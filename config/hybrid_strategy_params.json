@@ -1,0 +1,13 @@
+{
+  "strategy": "hybrid",
+  "fast_ema": 20,
+  "slow_ema": 30,
+  "rsi_period": 10,
+  "rsi_buy": 35,
+  "rsi_sell": 75,
+  "atr_multiplier": 3.0,
+  "profit_target_pct": 0.025,
+  "use_ema_filter": false,
+  "use_safety_filter": true,
+  "enable_compounding": true
+}

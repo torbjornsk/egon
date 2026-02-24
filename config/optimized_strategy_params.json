@@ -1,0 +1,10 @@
+{
+  "rsi_buy": 35,
+  "rsi_sell": 75,
+  "profit_target_pct": 0.025,
+  "stop_loss_pct": 0.015,
+  "ema_period": 50,
+  "rsi_period": 10,
+  "enable_safety": true,
+  "enable_compounding": true
+}

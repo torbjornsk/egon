@@ -1,0 +1,9 @@
+{
+  "mode": "demo",
+  "account_id": null,
+  "password": null,
+  "server": null,
+  "magic_number": 234000,
+  "logging_level": "INFO",
+  "enable_notifications": false
+}

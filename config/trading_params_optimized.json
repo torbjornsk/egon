@@ -1,0 +1,20 @@
+{
+  "symbol": "XAUUSD",
+  "timeframe": "M5",
+  "strategy": "scalping",
+  "risk_per_trade": 0.02,
+  "max_leverage": 100,
+  "max_daily_loss": 0.05,
+  "max_open_positions": 3,
+  "scalping": {
+    "fast_ema": 14.501356341026819,
+    "slow_ema": 20.03243220689987,
+    "rsi_period": 14,
+    "rsi_overbought": 70,
+    "rsi_oversold": 30,
+    "atr_period": 14,
+    "atr_multiplier": 3.0082307676792484,
+    "take_profit_pips": 76,
+    "stop_loss_pips": 28.366749959231335
+  }
+}

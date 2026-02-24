@@ -1,0 +1,14 @@
+{
+  "strategy": "aggressive",
+  "fast_ema": 15,
+  "slow_ema": 30,
+  "rsi_period": 10,
+  "rsi_buy": 40,
+  "rsi_sell": 65,
+  "atr_multiplier": 3.5,
+  "profit_target_pct": 0.04,
+  "trailing_stop_pct": 0.015,
+  "enable_shorts": true,
+  "enable_compounding": true,
+  "position_multiplier": 2.0
+}
