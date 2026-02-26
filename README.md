@@ -1,170 +1,167 @@
-# MetaTrader5 Gold Trading Bot
+# Gold Trading Bot
 
-A sophisticated automated trading bot for gold (XAUUSD) using MetaTrader5, featuring backtesting, parameter optimization, and risk management.
+Automated trading system for XAUUSD (Gold) using MetaTrader5 with dual-bot strategy (M5 and M1 timeframes).
 
-## Features
+## Quick Start
 
-- **Multiple Trading Strategies**: Scalping strategy with EMA crossovers, RSI, and ATR indicators
-- **Risk Management**: Position sizing, leverage control, daily loss limits, max open positions
-- **Backtesting Engine**: Test strategies against historical data
-- **Parameter Optimization**: Genetic algorithms and grid search for finding optimal parameters
-- **Demo & Live Trading**: Switch between demo and real money trading
-- **Clean Configuration**: JSON-based parameter management
+1. **Install dependencies:**
+   ```bash
+   uv sync
+   ```
 
-## Installation
+2. **Configure MetaTrader5:**
+   - Install MT5 on Windows
+   - Login to your account
+   - Ensure XAUUSD is visible in Market Watch
 
-1. Install MetaTrader5 terminal
+3. **Start the bots:**
+   ```bash
+   # M5 bot (5-minute timeframe)
+   start_bot.bat
 
-2. Install [uv](https://docs.astral.sh/uv/) (fast Python package manager):
-```bash
-# On macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+   # M1 bot (1-minute timeframe)  
+   start_bot_m1.bat
 
-# On Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
+   # Or run both simultaneously
+   ```
 
-3. Install dependencies:
-```bash
-# Create virtual environment and install dependencies
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
+See [QUICK_START.md](QUICK_START.md) for detailed setup instructions.
 
-# Or for development (includes testing and linting tools)
-uv pip install -e ".[dev]"
+## Bot Overview
 
-# For Jupyter notebook support
-uv pip install -e ".[notebook]"
-```
+### M5 Bot (Safe Leveraged)
+- **Timeframe:** 5 minutes
+- **Strategy:** Mean reversion with bidirectional trading
+- **Position:** 15% @ 25x leverage (375% effective)
+- **Entry:** RSI 30 (buy) / 75 (sell)
+- **Exit:** RSI 85 (long) / 15 (short)
+- **Stop Loss:** 3.0x ATR
+- **Take Profit:** 4.0%
+- **Performance:** ~72% return over 50 days, 75% win rate
 
-Alternatively, use the Makefile:
-```bash
-make install      # Install base dependencies
-make dev          # Install with dev dependencies
-make notebook     # Install with notebook support
-```
+### M1 Bot (Aggressive Scalping)
+- **Timeframe:** 1 minute
+- **Strategy:** Mean reversion scalping with adaptive exits
+- **Position:** 15% @ 25x leverage (375% effective)
+- **Entry:** RSI 35 (buy) / 65 (sell)
+- **Exit:** RSI 75 (long) / 25 (short) with adaptive logic
+- **Stop Loss:** 4.0x ATR
+- **Take Profit:** 0.8%
+- **Performance:** ~237% return over 50 days (with adaptive exits), 66% win rate
+- **New:** Adaptive exits cut losses early and let winners run (+42% improvement)
 
-## Configuration
+See [M1_ADAPTIVE_EXITS.md](M1_ADAPTIVE_EXITS.md) for details on the adaptive exit system.
 
-### Bot Configuration (`config/bot_config.json`)
-
-- `mode`: "demo" or "live"
-- `account_id`: Your MT5 account number (optional for demo)
-- `password`: Your MT5 password (optional for demo)
-- `server`: Your broker's server name (optional for demo)
-
-### Trading Parameters (`config/trading_params.json`)
-
-- `symbol`: Trading symbol (default: "XAUUSD")
-- `timeframe`: Chart timeframe (M1, M5, M15, M30, H1, H4, D1)
-- `risk_per_trade`: Risk percentage per trade (0.02 = 2%)
-- `max_leverage`: Maximum leverage to use
-- `max_daily_loss`: Maximum daily loss percentage (0.05 = 5%)
-- `max_open_positions`: Maximum concurrent positions
-
-Strategy-specific parameters in the `scalping` section.
-
-## Usage
-
-### Running the Bot
-
-```python
-from src.bot import GoldTradingBot
-
-bot = GoldTradingBot()
-bot.start()
-```
-
-### Backtesting
-
-```python
-from src.mt5_connector import MT5Connector
-from src.strategies.scalping import ScalpingStrategy
-from src.backtesting.backtester import Backtester
-from datetime import datetime, timedelta
-
-# Connect and get data
-mt5 = MT5Connector()
-mt5.connect()
-
-end_date = datetime.now()
-start_date = end_date - timedelta(days=365)
-data = mt5.get_historical_data('XAUUSD', 'M5', start_date, end_date)
-
-# Run backtest
-params = {
-    'fast_ema': 9,
-    'slow_ema': 21,
-    'rsi_period': 14,
-    'rsi_overbought': 70,
-    'rsi_oversold': 30,
-    'atr_period': 14,
-    'atr_multiplier': 1.5,
-    'take_profit_pips': 50,
-    'stop_loss_pips': 30
-}
-
-strategy = ScalpingStrategy(params)
-backtester = Backtester(strategy, initial_balance=10000)
-results = backtester.run(data)
-
-print(f"Total Trades: {results['total_trades']}")
-print(f"Win Rate: {results['win_rate']:.2%}")
-print(f"Total Profit: ${results['total_profit']:.2f}")
-print(f"Profit Factor: {results['profit_factor']:.2f}")
-print(f"Max Drawdown: {results['max_drawdown']:.2%}")
-print(f"Sharpe Ratio: {results['sharpe_ratio']:.2f}")
-```
-
-### Parameter Optimization
-
-```python
-from src.backtesting.optimizer import ParameterOptimizer
-from src.strategies.scalping import ScalpingStrategy
-
-# Define parameter ranges to optimize
-param_ranges = {
-    'fast_ema': (5, 15, 1),
-    'slow_ema': (20, 40, 2),
-    'atr_multiplier': (1.0, 3.0, 0.5)
-}
-
-optimizer = ParameterOptimizer(ScalpingStrategy, data, param_ranges)
-
-# Use genetic algorithm (recommended for large parameter spaces)
-best_params, logbook = optimizer.optimize_genetic(population_size=50, generations=20)
-
-# Or use grid search (for small parameter spaces)
-# best_params = optimizer.grid_search()
-
-print(f"Optimal parameters: {best_params}")
-```
+See [STRATEGY_SUMMARY.md](STRATEGY_SUMMARY.md) for detailed strategy information.
 
 ## Safety Features
 
-1. **Risk Management**
-   - Position sizing based on account balance and risk percentage
-   - Stop loss and take profit on every trade
-   - Maximum leverage limits
-   - Daily loss limits to prevent catastrophic losses
+Both bots include comprehensive safety mechanisms:
 
-2. **Demo Mode**
-   - Test strategies with virtual money before going live
-   - Same execution logic as live trading
+1. **Drawdown Limit** - Pauses at 35% (M5) / 40% (M1) drawdown
+2. **Daily Loss Limit** - Pauses if lose 15% in 24 hours
+3. **Rapid Loss Detection** - Pauses if lose 10% in 1 hour (flash crash protection)
+4. **Consecutive Loss Limit** - Pauses after 8 (M5) / 7 (M1) losses in a row
+5. **Emergency Threshold** - Closes all positions if equity drops 50%
 
-3. **Monitoring**
-   - Comprehensive logging
-   - Track all trades and performance metrics
+See [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md) for details.
 
-## Important Notes
+## Core Files
 
-- **Start with Demo**: Always test thoroughly in demo mode before using real money
-- **Monitor Performance**: Regularly review bot performance and adjust parameters
-- **Market Conditions**: Strategies may perform differently in various market conditions
-- **Leverage Risk**: Higher leverage increases both potential profits and losses
-- **Broker Requirements**: Ensure your broker allows automated trading
+### Trading Bots
+- `live_trading_bot.py` - M5 bot (5-minute timeframe)
+- `live_trading_bot_m1.py` - M1 bot (1-minute timeframe)
 
-## Disclaimer
+### Configuration
+- `config/safe_leveraged_params.json` - M5 bot parameters
+- `config/m1_scalping_params.json` - M1 bot parameters
 
-Trading involves substantial risk. Past performance does not guarantee future results. This bot is provided for educational purposes. Use at your own risk.
+### Analysis Tools
+- `evaluate_live_trades.py` - Analyze actual MT5 trade performance
+- `trade_report.py` - Generate detailed trade reports
+
+### Batch Files
+- `start_bot.bat` - Start M5 bot
+- `start_bot_m1.bat` - Start M1 bot
+- `start_bot_demo.bat` - M5 demo mode (no real trades)
+- `start_bot_m1_demo.bat` - M1 demo mode
+
+## Documentation
+
+- [QUICK_START.md](QUICK_START.md) - Setup and installation
+- [DUAL_BOT_GUIDE.md](DUAL_BOT_GUIDE.md) - Running both bots together
+- [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md) - Safety features explained
+- [STRATEGY_SUMMARY.md](STRATEGY_SUMMARY.md) - Strategy details and performance
+
+## Monitoring
+
+### Check Live Performance
+```bash
+python evaluate_live_trades.py
+```
+
+Shows:
+- Win rate and profit/loss
+- Average win/loss amounts
+- Stop loss rate
+- Risk/reward ratio
+- Recommendations
+
+### View Trade History
+```bash
+python trade_report.py
+```
+
+Generates detailed report of all trades with entry/exit prices, SL/TP levels, and P/L.
+
+### Logs
+- `trading_bot.log` - All bot activity and trades
+
+## Project Structure
+
+```
+goldtrade/
+├── live_trading_bot.py          # M5 bot
+├── live_trading_bot_m1.py        # M1 bot
+├── evaluate_live_trades.py      # Performance analysis
+├── trade_report.py              # Trade reporting
+├── config/                      # Bot configurations
+│   ├── safe_leveraged_params.json
+│   └── m1_scalping_params.json
+├── src/                         # Core modules
+│   ├── mt5_connector.py
+│   ├── risk_management.py
+│   ├── strategies/
+│   └── backtesting/
+├── analysis/                    # Historical analysis scripts
+├── examples/                    # Example scripts
+└── docs/                        # Documentation
+```
+
+## Requirements
+
+- Windows (MetaTrader5 only runs on Windows)
+- Python 3.11+
+- MetaTrader5 terminal
+- Active trading account with XAUUSD access
+
+## Risk Warning
+
+⚠️ **Trading involves substantial risk of loss.**
+
+- These bots use 25x leverage (high risk)
+- Past performance does not guarantee future results
+- Only trade with money you can afford to lose
+- Test in demo mode first
+- Monitor regularly, especially during high volatility
+
+## Support
+
+For issues or questions:
+1. Check the documentation files
+2. Review `trading_bot.log` for errors
+3. Run `evaluate_live_trades.py` to diagnose performance issues
+
+## License
+
+This project is for educational purposes. Use at your own risk.

@@ -40,13 +40,15 @@ def run_safe_leveraged_backtest(df, capital=1000,
                                 atr_multiplier=3.0,
                                 profit_target_pct=0.03,
                                 max_drawdown_limit=0.30,  # Stop trading if 30% drawdown
-                                enable_shorts=True):
+                                enable_shorts=True,
+                                warmup_candles=3):  # Wait after gaps
     """
-    Safe leveraged strategy:
+    Safe leveraged strategy with gap detection:
     - Only use X% of balance per trade (e.g., 10%)
     - Apply leverage to that percentage
     - Stop trading if drawdown exceeds limit
     - Proper risk management with ATR-based stops
+    - Detect market gaps and wait for warm-up period
     """
     
     df = compute_indicators(df, fast_ema, slow_ema, rsi_period)
@@ -58,6 +60,64 @@ def run_safe_leveraged_backtest(df, capital=1000,
     trades = []
     equity_curve = [balance]
     trading_paused = False
+    last_close_time = None
+    warmup_until_bar = -1  # Bar index until which we're in warm-up
+    
+    for i in range(max(fast_ema, slow_ema, rsi_period, 200), len(df)):
+        row = df.iloc[i]
+        price = row['close']
+        
+        # Detect market gap (time gap > 15 minutes for M5 data)
+        if i > 0:
+            prev_row = df.iloc[i-1]
+            time_gap_minutes = (row['time'] - prev_row['time']).total_seconds() / 60
+            
+            if time_gap_minutes > 15:
+                # Market gap detected - enter warm-up period
+                warmup_until_bar = i + warmup_candles
+                # Close any open position at gap (simulates stop loss/take profit hitting during gap)
+                if position is not None:
+                    # Assume we exit at the open price after gap
+                    exit_price = row['open']
+                    
+                    if position['type'] == 'long':
+                        price_change = exit_price - position['entry']
+                        pnl = (price_change / position['entry']) * position['leveraged_position']
+                    else:
+                        price_change = position['entry'] - exit_price
+                        pnl = (price_change / position['entry']) * position['leveraged_position']
+                    
+                    balance += pnl
+                    
+                    trades.append({
+                        'entry': position['entry'],
+                        'exit': exit_price,
+                        'type': position['type'],
+                        'pnl': pnl,
+                        'entry_time': position['time'],
+                        'exit_time': row['time'],
+                        'exit_reason': 'market_gap'
+                    })
+                    
+                    position = None
+        
+        # Update peak balance
+        if balance > peak_balance:
+            peak_balance = balance
+        
+        # Check drawdown
+        current_drawdown = (peak_balance - balance) / peak_balance
+        if current_drawdown >= max_drawdown_limit:
+            if not trading_paused:
+                trading_paused = True
+        
+        # Check if we're in warm-up period
+        in_warmup = i < warmup_until_bar
+        
+        # Check cooldown after closing position
+        in_cooldown = False
+        if last_close_time is not None and i < last_close_time + 2:  # 2 candle cooldown
+            in_cooldown = True
     
     for i in range(max(fast_ema, slow_ema, rsi_period, 200), len(df)):
         row = df.iloc[i]
@@ -74,7 +134,7 @@ def run_safe_leveraged_backtest(df, capital=1000,
                 print(f"Trading paused at bar {i}: Drawdown {current_drawdown*100:.2f}% exceeds limit")
                 trading_paused = True
         
-        if position is None and not trading_paused:
+        if position is None and not trading_paused and not in_warmup and not in_cooldown:
             # LONG ENTRY
             if row['RSI'] < rsi_buy:
                 # Position size: X% of balance, leveraged
@@ -169,6 +229,7 @@ def run_safe_leveraged_backtest(df, capital=1000,
                     'balance_after': balance
                 })
                 position = None
+                last_close_time = i  # Track when we closed for cooldown
             
             if balance <= 0:
                 print("Account blown!")

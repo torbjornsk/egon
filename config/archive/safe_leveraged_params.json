@@ -8,7 +8,9 @@
   "rsi_period": 10,
   "rsi_buy": 30,
   "rsi_sell": 75,
+  "rsi_exit_long": 85,
+  "rsi_exit_short": 15,
   "atr_multiplier": 3.0,
-  "profit_target_pct": 0.03,
+  "profit_target_pct": 0.04,
   "enable_shorts": true
 }

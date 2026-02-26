@@ -1,0 +1,17 @@
+{
+  "strategy": "m1_scalping",
+  "position_size_pct": 0.15,
+  "leverage": 25,
+  "max_drawdown_limit": 0.40,
+  "fast_ema": 5,
+  "slow_ema": 12,
+  "rsi_period": 5,
+  "rsi_buy": 35,
+  "rsi_sell": 65,
+  "rsi_exit_long": 75,
+  "rsi_exit_short": 25,
+  "atr_multiplier": 4.0,
+  "profit_target_pct": 0.008,
+  "enable_shorts": true,
+  "_comment": "Adaptive exits: Automatically cuts losses after 10 minutes if position is losing"
+}

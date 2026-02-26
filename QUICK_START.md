@@ -1,120 +1,169 @@
-# Quick Start Guide - Gold Trading Bot
+# Quick Start Guide
 
-## 🚀 Get Started in 3 Steps
+Get your gold trading bots running in 10 minutes.
 
-### Step 1: Test the Bot (DEMO MODE)
+## Prerequisites
+
+- Windows PC (MetaTrader5 requirement)
+- MetaTrader5 installed
+- Trading account with XAUUSD access
+- Python 3.11+ (recommended: use `uv` package manager)
+
+## Step 1: Install Dependencies
 
 ```bash
-# Double-click this file or run:
-start_bot_demo.bat
+# Using uv (recommended)
+uv sync
+
+# Or using pip
+pip install -r requirements.txt
 ```
 
-This runs the bot in dry-run mode - it will analyze the market but NOT place actual trades. Perfect for testing!
+## Step 2: Configure MetaTrader5
 
-### Step 2: Monitor Performance
+1. **Open MT5** and login to your account
+2. **Add XAUUSD to Market Watch:**
+   - Right-click Market Watch
+   - Select "Symbols"
+   - Find "XAUUSD" (Gold)
+   - Click "Show" and "OK"
+3. **Verify connection:**
+   - Check that prices are updating
+   - Ensure you're logged in (not "No connection")
 
-Open a second terminal and run:
+## Step 3: Test Connection
 
 ```bash
-python monitor_bot.py
+python -c "import MetaTrader5 as mt5; print('Connected!' if mt5.initialize() else 'Failed')"
 ```
 
-This shows real-time stats:
-- Current balance and profit
-- Open positions
-- Recent trades
-- Win rate
+Should print "Connected!"
 
-### Step 3: Go Live (When Ready)
+## Step 4: Choose Your Bot
+
+### Option A: M5 Bot Only (Recommended for beginners)
+- More stable, fewer trades
+- 5-minute timeframe
+- ~$38 per trade average
 
 ```bash
-# Double-click this file or run:
 start_bot.bat
 ```
 
-⚠️ **WARNING:** This will trade with real money!
-
-## 📊 What to Expect
-
-Based on 8-month backtest with the **Aggressive (15% @ 25x)** configuration:
-
-- **Return:** ~150% over 8 months (~225% annualized)
-- **Max Drawdown:** ~30%
-- **Win Rate:** ~61%
-- **Trades:** ~185 per month
-
-## 🎯 Strategy Overview
-
-**Entry Signals:**
-- **LONG:** RSI < 30 (oversold - buy the dip)
-- **SHORT:** RSI > 75 AND downtrend (overbought in bear market)
-
-**Exit Signals:**
-- RSI opposite extreme (75 for longs, 30 for shorts)
-- 3% profit target
-- ATR-based stop loss (3x ATR)
-
-**Position Sizing:**
-- Uses 15% of balance per trade
-- 25x leverage applied
-- Effective position: 375% of balance
-
-## 🛡️ Safety Features
-
-1. **Stop Losses:** Every trade has automatic stop loss
-2. **Drawdown Limit:** Bot pauses if drawdown exceeds 35%
-3. **Position Limits:** Only 15% of balance at risk per trade
-4. **Margin Protection:** Prevents over-leveraging
-
-## 📁 Configuration Files
-
-Choose your risk level:
-
-| File | Strategy | Return | Drawdown | Risk Level |
-|------|----------|--------|----------|------------|
-| `safe_leveraged_params.json` | **Aggressive** | 150% | 30% | ⚠️ High |
-| `bidirectional_strategy_params.json` | Moderate | 27% | 5.5% | ✓ Medium |
-| `hybrid_strategy_params.json` | Conservative | 28% | 4.5% | ✓✓ Low |
-
-To change strategy:
+### Option B: M1 Bot Only
+- More aggressive, many trades
+- 1-minute timeframe
+- Higher variance
 
 ```bash
-python live_trading_bot.py --config config/bidirectional_strategy_params.json
+start_bot_m1.bat
 ```
 
-## 📝 Daily Checklist
+### Option C: Both Bots (Advanced)
+- Run in separate terminals
+- Different magic numbers prevent conflicts
+- See [DUAL_BOT_GUIDE.md](DUAL_BOT_GUIDE.md)
 
-- [ ] Check bot is running
-- [ ] Review `trading_bot.log` for errors
-- [ ] Monitor current drawdown (should be < 35%)
-- [ ] Verify trades are executing as expected
+```bash
+# Terminal 1
+start_bot.bat
 
-## 🆘 Emergency Stop
+# Terminal 2
+start_bot_m1.bat
+```
 
-1. Press `Ctrl+C` in the bot terminal
-2. Bot will stop gracefully
-3. Close any open positions manually in MT5 if needed
+## Step 5: Monitor
 
-## 📞 Need Help?
+The bot will log all activity to console and `trading_bot.log`.
 
-1. Read `LIVE_TRADING_GUIDE.md` for detailed instructions
-2. Check `trading_bot.log` for error messages
-3. Test with demo mode first (`start_bot_demo.bat`)
+**What you'll see:**
+```
+2026-02-25 10:30:15 - INFO - Connected to MT5
+2026-02-25 10:30:15 - INFO - Balance: $1000.00
+2026-02-25 10:30:20 - INFO - >>> TRADE OPENED [LONG]
+2026-02-25 10:30:20 - INFO -   Entry: $5185.50
+2026-02-25 10:30:20 - INFO -   Stop Loss: $5175.20
+2026-02-25 10:30:20 - INFO -   Take Profit: $5225.50
+```
 
-## ⚠️ Final Warnings
+## Step 6: Check Performance
 
-- **Start with DEMO** - Test for at least 1-2 weeks
-- **Start small** - Use only money you can afford to lose
-- **Monitor daily** - Don't set and forget
-- **Understand risks** - Leverage amplifies both gains AND losses
-- **Have a plan** - Know when to stop (e.g., if drawdown > 40%)
+After a few hours/days:
 
-## 🎓 Learning Resources
+```bash
+python evaluate_live_trades.py
+```
 
-- `STRATEGY_SUMMARY.md` - Comparison of all tested strategies
-- `LIVE_TRADING_GUIDE.md` - Comprehensive setup and monitoring guide
-- `trading_bot.log` - Real-time bot activity log
+Shows win rate, profit/loss, and recommendations.
 
----
+## Demo Mode (Testing)
 
-**Remember:** Past performance doesn't guarantee future results. Trade responsibly!
+Test without real money:
+
+```bash
+# M5 demo
+start_bot_demo.bat
+
+# M1 demo
+start_bot_m1_demo.bat
+```
+
+**Note:** Demo mode simulates trades but doesn't place real orders. Use this to verify the bot works before going live.
+
+## Stopping the Bot
+
+Press `Ctrl+C` in the terminal. The bot will:
+1. Close any open positions (managed by SL/TP)
+2. Print a session summary
+3. Exit gracefully
+
+## Common Issues
+
+### "MT5 initialization failed"
+- Ensure MT5 is running and logged in
+- Check that you're not in a virtual machine (MT5 doesn't work in VMs)
+
+### "Symbol XAUUSD not found"
+- Add XAUUSD to Market Watch (see Step 2)
+- Verify your broker offers gold trading
+
+### "No prices available"
+- Market might be closed (gold trades 23/5)
+- Check MT5 connection status
+
+### Bot pauses trading
+- Check logs for reason (drawdown limit, daily loss, etc.)
+- See [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md)
+- Review with `python evaluate_live_trades.py`
+
+## Next Steps
+
+- Read [DUAL_BOT_GUIDE.md](DUAL_BOT_GUIDE.md) for running both bots
+- Review [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md) to understand protections
+- Check [STRATEGY_SUMMARY.md](STRATEGY_SUMMARY.md) for strategy details
+
+## Configuration
+
+Bot parameters are in:
+- `config/safe_leveraged_params.json` (M5)
+- `config/m1_scalping_params.json` (M1)
+
+**Don't modify unless you know what you're doing!** The current settings are optimized through extensive backtesting.
+
+## Support
+
+If something goes wrong:
+1. Check `trading_bot.log` for errors
+2. Run `python evaluate_live_trades.py` to see what happened
+3. Review the documentation files
+
+## Risk Warning
+
+⚠️ **Start with small amounts!**
+
+- Bots use 25x leverage (high risk)
+- Test in demo mode first
+- Only trade what you can afford to lose
+- Monitor regularly during first week
+
+Good luck! 🚀
