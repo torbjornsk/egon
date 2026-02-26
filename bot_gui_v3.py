@@ -909,7 +909,17 @@ class BotGUI:
                 for pos in m5_positions:
                     # Adjust for MT5 being 1 hour ahead of local time
                     # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
-                    time_held_minutes = (datetime.now().timestamp() - (pos.time - 3600)) / 60
+                    now_ts = datetime.now().timestamp()
+                    pos_time_adjusted = pos.time - 3600
+                    time_held_minutes = (now_ts - pos_time_adjusted) / 60
+                    
+                    # Debug output
+                    print(f"[DEBUG M5] Position {pos.ticket}:")
+                    print(f"  Now timestamp: {now_ts} ({datetime.fromtimestamp(now_ts)})")
+                    print(f"  Position time (raw): {pos.time} ({datetime.fromtimestamp(pos.time)})")
+                    print(f"  Position time (adjusted): {pos_time_adjusted} ({datetime.fromtimestamp(pos_time_adjusted)})")
+                    print(f"  Time held: {time_held_minutes:.1f} minutes")
+                    
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -926,7 +936,17 @@ class BotGUI:
                 for pos in m1_positions:
                     # Adjust for MT5 being 1 hour ahead of local time
                     # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
-                    time_held_minutes = (datetime.now().timestamp() - (pos.time - 3600)) / 60
+                    now_ts = datetime.now().timestamp()
+                    pos_time_adjusted = pos.time - 3600
+                    time_held_minutes = (now_ts - pos_time_adjusted) / 60
+                    
+                    # Debug output
+                    print(f"[DEBUG M1] Position {pos.ticket}:")
+                    print(f"  Now timestamp: {now_ts} ({datetime.fromtimestamp(now_ts)})")
+                    print(f"  Position time (raw): {pos.time} ({datetime.fromtimestamp(pos.time)})")
+                    print(f"  Position time (adjusted): {pos_time_adjusted} ({datetime.fromtimestamp(pos_time_adjusted)})")
+                    print(f"  Time held: {time_held_minutes:.1f} minutes")
+                    
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
