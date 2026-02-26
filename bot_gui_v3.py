@@ -230,13 +230,13 @@ class BotGUI:
                         exit_deal = buy_deals[0]
                         position_type = 'SHORT'
                     
-                    # Adjust timestamps for MT5 being 1 hour ahead
+                    # Adjust timestamps for MT5 being 2 hours ahead
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
                         'type': position_type,
-                        'entry_time': datetime.fromtimestamp(entry_deal.time - 3600),
-                        'exit_time': datetime.fromtimestamp(exit_deal.time - 3600),
+                        'entry_time': datetime.fromtimestamp(entry_deal.time - 7200),
+                        'exit_time': datetime.fromtimestamp(exit_deal.time - 7200),
                         'entry_price': entry_deal.price,
                         'exit_price': exit_deal.price,
                         'volume': entry_deal.volume,
@@ -907,18 +907,10 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
-                    # Adjust for MT5 being 1 hour ahead of local time
-                    # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
+                    # MT5 appears to be 2 hours ahead of local time
                     now_ts = datetime.now().timestamp()
-                    pos_time_adjusted = pos.time - 3600
+                    pos_time_adjusted = pos.time - 7200  # Subtract 2 hours
                     time_held_minutes = (now_ts - pos_time_adjusted) / 60
-                    
-                    # Debug output
-                    print(f"[DEBUG M5] Position {pos.ticket}:")
-                    print(f"  Now timestamp: {now_ts} ({datetime.fromtimestamp(now_ts)})")
-                    print(f"  Position time (raw): {pos.time} ({datetime.fromtimestamp(pos.time)})")
-                    print(f"  Position time (adjusted): {pos_time_adjusted} ({datetime.fromtimestamp(pos_time_adjusted)})")
-                    print(f"  Time held: {time_held_minutes:.1f} minutes")
                     
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
@@ -934,18 +926,10 @@ class BotGUI:
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
-                    # Adjust for MT5 being 1 hour ahead of local time
-                    # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
+                    # MT5 appears to be 2 hours ahead of local time
                     now_ts = datetime.now().timestamp()
-                    pos_time_adjusted = pos.time - 3600
+                    pos_time_adjusted = pos.time - 7200  # Subtract 2 hours
                     time_held_minutes = (now_ts - pos_time_adjusted) / 60
-                    
-                    # Debug output
-                    print(f"[DEBUG M1] Position {pos.ticket}:")
-                    print(f"  Now timestamp: {now_ts} ({datetime.fromtimestamp(now_ts)})")
-                    print(f"  Position time (raw): {pos.time} ({datetime.fromtimestamp(pos.time)})")
-                    print(f"  Position time (adjusted): {pos_time_adjusted} ({datetime.fromtimestamp(pos_time_adjusted)})")
-                    print(f"  Time held: {time_held_minutes:.1f} minutes")
                     
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
