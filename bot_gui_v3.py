@@ -1048,6 +1048,12 @@ class BotGUI:
     
     def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
         """Update 2 static position cards with exit signals"""
+        # Debug output
+        print(f"[DEBUG] update_position_cards called for {bot_name}")
+        print(f"[DEBUG] Number of positions: {len(positions)}")
+        print(f"[DEBUG] Positions data: {positions}")
+        print(f"[DEBUG] Current price: {current_price}, RSI: {rsi}")
+        
         # Get exit thresholds
         if bot_name == "M5":
             rsi_exit_long = 75
@@ -1059,10 +1065,12 @@ class BotGUI:
         # Update each card slot
         for i in range(2):
             card = cards[i]
+            print(f"[DEBUG] Processing card {i}")
             
             if i < len(positions):
                 # Position exists
                 pos = positions[i]
+                print(f"[DEBUG] Card {i} - Position exists: {pos}")
                 
                 # Update header
                 type_color = self.success_color if pos['type'] == 'LONG' else self.error_color
@@ -1158,13 +1166,17 @@ class BotGUI:
                 for j, condition in enumerate(exit_conditions):
                     if j < len(card['exit_labels']):
                         card['exit_labels'][j].config(text=condition)
+                        print(f"[DEBUG] Card {i} exit label {j}: {condition}")
                 
                 # Clear any unused exit labels
                 for j in range(len(exit_conditions), len(card['exit_labels'])):
                     card['exit_labels'][j].config(text="")
                 
+                print(f"[DEBUG] Card {i} updated successfully")
+                
             else:
                 # No position - show empty
+                print(f"[DEBUG] Card {i} - No position (empty)")
                 card['ticket_label'].config(
                     text=f"Pos {i+1}: Empty", 
                     fg=self.neutral_color
