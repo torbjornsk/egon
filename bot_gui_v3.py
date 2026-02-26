@@ -71,6 +71,9 @@ class BotGUI:
         self.mt5_connected = False
         self.mt5_symbol = 'XAUUSD'
         
+        # Chart settings
+        self.chart_timeframe = 'M5'  # Default to M5
+        
         # Bot states
         self.m5_data = {
             'status': 'Stopped',
@@ -430,8 +433,24 @@ class BotGUI:
         
         # Price chart
         if MATPLOTLIB_AVAILABLE:
-            chart_frame = ttk.LabelFrame(center_frame, text="Price Chart (Last 50 M5)", padding="3")
+            chart_frame = ttk.LabelFrame(center_frame, text="Price Chart", padding="3")
             chart_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 3))
+            
+            # Chart controls
+            chart_controls = tk.Frame(chart_frame, bg=self.bg_dark)
+            chart_controls.pack(fill=tk.X, pady=(0, 3))
+            
+            tk.Label(chart_controls, text="Timeframe:", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8)).pack(side=tk.LEFT, padx=(0, 5))
+            
+            # Timeframe selector
+            self.chart_tf_var = tk.StringVar(value='M5')
+            m5_radio = ttk.Radiobutton(chart_controls, text='M5 (50 candles)', variable=self.chart_tf_var, value='M5',
+                                      command=self.on_chart_timeframe_change)
+            m5_radio.pack(side=tk.LEFT, padx=5)
+            
+            m1_radio = ttk.Radiobutton(chart_controls, text='M1 (100 candles)', variable=self.chart_tf_var, value='M1',
+                                      command=self.on_chart_timeframe_change)
+            m1_radio.pack(side=tk.LEFT, padx=5)
             
             self.fig = Figure(figsize=(8, 4), dpi=100, facecolor='#1e1e1e')
             self.ax = self.fig.add_subplot(111, facecolor='#2d2d2d')
@@ -658,14 +677,28 @@ class BotGUI:
             self.m1_data['status'] = 'Stopped'
             self.m1_widgets['status_label'].config(text='Stopped', foreground=self.neutral_color)
     
+    def on_chart_timeframe_change(self):
+        """Handle chart timeframe change"""
+        self.chart_timeframe = self.chart_tf_var.get()
+        self.update_price_chart()
+    
     def update_price_chart(self):
         """Update the price chart with recent candles"""
         if not MATPLOTLIB_AVAILABLE or not self.mt5_connected:
             return
         
         try:
-            # Get last 50 M5 candles
-            rates = mt5.copy_rates_from_pos(self.mt5_symbol, mt5.TIMEFRAME_M5, 0, 50)
+            # Get candles based on selected timeframe
+            if self.chart_timeframe == 'M1':
+                timeframe = mt5.TIMEFRAME_M1
+                num_candles = 100
+                tick_interval = 10  # Show timestamp every 10 minutes
+            else:  # M5
+                timeframe = mt5.TIMEFRAME_M5
+                num_candles = 50
+                tick_interval = 15  # Show timestamp every 15 minutes
+            
+            rates = mt5.copy_rates_from_pos(self.mt5_symbol, timeframe, 0, num_candles)
             if rates is None or len(rates) == 0:
                 return
             
@@ -696,7 +729,7 @@ class BotGUI:
             # Style
             self.ax.set_xlim(-1, len(df))
             self.ax.set_ylim(df['low'].min() * 0.9999, df['high'].max() * 1.0001)
-            self.ax.tick_params(colors='#e0e0e0', labelsize=8)
+            self.ax.tick_params(colors='#e0e0e0', labelsize=7)
             self.ax.spines['bottom'].set_color('#3e3e3e')
             self.ax.spines['top'].set_color('#3e3e3e')
             self.ax.spines['left'].set_color('#3e3e3e')
@@ -706,19 +739,28 @@ class BotGUI:
             # Format y-axis to show price
             self.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
             
-            # Format x-axis to show timestamps every 15 minutes
+            # Format x-axis to show timestamps
             tick_positions = []
             tick_labels = []
             for i in range(len(df)):
                 time = df.iloc[i]['time']
                 minute = time.minute
-                if minute % 15 == 0:
+                # Show labels at specified intervals
+                if minute % tick_interval == 0:
                     tick_positions.append(i)
                     tick_labels.append(time.strftime('%H:%M'))
             
             if tick_positions:
                 self.ax.set_xticks(tick_positions)
-                self.ax.set_xticklabels(tick_labels, rotation=0, ha='center', fontsize=9)
+                self.ax.set_xticklabels(tick_labels, rotation=0, ha='center', fontsize=8)
+            
+            self.ax.tick_params(axis='x', colors='#e0e0e0', labelsize=8)
+            
+            # Redraw
+            self.canvas.draw()
+            
+        except Exception as e:
+            print(f"Error updating chart: {e}")
             
             self.ax.tick_params(axis='x', colors='#e0e0e0', labelsize=9)
             
@@ -997,6 +1039,11 @@ class BotGUI:
         
         # Positions - update position count in frame title
         widgets['positions_frame'].config(text=f"Positions ({data['positions']}/2)")
+        
+        # Debug: print position data
+        if data['positions'] > 0:
+            print(f"{bot_name} has {data['positions']} positions, details: {len(data['position_details'])} items")
+        
         self.update_position_cards(widgets['position_cards'], data['position_details'], price, rsi, bot_name)
     
     def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
