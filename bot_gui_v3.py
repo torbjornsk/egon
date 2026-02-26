@@ -119,6 +119,21 @@ class BotGUI:
         # Trade history
         self.trade_history = []
         
+        # Load bot configurations
+        self.m5_config = {}
+        self.m1_config = {}
+        try:
+            with open('config/m5_params.json', 'r') as f:
+                self.m5_config = json.load(f)
+        except:
+            print("Warning: Could not load M5 config")
+        
+        try:
+            with open('config/m1_params.json', 'r') as f:
+                self.m1_config = json.load(f)
+        except:
+            print("Warning: Could not load M1 config")
+        
         # Connect to MT5
         if MT5_AVAILABLE:
             self.connect_mt5()
@@ -1066,13 +1081,13 @@ class BotGUI:
         # Entry conditions
         price = self.market_data['price']
         
-        # Get thresholds
+        # Get thresholds from config
         if bot_name == "M5":
-            rsi_buy = 25
-            rsi_sell = 75
+            rsi_buy = self.m5_config.get('rsi_buy', 25)
+            rsi_sell = self.m5_config.get('rsi_sell', 75)
         else:
-            rsi_buy = 35
-            rsi_sell = 65
+            rsi_buy = self.m1_config.get('rsi_buy', 35)
+            rsi_sell = self.m1_config.get('rsi_sell', 65)
         
         conditions = []
         
@@ -1123,13 +1138,13 @@ class BotGUI:
     
     def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
         """Update 2 static position cards with exit signals"""
-        # Get exit thresholds
+        # Get exit thresholds from config
         if bot_name == "M5":
-            rsi_exit_long = 75
-            rsi_exit_short = 25
+            rsi_exit_long = self.m5_config.get('rsi_exit_long', 70)
+            rsi_exit_short = self.m5_config.get('rsi_exit_short', 30)
         else:
-            rsi_exit_long = 75
-            rsi_exit_short = 25
+            rsi_exit_long = self.m1_config.get('rsi_exit_long', 75)
+            rsi_exit_short = self.m1_config.get('rsi_exit_short', 25)
         
         # Update each card slot
         for i in range(2):
