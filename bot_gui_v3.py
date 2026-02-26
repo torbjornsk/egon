@@ -1112,13 +1112,14 @@ class BotGUI:
                     if j < len(card['exit_labels']):
                         card['exit_labels'][j].config(text=condition)
                 
-                # Show card
-                card['frame'].pack(fill=tk.X, pady=3)
+                # Clear any unused exit labels
+                for j in range(len(exit_conditions), len(card['exit_labels'])):
+                    card['exit_labels'][j].config(text="")
                 
             else:
                 # No position - show empty
                 card['ticket_label'].config(
-                    text=f"Position {i+1}: Empty", 
+                    text=f"Pos {i+1}: Empty", 
                     fg=self.neutral_color
                 )
                 card['profit_label'].config(text="")
@@ -1127,9 +1128,6 @@ class BotGUI:
                 # Clear all exit labels
                 for label in card['exit_labels']:
                     label.config(text="")
-                
-                # Show card
-                card['frame'].pack(fill=tk.X, pady=3)
     
     def fetch_market_data(self):
         """Fetch market data from MT5"""
