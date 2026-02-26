@@ -907,11 +907,23 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
-                    # MT5 is 1 hour ahead (GMT+2 vs local GMT+1)
-                    # pos.time is Unix timestamp, but datetime.now() is in local timezone
-                    # We need to add 1 hour to local time to match MT5 timezone
-                    now_ts = datetime.now().timestamp() + 3600  # Add 1 hour to match MT5
-                    time_held_minutes = (now_ts - pos.time) / 60
+                    # Calculate time held
+                    # pos.time is seconds since epoch, but in MT5 server time
+                    # Convert both to datetime objects for proper comparison
+                    from datetime import timezone, timedelta
+                    
+                    # MT5 server is GMT+2, local is GMT+1
+                    mt5_tz = timezone(timedelta(hours=2))
+                    local_tz = timezone(timedelta(hours=1))
+                    
+                    # Position time in MT5 timezone
+                    pos_time = datetime.fromtimestamp(pos.time, tz=mt5_tz)
+                    # Current time in local timezone
+                    now_time = datetime.now(tz=local_tz)
+                    
+                    # Calculate difference
+                    time_held = now_time - pos_time
+                    time_held_minutes = time_held.total_seconds() / 60
                     
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
@@ -927,11 +939,23 @@ class BotGUI:
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
-                    # MT5 is 1 hour ahead (GMT+2 vs local GMT+1)
-                    # pos.time is Unix timestamp, but datetime.now() is in local timezone
-                    # We need to add 1 hour to local time to match MT5 timezone
-                    now_ts = datetime.now().timestamp() + 3600  # Add 1 hour to match MT5
-                    time_held_minutes = (now_ts - pos.time) / 60
+                    # Calculate time held
+                    # pos.time is seconds since epoch, but in MT5 server time
+                    # Convert both to datetime objects for proper comparison
+                    from datetime import timezone, timedelta
+                    
+                    # MT5 server is GMT+2, local is GMT+1
+                    mt5_tz = timezone(timedelta(hours=2))
+                    local_tz = timezone(timedelta(hours=1))
+                    
+                    # Position time in MT5 timezone
+                    pos_time = datetime.fromtimestamp(pos.time, tz=mt5_tz)
+                    # Current time in local timezone
+                    now_time = datetime.now(tz=local_tz)
+                    
+                    # Calculate difference
+                    time_held = now_time - pos_time
+                    time_held_minutes = time_held.total_seconds() / 60
                     
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
