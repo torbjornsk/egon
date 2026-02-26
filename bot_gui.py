@@ -38,7 +38,7 @@ class BotGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Gold Trading Bot Dashboard")
-        self.root.geometry("1600x1000")  # Increased from 1400x900
+        self.root.geometry("1800x1000")  # Wider to match your screenshot
         
         # Dark mode colors
         self.bg_dark = '#1e1e1e'
@@ -901,12 +901,24 @@ class BotGUI:
             # Format y-axis to show price
             self.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
             
-            # Format x-axis to show timestamps
-            # Show every 10th candle to avoid crowding
-            tick_positions = list(range(0, len(df), 10))
-            tick_labels = [df.iloc[i]['time'].strftime('%H:%M') for i in tick_positions]
-            self.ax.set_xticks(tick_positions)
-            self.ax.set_xticklabels(tick_labels, rotation=45, ha='right')
+            # Format x-axis to show timestamps every 15 minutes (every 3 M5 candles)
+            # Find candles that are at 00, 15, 30, 45 minutes
+            tick_positions = []
+            tick_labels = []
+            for i in range(len(df)):
+                time = df.iloc[i]['time']
+                minute = time.minute
+                # Show labels at 00, 15, 30, 45 minutes
+                if minute % 15 == 0:
+                    tick_positions.append(i)
+                    tick_labels.append(time.strftime('%H:%M'))
+            
+            if tick_positions:
+                self.ax.set_xticks(tick_positions)
+                self.ax.set_xticklabels(tick_labels, rotation=0, ha='center', fontsize=9)
+            
+            # Make x-axis labels more visible
+            self.ax.tick_params(axis='x', colors='#e0e0e0', labelsize=9)
             
             # Redraw
             self.canvas.draw()
