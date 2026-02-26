@@ -831,9 +831,15 @@ class BotGUI:
             
             # Get open positions
             positions = mt5.positions_get(symbol=self.mt5_symbol)
-            if positions:
+            print(f"[DEBUG] MT5 positions_get returned: {positions}")
+            print(f"[DEBUG] Type: {type(positions)}, Length: {len(positions) if positions else 0}")
+            
+            if positions is not None and len(positions) > 0:
+                print(f"[DEBUG] Found {len(positions)} total positions")
                 m5_positions = [p for p in positions if p.magic == 234000]
                 m1_positions = [p for p in positions if p.magic == 234001]
+                
+                print(f"[DEBUG] M5 positions: {len(m5_positions)}, M1 positions: {len(m1_positions)}")
                 
                 self.m5_data['positions'] = len(m5_positions)
                 self.m1_data['positions'] = len(m1_positions)
@@ -841,6 +847,7 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
+                    print(f"[DEBUG] M5 position: ticket={pos.ticket}, type={pos.type}, magic={pos.magic}")
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -855,6 +862,7 @@ class BotGUI:
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
+                    print(f"[DEBUG] M1 position: ticket={pos.ticket}, type={pos.type}, magic={pos.magic}")
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -866,8 +874,11 @@ class BotGUI:
                         'time_held': (datetime.now().timestamp() - pos.time) / 60
                     })
             else:
+                print(f"[DEBUG] No positions found or positions_get returned None")
                 self.m5_data['positions'] = 0
                 self.m1_data['positions'] = 0
+                self.m5_data['position_details'] = []
+                self.m1_data['position_details'] = []
                 self.m5_data['position_details'] = []
                 self.m1_data['position_details'] = []
                 
