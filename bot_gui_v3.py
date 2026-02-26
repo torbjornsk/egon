@@ -907,23 +907,9 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
-                    # Calculate time held
-                    # pos.time is seconds since epoch, but in MT5 server time
-                    # Convert both to datetime objects for proper comparison
-                    from datetime import timezone, timedelta
-                    
-                    # MT5 server is GMT+2, local is GMT+1
-                    mt5_tz = timezone(timedelta(hours=2))
-                    local_tz = timezone(timedelta(hours=1))
-                    
-                    # Position time in MT5 timezone
-                    pos_time = datetime.fromtimestamp(pos.time, tz=mt5_tz)
-                    # Current time in local timezone
-                    now_time = datetime.now(tz=local_tz)
-                    
-                    # Calculate difference
-                    time_held = now_time - pos_time
-                    time_held_minutes = time_held.total_seconds() / 60
+                    # Simple approach: both are Unix timestamps, just calculate difference
+                    # If result is negative, it means clocks are offset
+                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60
                     
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
@@ -939,23 +925,21 @@ class BotGUI:
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
-                    # Calculate time held
-                    # pos.time is seconds since epoch, but in MT5 server time
-                    # Convert both to datetime objects for proper comparison
-                    from datetime import timezone, timedelta
+                    # Debug: let's see what we're actually getting
+                    import time
+                    now_ts = datetime.now().timestamp()
+                    now_utc = time.time()  # UTC timestamp
                     
-                    # MT5 server is GMT+2, local is GMT+1
-                    mt5_tz = timezone(timedelta(hours=2))
-                    local_tz = timezone(timedelta(hours=1))
+                    print(f"\n[TIME DEBUG] Position {pos.ticket}:")
+                    print(f"  pos.time: {pos.time}")
+                    print(f"  datetime.now().timestamp(): {now_ts}")
+                    print(f"  time.time() (UTC): {now_utc}")
+                    print(f"  Difference (now - pos): {(now_ts - pos.time) / 60:.1f} min")
+                    print(f"  Difference (UTC - pos): {(now_utc - pos.time) / 60:.1f} min")
                     
-                    # Position time in MT5 timezone
-                    pos_time = datetime.fromtimestamp(pos.time, tz=mt5_tz)
-                    # Current time in local timezone
-                    now_time = datetime.now(tz=local_tz)
-                    
-                    # Calculate difference
-                    time_held = now_time - pos_time
-                    time_held_minutes = time_held.total_seconds() / 60
+                    # Simple approach: both are Unix timestamps, just calculate difference
+                    # If result is negative, it means clocks are offset
+                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60
                     
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
