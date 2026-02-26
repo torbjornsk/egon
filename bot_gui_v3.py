@@ -235,9 +235,21 @@ class BotGUI:
             self.m1_widgets = {}
             widgets = self.m1_widgets
         
+        # === INFO GRID (2 columns) ===
+        info_container = tk.Frame(bot_frame, bg=self.bg_dark)
+        info_container.pack(fill=tk.BOTH, expand=False, padx=10, pady=5)
+        
+        # Configure grid weights
+        info_container.columnconfigure(0, weight=1)  # Left column
+        info_container.columnconfigure(1, weight=1)  # Right column
+        
+        # === LEFT COLUMN ===
+        left_column = tk.Frame(info_container, bg=self.bg_dark)
+        left_column.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(0, 5))
+        
         # === CONTROLS ===
-        controls_frame = ttk.LabelFrame(bot_frame, text="Controls", padding="8")
-        controls_frame.pack(fill=tk.X, padx=10, pady=5)
+        controls_frame = ttk.LabelFrame(left_column, text="Controls", padding="8")
+        controls_frame.pack(fill=tk.X, pady=(0, 5))
         
         controls = tk.Frame(controls_frame, bg=self.bg_dark)
         controls.pack(fill=tk.X)
@@ -260,8 +272,8 @@ class BotGUI:
         widgets['status_label'] = status_label
         
         # === MARKET INDICATORS ===
-        market_frame = ttk.LabelFrame(bot_frame, text="Market Indicators", padding="5")
-        market_frame.pack(fill=tk.X, padx=10, pady=5)
+        market_frame = ttk.LabelFrame(left_column, text="Market Indicators", padding="5")
+        market_frame.pack(fill=tk.X, pady=(0, 5))
         
         market_grid = tk.Frame(market_frame, bg=self.bg_dark)
         market_grid.pack(fill=tk.X)
@@ -275,29 +287,29 @@ class BotGUI:
         # RSI
         tk.Label(market_grid, text="RSI:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=2, sticky=tk.W, padx=(0,3))
         rsi_label = tk.Label(market_grid, text="0.0", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 9, 'bold'))
-        rsi_label.grid(row=0, column=3, sticky=tk.W, padx=(0,10))
+        rsi_label.grid(row=0, column=3, sticky=tk.W)
         widgets['rsi_label'] = rsi_label
         
         # ATR
-        tk.Label(market_grid, text="ATR:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=4, sticky=tk.W, padx=(0,3))
+        tk.Label(market_grid, text="ATR:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
         atr_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8))
-        atr_label.grid(row=0, column=5, sticky=tk.W)
+        atr_label.grid(row=1, column=1, sticky=tk.W, pady=(3,0))
         widgets['atr_label'] = atr_label
         
         # EMAs
-        tk.Label(market_grid, text="EMA Fast:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
+        tk.Label(market_grid, text="EMA Fast:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=2, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
         ema_fast_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.success_color, font=('Arial', 8))
-        ema_fast_label.grid(row=1, column=1, sticky=tk.W, padx=(0,10), pady=(3,0))
+        ema_fast_label.grid(row=2, column=1, sticky=tk.W, pady=(3,0))
         widgets['ema_fast_label'] = ema_fast_label
         
-        tk.Label(market_grid, text="EMA Slow:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=2, sticky=tk.W, padx=(0,3), pady=(3,0))
+        tk.Label(market_grid, text="EMA Slow:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=2, column=2, sticky=tk.W, padx=(0,3), pady=(3,0))
         ema_slow_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 8))
-        ema_slow_label.grid(row=1, column=3, sticky=tk.W, pady=(3,0))
+        ema_slow_label.grid(row=2, column=3, sticky=tk.W, pady=(3,0))
         widgets['ema_slow_label'] = ema_slow_label
         
         # === ENTRY CONDITIONS ===
-        entry_frame = ttk.LabelFrame(bot_frame, text="Entry Conditions", padding="5")
-        entry_frame.pack(fill=tk.X, padx=10, pady=5)
+        entry_frame = ttk.LabelFrame(left_column, text="Entry Conditions", padding="5")
+        entry_frame.pack(fill=tk.X)
         
         entry_container = tk.Frame(entry_frame, bg=self.bg_dark)
         entry_container.pack(fill=tk.X)
@@ -309,14 +321,18 @@ class BotGUI:
             label.pack(fill=tk.X, pady=1)
             widgets['entry_labels'].append(label)
         
+        # === RIGHT COLUMN ===
+        right_column = tk.Frame(info_container, bg=self.bg_dark)
+        right_column.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(5, 0))
+        
         # === POSITIONS (2 STATIC CARDS) ===
-        positions_frame = ttk.LabelFrame(bot_frame, text="Open Positions (0/2)", padding="5")
-        positions_frame.pack(fill=tk.X, padx=10, pady=5)
+        positions_frame = ttk.LabelFrame(right_column, text="Open Positions (0/2)", padding="5")
+        positions_frame.pack(fill=tk.BOTH, expand=True)
         widgets['positions_frame'] = positions_frame
         
         # Container for 2 position cards
         positions_container = tk.Frame(positions_frame, bg=self.bg_dark)
-        positions_container.pack(fill=tk.X)
+        positions_container.pack(fill=tk.BOTH, expand=True)
         
         # Create 2 static position card slots
         widgets['position_cards'] = []
@@ -370,12 +386,12 @@ class BotGUI:
                 'exit_labels': exit_labels
             })
         
-        # === LOG (REDUCED SIZE) ===
+        # === LOG (MORE VERTICAL SPACE) ===
         log_frame = ttk.LabelFrame(bot_frame, text="Log", padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         log_text = tk.Text(log_frame, wrap=tk.WORD, bg=self.bg_medium, fg=self.fg_color,
-                          insertbackground=self.fg_color, font=('Consolas', 8), height=8)
+                          insertbackground=self.fg_color, font=('Consolas', 8))
         log_scrollbar = ttk.Scrollbar(log_frame, command=log_text.yview)
         log_text.config(yscrollcommand=log_scrollbar.set)
         
