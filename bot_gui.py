@@ -766,11 +766,18 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} < ${target_price:.2f}")
                     
-                    # 3. Time-based exit (10 min for M1)
-                    if bot_name == "M1" and pos['time_held'] >= 10 and current_price < pos['entry']:
-                        exit_conditions.append(f"⚠ Time Exit: {pos['time_held']:.0f} min (losing)")
+                    # 3. Time-based exit (10 min for M1 only when losing)
+                    if bot_name == "M1":
+                        if pos['time_held'] >= 10 and current_price < pos['entry']:
+                            exit_conditions.append(f"⚠ Time: {pos['time_held']:.0f} min (will exit if still losing)")
+                        elif pos['time_held'] >= 10:
+                            exit_conditions.append(f"✅ Time: {pos['time_held']:.0f} min (holding winner)")
+                        else:
+                            time_remaining = 10 - pos['time_held']
+                            exit_conditions.append(f"⏱ Time: {pos['time_held']:.0f}/10 min")
                     else:
-                        exit_conditions.append(f"❌ Time: {pos['time_held']:.0f} min")
+                        # M5 doesn't have time-based exits
+                        exit_conditions.append(f"⏱ Held: {pos['time_held']:.0f} min")
                     
                     # 4. Current P/L
                     pnl_pct = ((current_price - pos['entry']) / pos['entry']) * 100
@@ -793,11 +800,17 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} > ${target_price:.2f}")
                     
-                    # 3. Time-based exit
-                    if bot_name == "M1" and pos['time_held'] >= 10 and current_price > pos['entry']:
-                        exit_conditions.append(f"⚠ Time Exit: {pos['time_held']:.0f} min (losing)")
+                    # 3. Time-based exit (10 min for M1 only when losing)
+                    if bot_name == "M1":
+                        if pos['time_held'] >= 10 and current_price > pos['entry']:
+                            exit_conditions.append(f"⚠ Time: {pos['time_held']:.0f} min (will exit if still losing)")
+                        elif pos['time_held'] >= 10:
+                            exit_conditions.append(f"✅ Time: {pos['time_held']:.0f} min (holding winner)")
+                        else:
+                            exit_conditions.append(f"⏱ Time: {pos['time_held']:.0f}/10 min")
                     else:
-                        exit_conditions.append(f"❌ Time: {pos['time_held']:.0f} min")
+                        # M5 doesn't have time-based exits
+                        exit_conditions.append(f"⏱ Held: {pos['time_held']:.0f} min")
                     
                     # 4. Current P/L
                     pnl_pct = ((pos['entry'] - current_price) / pos['entry']) * 100
