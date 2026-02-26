@@ -172,7 +172,7 @@ class BotGUI:
             self.mt5_connected = False
     
     def fetch_trade_history(self):
-        """Fetch last 100 trades from MT5"""
+        """Fetch last 100 closed positions from MT5 (grouped by position)"""
         if not self.mt5_connected:
             return
         
@@ -186,23 +186,75 @@ class BotGUI:
             if deals is None or len(deals) == 0:
                 return
             
-            # Filter for XAUUSD and our magic numbers
-            filtered_deals = []
+            # Group deals by position_id to match entry and exit
+            position_map = {}
+            
             for deal in deals:
-                if deal.symbol == 'XAUUSD' and deal.magic in [234000, 234001]:
-                    filtered_deals.append({
-                        'time': datetime.fromtimestamp(deal.time),
-                        'ticket': deal.ticket,
-                        'type': 'BUY' if deal.type == mt5.ORDER_TYPE_BUY else 'SELL',
-                        'volume': deal.volume,
-                        'price': deal.price,
-                        'profit': deal.profit,
+                # Only process XAUUSD deals from our bots
+                if deal.symbol != 'XAUUSD' or deal.magic not in [234000, 234001]:
+                    continue
+                
+                # Skip balance operations (deposits, withdrawals, etc)
+                if deal.entry == 0:  # DEAL_ENTRY_OUT_BY or balance operation
+                    continue
+                
+                pos_id = deal.position_id
+                
+                if pos_id not in position_map:
+                    position_map[pos_id] = {
+                        'entry_deal': None,
+                        'exit_deal': None,
                         'bot': 'M5' if deal.magic == 234000 else 'M1'
+                    }
+                
+                # entry: 0=IN, 1=OUT, 2=INOUT, 3=OUT_BY
+                if deal.entry == 0:  # DEAL_ENTRY_IN - opening position
+                    position_map[pos_id]['entry_deal'] = deal
+                elif deal.entry == 1:  # DEAL_ENTRY_OUT - closing position
+                    position_map[pos_id]['exit_deal'] = deal
+            
+            # Convert to list of completed positions
+            completed_positions = []
+            for pos_id, data in position_map.items():
+                entry = data['entry_deal']
+                exit_deal = data['exit_deal']
+                
+                # Only include positions that have been closed
+                if entry and exit_deal:
+                    position_type = 'LONG' if entry.type == 0 else 'SHORT'  # 0=BUY, 1=SELL
+                    
+                    completed_positions.append({
+                        'position_id': pos_id,
+                        'bot': data['bot'],
+                        'type': position_type,
+                        'entry_time': datetime.fromtimestamp(entry.time),
+                        'exit_time': datetime.fromtimestamp(exit_deal.time),
+                        'entry_price': entry.price,
+                        'exit_price': exit_deal.price,
+                        'volume': entry.volume,
+                        'profit': exit_deal.profit,
+                        'is_closed': True
+                    })
+                elif entry and not exit_deal:
+                    # Position is still open
+                    position_type = 'LONG' if entry.type == 0 else 'SHORT'
+                    
+                    completed_positions.append({
+                        'position_id': pos_id,
+                        'bot': data['bot'],
+                        'type': position_type,
+                        'entry_time': datetime.fromtimestamp(entry.time),
+                        'exit_time': None,
+                        'entry_price': entry.price,
+                        'exit_price': None,
+                        'volume': entry.volume,
+                        'profit': 0,
+                        'is_closed': False
                     })
             
-            # Sort by time descending and take last 100
-            filtered_deals.sort(key=lambda x: x['time'], reverse=True)
-            self.trade_history = filtered_deals[:100]
+            # Sort by entry time descending and take last 100
+            completed_positions.sort(key=lambda x: x['entry_time'], reverse=True)
+            self.trade_history = completed_positions[:100]
             
         except Exception as e:
             print(f"Error fetching trade history: {e}")
@@ -226,7 +278,7 @@ class BotGUI:
     def setup_bot_side(self, parent, bot_name, bot_data, log_queue):
         """Setup a bot panel on the side"""
         bot_frame = tk.Frame(parent, bg=self.bg_dark)
-        parent.add(bot_frame, width=500, minsize=400)
+        parent.add(bot_frame, width=520, minsize=400)  # Fixed width for both sides
         
         # Title
         tk.Label(bot_frame, text=f"{bot_name} Bot", bg=self.bg_dark, fg=self.accent_color,
@@ -467,28 +519,30 @@ class BotGUI:
             self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
         # Trade history
-        history_frame = ttk.LabelFrame(center_frame, text="Trade History (Last 100)", padding="3")
+        history_frame = ttk.LabelFrame(center_frame, text="Trade History (Last 100 positions)", padding="3")
         history_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
         
         # Create treeview for trade history
-        columns = ('Time', 'Bot', 'Type', 'Volume', 'Price', 'Profit')
+        columns = ('Entry Time', 'Bot', 'Type', 'Volume', 'Entry', 'Exit', 'Profit')
         self.trade_tree = ttk.Treeview(history_frame, columns=columns, show='headings', height=10)
         
         # Define headings
-        self.trade_tree.heading('Time', text='Time')
+        self.trade_tree.heading('Entry Time', text='Entry Time')
         self.trade_tree.heading('Bot', text='Bot')
         self.trade_tree.heading('Type', text='Type')
-        self.trade_tree.heading('Volume', text='Volume')
-        self.trade_tree.heading('Price', text='Price')
+        self.trade_tree.heading('Volume', text='Vol')
+        self.trade_tree.heading('Entry', text='Entry')
+        self.trade_tree.heading('Exit', text='Exit')
         self.trade_tree.heading('Profit', text='Profit')
         
         # Define column widths
-        self.trade_tree.column('Time', width=140)
+        self.trade_tree.column('Entry Time', width=130)
         self.trade_tree.column('Bot', width=40)
         self.trade_tree.column('Type', width=50)
-        self.trade_tree.column('Volume', width=70)
-        self.trade_tree.column('Price', width=90)
-        self.trade_tree.column('Profit', width=90)
+        self.trade_tree.column('Volume', width=50)
+        self.trade_tree.column('Entry', width=80)
+        self.trade_tree.column('Exit', width=80)
+        self.trade_tree.column('Profit', width=80)
         
         # Scrollbar
         tree_scroll = ttk.Scrollbar(history_frame, orient=tk.VERTICAL, command=self.trade_tree.yview)
@@ -503,26 +557,47 @@ class BotGUI:
         for item in self.trade_tree.get_children():
             self.trade_tree.delete(item)
         
-        # Add trades
-        for trade in self.trade_history:
-            profit_str = f"${trade['profit']:.2f}"
+        # Add positions
+        for pos in self.trade_history:
+            entry_time_str = pos['entry_time'].strftime('%Y-%m-%d %H:%M')
+            
+            if pos['is_closed']:
+                # Closed position - show entry and exit
+                exit_str = f"${pos['exit_price']:.2f}"
+                profit_str = f"${pos['profit']:.2f}"
+                
+                # Color coding for closed positions
+                if pos['profit'] > 0:
+                    tag = 'profit'  # Green for profit (both LONG and SHORT)
+                else:
+                    tag = 'loss'  # Red for loss (both LONG and SHORT)
+            else:
+                # Open position - show as white (LONG) or yellow (SHORT)
+                exit_str = "OPEN"
+                profit_str = "-"
+                
+                if pos['type'] == 'LONG':
+                    tag = 'open_long'  # White for open LONG
+                else:
+                    tag = 'open_short'  # Yellow for open SHORT
+            
             values = (
-                trade['time'].strftime('%Y-%m-%d %H:%M:%S'),
-                trade['bot'],
-                trade['type'],
-                f"{trade['volume']:.2f}",
-                f"${trade['price']:.2f}",
+                entry_time_str,
+                pos['bot'],
+                pos['type'],
+                f"{pos['volume']:.2f}",
+                f"${pos['entry_price']:.2f}",
+                exit_str,
                 profit_str
             )
             
-            # Color code by profit
-            tag = 'profit' if trade['profit'] > 0 else 'loss' if trade['profit'] < 0 else 'neutral'
             self.trade_tree.insert('', tk.END, values=values, tags=(tag,))
         
-        # Configure tags
-        self.trade_tree.tag_configure('profit', foreground=self.success_color)
-        self.trade_tree.tag_configure('loss', foreground=self.error_color)
-        self.trade_tree.tag_configure('neutral', foreground=self.fg_color)
+        # Configure tags with colors
+        self.trade_tree.tag_configure('profit', foreground=self.success_color)  # Green
+        self.trade_tree.tag_configure('loss', foreground=self.error_color)  # Red
+        self.trade_tree.tag_configure('open_long', foreground=self.fg_color)  # White
+        self.trade_tree.tag_configure('open_short', foreground=self.warning_color)  # Yellow
     
     def update_displays(self):
         """Update all displays"""
