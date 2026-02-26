@@ -831,15 +831,10 @@ class BotGUI:
             
             # Get open positions
             positions = mt5.positions_get(symbol=self.mt5_symbol)
-            print(f"[DEBUG] MT5 positions_get returned: {positions}")
-            print(f"[DEBUG] Type: {type(positions)}, Length: {len(positions) if positions else 0}")
             
             if positions is not None and len(positions) > 0:
-                print(f"[DEBUG] Found {len(positions)} total positions")
                 m5_positions = [p for p in positions if p.magic == 234000]
                 m1_positions = [p for p in positions if p.magic == 234001]
-                
-                print(f"[DEBUG] M5 positions: {len(m5_positions)}, M1 positions: {len(m1_positions)}")
                 
                 self.m5_data['positions'] = len(m5_positions)
                 self.m1_data['positions'] = len(m1_positions)
@@ -847,7 +842,8 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
-                    print(f"[DEBUG] M5 position: ticket={pos.ticket}, type={pos.type}, magic={pos.magic}")
+                    # Adjust for MT5 being 1 hour ahead
+                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60 + 60
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -856,13 +852,14 @@ class BotGUI:
                         'sl': pos.sl,
                         'tp': pos.tp,
                         'profit': pos.profit,
-                        'time_held': (datetime.now().timestamp() - pos.time) / 60
+                        'time_held': time_held_minutes
                     })
                 
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
-                    print(f"[DEBUG] M1 position: ticket={pos.ticket}, type={pos.type}, magic={pos.magic}")
+                    # Adjust for MT5 being 1 hour ahead
+                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60 + 60
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -871,10 +868,9 @@ class BotGUI:
                         'sl': pos.sl,
                         'tp': pos.tp,
                         'profit': pos.profit,
-                        'time_held': (datetime.now().timestamp() - pos.time) / 60
+                        'time_held': time_held_minutes
                     })
             else:
-                print(f"[DEBUG] No positions found or positions_get returned None")
                 self.m5_data['positions'] = 0
                 self.m1_data['positions'] = 0
                 self.m5_data['position_details'] = []
@@ -1051,20 +1047,10 @@ class BotGUI:
         # Positions - update position count in frame title
         widgets['positions_frame'].config(text=f"Positions ({data['positions']}/2)")
         
-        # Debug: print position data
-        if data['positions'] > 0:
-            print(f"{bot_name} has {data['positions']} positions, details: {len(data['position_details'])} items")
-        
         self.update_position_cards(widgets['position_cards'], data['position_details'], price, rsi, bot_name)
     
     def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
         """Update 2 static position cards with exit signals"""
-        # Debug output
-        print(f"[DEBUG] update_position_cards called for {bot_name}")
-        print(f"[DEBUG] Number of positions: {len(positions)}")
-        print(f"[DEBUG] Positions data: {positions}")
-        print(f"[DEBUG] Current price: {current_price}, RSI: {rsi}")
-        
         # Get exit thresholds
         if bot_name == "M5":
             rsi_exit_long = 75
@@ -1076,12 +1062,10 @@ class BotGUI:
         # Update each card slot
         for i in range(2):
             card = cards[i]
-            print(f"[DEBUG] Processing card {i}")
             
             if i < len(positions):
                 # Position exists
                 pos = positions[i]
-                print(f"[DEBUG] Card {i} - Position exists: {pos}")
                 
                 # Update header
                 type_color = self.success_color if pos['type'] == 'LONG' else self.error_color
@@ -1177,17 +1161,13 @@ class BotGUI:
                 for j, condition in enumerate(exit_conditions):
                     if j < len(card['exit_labels']):
                         card['exit_labels'][j].config(text=condition)
-                        print(f"[DEBUG] Card {i} exit label {j}: {condition}")
                 
                 # Clear any unused exit labels
                 for j in range(len(exit_conditions), len(card['exit_labels'])):
                     card['exit_labels'][j].config(text="")
                 
-                print(f"[DEBUG] Card {i} updated successfully")
-                
             else:
                 # No position - show empty
-                print(f"[DEBUG] Card {i} - No position (empty)")
                 card['ticket_label'].config(
                     text=f"Pos {i+1}: Empty", 
                     fg=self.neutral_color
