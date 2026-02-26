@@ -123,6 +123,19 @@ class BotGUI:
         style.configure('TLabel', background=self.bg_dark, foreground=self.fg_color)
         style.configure('TButton', background=self.bg_medium, foreground=self.fg_color, bordercolor=self.bg_light)
         style.map('TButton', background=[('active', self.accent_color)])
+        
+        # Configure Treeview (table) for dark mode
+        style.configure('Treeview',
+                       background=self.bg_medium,
+                       foreground=self.fg_color,
+                       fieldbackground=self.bg_medium,
+                       borderwidth=0)
+        style.configure('Treeview.Heading',
+                       background=self.bg_light,
+                       foreground=self.fg_color,
+                       borderwidth=1)
+        style.map('Treeview', background=[('selected', self.accent_color)])
+        style.map('Treeview.Heading', background=[('active', self.accent_color)])
     
     def connect_mt5(self):
         """Connect to MT5 for real-time data"""
@@ -574,22 +587,6 @@ class BotGUI:
                 self.market_data['price'] = tick.bid
         except Exception as e:
             print(f"Error fetching market data: {e}")
-    
-    def start_m5(self):
-        """Start M5 bot"""
-        pass  # Implement bot starting logic
-    
-    def stop_m5(self):
-        """Stop M5 bot"""
-        pass
-    
-    def start_m1(self):
-        """Start M1 bot"""
-        pass
-    
-    def stop_m1(self):
-        """Stop M1 bot"""
-        pass
     
     def on_closing(self):
         """Handle window closing"""
