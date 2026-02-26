@@ -178,8 +178,9 @@ class BotGUI:
         
         try:
             # Get deals from last 30 days
+            # Add extra buffer to to_date since MT5 might be ahead
             from_date = datetime.now() - pd.Timedelta(days=30)
-            to_date = datetime.now() + pd.Timedelta(hours=1)
+            to_date = datetime.now() + pd.Timedelta(hours=3)  # Extra buffer for timezone
             deals = mt5.history_deals_get(from_date, to_date)
             
             if deals is None or len(deals) == 0:
@@ -248,6 +249,8 @@ class BotGUI:
             # Sort by entry time descending and take last 100
             completed_positions.sort(key=lambda x: x['entry_time'], reverse=True)
             self.trade_history = completed_positions[:100]
+            
+            print(f"[HISTORY DEBUG] Fetched {len(completed_positions)} closed positions, showing {len(self.trade_history)}")
             
         except Exception as e:
             print(f"Error fetching trade history: {e}")
@@ -897,9 +900,13 @@ class BotGUI:
             # Get open positions
             positions = mt5.positions_get(symbol=self.mt5_symbol)
             
+            print(f"[POSITION DEBUG] Total positions: {len(positions) if positions else 0}")
+            
             if positions is not None and len(positions) > 0:
                 m5_positions = [p for p in positions if p.magic == 234000]
                 m1_positions = [p for p in positions if p.magic == 234001]
+                
+                print(f"[POSITION DEBUG] M5 positions: {len(m5_positions)}, M1 positions: {len(m1_positions)}")
                 
                 self.m5_data['positions'] = len(m5_positions)
                 self.m1_data['positions'] = len(m1_positions)
@@ -954,8 +961,6 @@ class BotGUI:
             else:
                 self.m5_data['positions'] = 0
                 self.m1_data['positions'] = 0
-                self.m5_data['position_details'] = []
-                self.m1_data['position_details'] = []
                 self.m5_data['position_details'] = []
                 self.m1_data['position_details'] = []
                 
