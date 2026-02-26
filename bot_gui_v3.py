@@ -263,18 +263,21 @@ class BotGUI:
         main_paned.pack(fill=tk.BOTH, expand=True)
         
         # === LEFT: M5 BOT ===
-        self.setup_bot_side(main_paned, "M5", self.m5_data, self.m5_queue)
+        m5_frame = self.setup_bot_side(main_paned, "M5", self.m5_data, self.m5_queue)
+        main_paned.add(m5_frame, width=520, minsize=400, stretch="never")
         
         # === CENTER: ACCOUNT + CHART + TRADE HISTORY ===
-        self.setup_center_panel(main_paned)
+        center_frame = self.setup_center_panel(main_paned)
+        main_paned.add(center_frame, width=800, minsize=600, stretch="always")
         
         # === RIGHT: M1 BOT ===
-        self.setup_bot_side(main_paned, "M1", self.m1_data, self.m1_queue)
+        m1_frame = self.setup_bot_side(main_paned, "M1", self.m1_data, self.m1_queue)
+        main_paned.add(m1_frame, width=520, minsize=400, stretch="never")
     
     def setup_bot_side(self, parent, bot_name, bot_data, log_queue):
         """Setup a bot panel on the side"""
         bot_frame = tk.Frame(parent, bg=self.bg_dark)
-        parent.add(bot_frame, width=520, minsize=400)  # Fixed width for both sides
+        # Don't add to parent here - return the frame instead
         
         # Title
         tk.Label(bot_frame, text=f"{bot_name} Bot", bg=self.bg_dark, fg=self.accent_color,
@@ -454,11 +457,13 @@ class BotGUI:
             self.m5_log_widget = log_text
         else:
             self.m1_log_widget = log_text
+        
+        return bot_frame
     
     def setup_center_panel(self, parent):
         """Setup center panel with account info, chart, and trade history"""
         center_frame = tk.Frame(parent, bg=self.bg_dark)
-        parent.add(center_frame, width=800, minsize=600)
+        # Don't add to parent here - return the frame instead
         
         # Account info
         account_frame = ttk.LabelFrame(center_frame, text="Account", padding="5")
@@ -546,6 +551,8 @@ class BotGUI:
         
         self.trade_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        return center_frame
     
     def update_trade_history_display(self):
         """Update the trade history treeview"""
