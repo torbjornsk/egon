@@ -125,14 +125,16 @@ class BotGUI:
         try:
             with open('config/m5_params.json', 'r') as f:
                 self.m5_config = json.load(f)
-        except:
-            print("Warning: Could not load M5 config")
+                print(f"[CONFIG] M5 loaded: RSI buy={self.m5_config.get('rsi_buy')}, sell={self.m5_config.get('rsi_sell')}")
+        except Exception as e:
+            print(f"Warning: Could not load M5 config: {e}")
         
         try:
             with open('config/m1_params.json', 'r') as f:
                 self.m1_config = json.load(f)
-        except:
-            print("Warning: Could not load M1 config")
+                print(f"[CONFIG] M1 loaded: RSI buy={self.m1_config.get('rsi_buy')}, sell={self.m1_config.get('rsi_sell')}")
+        except Exception as e:
+            print(f"Warning: Could not load M1 config: {e}")
         
         # Connect to MT5
         if MT5_AVAILABLE:
