@@ -947,8 +947,9 @@ class BotGUI:
                 # Update position details for M5
                 self.m5_data['position_details'] = []
                 for pos in m5_positions:
-                    # Adjust for MT5 being 1 hour ahead
-                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60 + 60
+                    # Adjust for MT5 being 1 hour ahead of local time
+                    # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
+                    time_held_minutes = (datetime.now().timestamp() - (pos.time - 3600)) / 60
                     self.m5_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
@@ -963,8 +964,9 @@ class BotGUI:
                 # Update position details for M1
                 self.m1_data['position_details'] = []
                 for pos in m1_positions:
-                    # Adjust for MT5 being 1 hour ahead
-                    time_held_minutes = (datetime.now().timestamp() - pos.time) / 60 + 60
+                    # Adjust for MT5 being 1 hour ahead of local time
+                    # pos.time is in MT5 timezone, we need to subtract 1 hour from it to match local
+                    time_held_minutes = (datetime.now().timestamp() - (pos.time - 3600)) / 60
                     self.m1_data['position_details'].append({
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
