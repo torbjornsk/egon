@@ -241,6 +241,9 @@ class BotGUI:
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
                         'entry': pos.price_open,
+                        'current': pos.price_current,
+                        'sl': pos.sl,
+                        'tp': pos.tp,
                         'profit': pos.profit,
                         'time_held': (datetime.now().timestamp() - pos.time) / 60
                     })
@@ -252,6 +255,9 @@ class BotGUI:
                         'ticket': str(pos.ticket),
                         'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
                         'entry': pos.price_open,
+                        'current': pos.price_current,
+                        'sl': pos.sl,
+                        'tp': pos.tp,
                         'profit': pos.profit,
                         'time_held': (datetime.now().timestamp() - pos.time) / 60
                     })
@@ -747,7 +753,17 @@ class BotGUI:
                     text=f"Entry: ${pos['entry']:.2f} | Held: {pos['time_held']:.0f} min"
                 )
                 
-                # Calculate exit signals
+                # Add price info line (Current, SL, TP)
+                price_info = f"Current: ${pos.get('current', current_price):.2f}"
+                if pos.get('sl', 0) > 0:
+                    price_info += f" | SL: ${pos['sl']:.2f}"
+                if pos.get('tp', 0) > 0:
+                    price_info += f" | TP: ${pos['tp']:.2f}"
+                
+                # Update the first exit label to show price info instead
+                card['exit_labels'][0].config(text=price_info, fg=self.fg_color)
+                
+                # Calculate exit signals (start from index 1 now)
                 exit_conditions = []
                 
                 if pos['type'] == 'LONG':
@@ -816,8 +832,8 @@ class BotGUI:
                     pnl_pct = ((pos['entry'] - current_price) / pos['entry']) * 100
                     exit_conditions.append(f"P/L: {pnl_pct:+.2f}%")
                 
-                # Update exit labels
-                for j, condition in enumerate(exit_conditions):
+                # Update exit labels (starting from index 1, since 0 is price info)
+                for j, condition in enumerate(exit_conditions, start=1):
                     if j < len(card['exit_labels']):
                         card['exit_labels'][j].config(text=condition)
                 
@@ -833,7 +849,7 @@ class BotGUI:
                 card['profit_label'].config(text="")
                 card['entry_info'].config(text="")
                 
-                # Clear exit labels
+                # Clear all exit labels
                 for label in card['exit_labels']:
                     label.config(text="")
                 
