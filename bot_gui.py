@@ -38,7 +38,7 @@ class BotGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Gold Trading Bot Dashboard")
-        self.root.geometry("1800x1000")  # Wider to match your screenshot
+        self.root.geometry("1920x1080")  # Full HD size for proper initial display
         
         # Dark mode colors
         self.bg_dark = '#1e1e1e'
