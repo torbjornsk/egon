@@ -1199,23 +1199,6 @@ class BotGUI:
                 for label in card['exit_labels']:
                     label.config(text="")
     
-    def fetch_market_data(self):
-        """Fetch market data from MT5"""
-        if not self.mt5_connected:
-            return
-        
-        try:
-            account = mt5.account_info()
-            if account:
-                self.market_data['balance'] = account.balance
-                self.market_data['equity'] = account.equity
-            
-            tick = mt5.symbol_info_tick(self.mt5_symbol)
-            if tick:
-                self.market_data['price'] = tick.bid
-        except Exception as e:
-            print(f"Error fetching market data: {e}")
-    
     def on_closing(self):
         """Handle window closing"""
         if self.m5_process:
