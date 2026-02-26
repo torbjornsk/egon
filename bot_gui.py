@@ -22,6 +22,18 @@ except ImportError:
     MT5_AVAILABLE = False
     print("Warning: MetaTrader5 not available. Market data will not update.")
 
+try:
+    import matplotlib
+    matplotlib.use('TkAgg')
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from matplotlib.figure import Figure
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    print("Warning: Matplotlib not available. Price chart will not display.")
+
 class BotGUI:
     def __init__(self, root):
         self.root = root
@@ -333,7 +345,7 @@ class BotGUI:
         
         main_frame.columnconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(2, weight=1)
+        main_frame.rowconfigure(3, weight=1)  # Changed from 2 to 3 to accommodate chart
         
         # ===== SHARED ACCOUNT INFO =====
         account_frame = ttk.LabelFrame(main_frame, text="Account", padding="8")
@@ -354,9 +366,31 @@ class BotGUI:
         self.account_positions_label = tk.Label(acc_grid, text="0/4", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 11, 'bold'))
         self.account_positions_label.grid(row=0, column=5, sticky=tk.W)
         
+        # ===== PRICE CHART =====
+        if MATPLOTLIB_AVAILABLE:
+            chart_frame = ttk.LabelFrame(main_frame, text="Price Chart (Last 50 candles)", padding="5")
+            chart_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+            
+            # Create matplotlib figure
+            self.fig = Figure(figsize=(8, 3), dpi=80, facecolor='#1e1e1e')
+            self.ax = self.fig.add_subplot(111, facecolor='#2d2d2d')
+            
+            # Style the chart
+            self.ax.tick_params(colors='#e0e0e0', labelsize=8)
+            self.ax.spines['bottom'].set_color('#3e3e3e')
+            self.ax.spines['top'].set_color('#3e3e3e')
+            self.ax.spines['left'].set_color('#3e3e3e')
+            self.ax.spines['right'].set_color('#3e3e3e')
+            self.ax.grid(True, alpha=0.2, color='#3e3e3e')
+            
+            # Embed in tkinter
+            self.canvas = FigureCanvasTkAgg(self.fig, master=chart_frame)
+            self.canvas.draw()
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
         # ===== SHARED PRICE =====
         price_frame = ttk.LabelFrame(main_frame, text="Current Price", padding="5")
-        price_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        price_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
         self.shared_price_label = tk.Label(price_frame, text="$0.00", bg=self.bg_dark, fg=self.warning_color, font=('Arial', 16, 'bold'))
         self.shared_price_label.pack()
@@ -371,7 +405,7 @@ class BotGUI:
         """Setup a bot panel"""
         timeframe = "M5" if bot_name == "M5" else "M1"
         bot_frame = ttk.LabelFrame(parent, text=f"{bot_name} Bot", padding="8")
-        bot_frame.grid(row=2, column=column, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)
+        bot_frame.grid(row=3, column=column, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5, pady=5)  # Changed from row=2 to row=3
         bot_frame.columnconfigure(0, weight=1)
         bot_frame.rowconfigure(3, weight=1)
         
@@ -793,6 +827,60 @@ class BotGUI:
                 # Show card
                 card['frame'].pack(fill=tk.X, pady=3)
     
+    def update_price_chart(self):
+        """Update the price chart with recent candles"""
+        if not MATPLOTLIB_AVAILABLE or not self.mt5_connected:
+            return
+        
+        try:
+            # Get last 50 M5 candles
+            rates = mt5.copy_rates_from_pos(self.mt5_symbol, mt5.TIMEFRAME_M5, 0, 50)
+            if rates is None or len(rates) == 0:
+                return
+            
+            df = pd.DataFrame(rates)
+            df['time'] = pd.to_datetime(df['time'], unit='s')
+            
+            # Clear the axis
+            self.ax.clear()
+            
+            # Plot candlesticks
+            for i in range(len(df)):
+                row = df.iloc[i]
+                
+                # Determine color
+                color = '#4ec9b0' if row['close'] >= row['open'] else '#f48771'  # Green for up, red for down
+                
+                # Draw candle body
+                body_height = abs(row['close'] - row['open'])
+                body_bottom = min(row['open'], row['close'])
+                
+                rect = Rectangle((i - 0.3, body_bottom), 0.6, body_height, 
+                               facecolor=color, edgecolor=color, alpha=0.8)
+                self.ax.add_patch(rect)
+                
+                # Draw wicks
+                self.ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1, alpha=0.6)
+            
+            # Style
+            self.ax.set_xlim(-1, len(df))
+            self.ax.set_ylim(df['low'].min() * 0.9999, df['high'].max() * 1.0001)
+            self.ax.tick_params(colors='#e0e0e0', labelsize=8)
+            self.ax.spines['bottom'].set_color('#3e3e3e')
+            self.ax.spines['top'].set_color('#3e3e3e')
+            self.ax.spines['left'].set_color('#3e3e3e')
+            self.ax.spines['right'].set_color('#3e3e3e')
+            self.ax.grid(True, alpha=0.2, color='#3e3e3e')
+            
+            # Format y-axis to show price
+            self.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
+            
+            # Redraw
+            self.canvas.draw()
+            
+        except Exception as e:
+            print(f"Error updating chart: {e}")
+    
     def update_displays(self):
         """Update all displays"""
         # Update M5 log
@@ -818,6 +906,7 @@ class BotGUI:
         # Fetch fresh market data from MT5
         if self.mt5_connected:
             self.fetch_market_data()
+            self.update_price_chart()  # Update chart
         
         # Update shared account info
         self.account_balance_label.config(text=f"${self.market_data['balance']:.2f}")
