@@ -38,7 +38,7 @@ class BotGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Gold Trading Bot Dashboard")
-        self.root.geometry("1400x900")  # Better for 2560x1440 screens
+        self.root.geometry("1600x1000")  # Increased from 1400x900
         
         # Dark mode colors
         self.bg_dark = '#1e1e1e'
@@ -900,6 +900,13 @@ class BotGUI:
             
             # Format y-axis to show price
             self.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
+            
+            # Format x-axis to show timestamps
+            # Show every 10th candle to avoid crowding
+            tick_positions = list(range(0, len(df), 10))
+            tick_labels = [df.iloc[i]['time'].strftime('%H:%M') for i in tick_positions]
+            self.ax.set_xticks(tick_positions)
+            self.ax.set_xticklabels(tick_labels, rotation=45, ha='right')
             
             # Redraw
             self.canvas.draw()
