@@ -175,8 +175,10 @@ class BotGUI:
         
         try:
             # Get deals from last 30 days
+            # Add 1 hour to the end time to account for MT5 being 1 hour ahead
             from_date = datetime.now() - pd.Timedelta(days=30)
-            deals = mt5.history_deals_get(from_date, datetime.now())
+            to_date = datetime.now() + pd.Timedelta(hours=1)
+            deals = mt5.history_deals_get(from_date, to_date)
             
             if deals is None or len(deals) == 0:
                 return
