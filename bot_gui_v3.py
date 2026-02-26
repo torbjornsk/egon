@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 import re
 import os
+import json
 
 try:
     import MetaTrader5 as mt5
