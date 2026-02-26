@@ -178,7 +178,6 @@ class BotGUI:
         
         try:
             # Get deals from last 30 days
-            # Add 1 hour to the end time to account for MT5 being 1 hour ahead
             from_date = datetime.now() - pd.Timedelta(days=30)
             to_date = datetime.now() + pd.Timedelta(hours=1)
             deals = mt5.history_deals_get(from_date, to_date)
@@ -194,60 +193,55 @@ class BotGUI:
                 if deal.symbol != 'XAUUSD' or deal.magic not in [234000, 234001]:
                     continue
                 
-                # Skip balance operations (deposits, withdrawals, etc)
-                if deal.entry == 0:  # DEAL_ENTRY_OUT_BY or balance operation
-                    continue
-                
                 pos_id = deal.position_id
                 
                 if pos_id not in position_map:
                     position_map[pos_id] = {
-                        'entry_deal': None,
-                        'exit_deal': None,
+                        'deals': [],
                         'bot': 'M5' if deal.magic == 234000 else 'M1'
                     }
                 
-                # entry: 0=IN, 1=OUT, 2=INOUT, 3=OUT_BY
-                if deal.entry == 0:  # DEAL_ENTRY_IN - opening position
-                    position_map[pos_id]['entry_deal'] = deal
-                elif deal.entry == 1:  # DEAL_ENTRY_OUT - closing position
-                    position_map[pos_id]['exit_deal'] = deal
+                position_map[pos_id]['deals'].append(deal)
             
-            # Convert to list of completed positions
+            # Convert to list of positions
             completed_positions = []
             for pos_id, data in position_map.items():
-                entry = data['entry_deal']
-                exit_deal = data['exit_deal']
+                deals_list = data['deals']
                 
-                # Only include positions that have been closed
-                if entry and exit_deal:
-                    position_type = 'LONG' if entry.type == 0 else 'SHORT'  # 0=BUY, 1=SELL
-                    
+                # Sort deals by time
+                deals_list.sort(key=lambda d: d.time)
+                
+                # First deal is entry, last deal is exit (if closed)
+                entry_deal = deals_list[0]
+                exit_deal = deals_list[-1] if len(deals_list) > 1 else None
+                
+                position_type = 'LONG' if entry_deal.type == 0 else 'SHORT'  # 0=BUY, 1=SELL
+                
+                if exit_deal and exit_deal.time != entry_deal.time:
+                    # Closed position
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
                         'type': position_type,
-                        'entry_time': datetime.fromtimestamp(entry.time),
+                        'entry_time': datetime.fromtimestamp(entry_deal.time),
                         'exit_time': datetime.fromtimestamp(exit_deal.time),
-                        'entry_price': entry.price,
+                        'entry_price': entry_deal.price,
                         'exit_price': exit_deal.price,
-                        'volume': entry.volume,
+                        'volume': entry_deal.volume,
                         'profit': exit_deal.profit,
                         'is_closed': True
                     })
-                elif entry and not exit_deal:
-                    # Position is still open
-                    position_type = 'LONG' if entry.type == 0 else 'SHORT'
-                    
+                else:
+                    # Open position (only one deal)
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
                         'type': position_type,
-                        'entry_time': datetime.fromtimestamp(entry.time),
+                        'entry_time': datetime.fromtimestamp(entry_deal.time),
                         'exit_time': None,
-                        'entry_price': entry.price,
+                        'entry_price': entry_deal.price,
                         'exit_price': None,
-                        'volume': entry.volume,
+                        'volume': entry_deal.volume,
                         'profit': 0,
                         'is_closed': False
                     })
@@ -258,6 +252,8 @@ class BotGUI:
             
         except Exception as e:
             print(f"Error fetching trade history: {e}")
+            import traceback
+            traceback.print_exc()
     
     def setup_ui(self):
         """Setup the new UI layout"""
