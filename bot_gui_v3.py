@@ -76,12 +76,24 @@ class BotGUI:
             'status': 'Stopped',
             'positions': 0,
             'position_details': [],
+            'max_positions': False,
+            'gap_warmup': False,
+            'cooldown_active': False,
+            'ready_for_entry': False,
+            'has_signal': False,
+            'signal': 'None'
         }
         
         self.m1_data = {
             'status': 'Stopped',
             'positions': 0,
             'position_details': [],
+            'max_positions': False,
+            'gap_warmup': False,
+            'cooldown_active': False,
+            'ready_for_entry': False,
+            'has_signal': False,
+            'signal': 'None'
         }
         
         # Market data
@@ -215,13 +227,20 @@ class BotGUI:
         tk.Label(bot_frame, text=f"{bot_name} Bot", bg=self.bg_dark, fg=self.accent_color,
                 font=('Arial', 12, 'bold')).pack(pady=5)
         
-        # Bot controls and info (horizontal layout)
-        info_frame = ttk.LabelFrame(bot_frame, text="Controls & Status", padding="10")
-        info_frame.pack(fill=tk.X, padx=10, pady=5)
+        # Store widgets
+        if bot_name == "M5":
+            self.m5_widgets = {}
+            widgets = self.m5_widgets
+        else:
+            self.m1_widgets = {}
+            widgets = self.m1_widgets
         
-        # Controls
-        controls = tk.Frame(info_frame, bg=self.bg_dark)
-        controls.pack(fill=tk.X, pady=5)
+        # === CONTROLS ===
+        controls_frame = ttk.LabelFrame(bot_frame, text="Controls", padding="8")
+        controls_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        controls = tk.Frame(controls_frame, bg=self.bg_dark)
+        controls.pack(fill=tk.X)
         
         start_btn = ttk.Button(controls, text="Start",
                               command=lambda: self.start_m5() if bot_name == "M5" else self.start_m1(),
@@ -233,23 +252,130 @@ class BotGUI:
                              state=tk.DISABLED, width=10)
         stop_btn.pack(side=tk.LEFT, padx=5)
         
-        status_label = ttk.Label(controls, text="Stopped", foreground=self.neutral_color)
+        status_label = ttk.Label(controls, text="Stopped", foreground=self.neutral_color, font=('Arial', 9))
         status_label.pack(side=tk.LEFT, padx=10)
         
-        # Store widgets
-        if bot_name == "M5":
-            self.m5_widgets = {'start_btn': start_btn, 'stop_btn': stop_btn, 'status_label': status_label}
-            self.m5_log_widget = None
-        else:
-            self.m1_widgets = {'start_btn': start_btn, 'stop_btn': stop_btn, 'status_label': status_label}
-            self.m1_log_widget = None
+        widgets['start_btn'] = start_btn
+        widgets['stop_btn'] = stop_btn
+        widgets['status_label'] = status_label
         
-        # Log
+        # === MARKET INDICATORS ===
+        market_frame = ttk.LabelFrame(bot_frame, text="Market Indicators", padding="5")
+        market_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        market_grid = tk.Frame(market_frame, bg=self.bg_dark)
+        market_grid.pack(fill=tk.X)
+        
+        # Trend
+        tk.Label(market_grid, text="Trend:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=0, sticky=tk.W, padx=(0,3))
+        trend_label = tk.Label(market_grid, text="N/A", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 9))
+        trend_label.grid(row=0, column=1, sticky=tk.W, padx=(0,10))
+        widgets['trend_label'] = trend_label
+        
+        # RSI
+        tk.Label(market_grid, text="RSI:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=2, sticky=tk.W, padx=(0,3))
+        rsi_label = tk.Label(market_grid, text="0.0", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 9, 'bold'))
+        rsi_label.grid(row=0, column=3, sticky=tk.W, padx=(0,10))
+        widgets['rsi_label'] = rsi_label
+        
+        # ATR
+        tk.Label(market_grid, text="ATR:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=4, sticky=tk.W, padx=(0,3))
+        atr_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8))
+        atr_label.grid(row=0, column=5, sticky=tk.W)
+        widgets['atr_label'] = atr_label
+        
+        # EMAs
+        tk.Label(market_grid, text="EMA Fast:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
+        ema_fast_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.success_color, font=('Arial', 8))
+        ema_fast_label.grid(row=1, column=1, sticky=tk.W, padx=(0,10), pady=(3,0))
+        widgets['ema_fast_label'] = ema_fast_label
+        
+        tk.Label(market_grid, text="EMA Slow:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=2, sticky=tk.W, padx=(0,3), pady=(3,0))
+        ema_slow_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 8))
+        ema_slow_label.grid(row=1, column=3, sticky=tk.W, pady=(3,0))
+        widgets['ema_slow_label'] = ema_slow_label
+        
+        # === ENTRY CONDITIONS ===
+        entry_frame = ttk.LabelFrame(bot_frame, text="Entry Conditions", padding="5")
+        entry_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        entry_container = tk.Frame(entry_frame, bg=self.bg_dark)
+        entry_container.pack(fill=tk.X)
+        
+        # Create labels for entry conditions
+        widgets['entry_labels'] = []
+        for i in range(5):  # 5 condition rows
+            label = tk.Label(entry_container, text="", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8), anchor=tk.W)
+            label.pack(fill=tk.X, pady=1)
+            widgets['entry_labels'].append(label)
+        
+        # === POSITIONS (2 STATIC CARDS) ===
+        positions_frame = ttk.LabelFrame(bot_frame, text="Open Positions (0/2)", padding="5")
+        positions_frame.pack(fill=tk.X, padx=10, pady=5)
+        widgets['positions_frame'] = positions_frame
+        
+        # Container for 2 position cards
+        positions_container = tk.Frame(positions_frame, bg=self.bg_dark)
+        positions_container.pack(fill=tk.X)
+        
+        # Create 2 static position card slots
+        widgets['position_cards'] = []
+        for i in range(2):
+            card_frame = tk.Frame(positions_container, bg=self.bg_light, relief=tk.RAISED, bd=1)
+            card_frame.pack(fill=tk.X, pady=3)
+            
+            # Card content container
+            card_content = tk.Frame(card_frame, bg=self.bg_light)
+            card_content.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+            
+            # Header (ticket + type + profit)
+            header = tk.Frame(card_content, bg=self.bg_light)
+            header.pack(fill=tk.X)
+            
+            ticket_label = tk.Label(header, text=f"Position {i+1}: Empty", bg=self.bg_light, 
+                                   fg=self.neutral_color, font=('Arial', 8, 'bold'))
+            ticket_label.pack(side=tk.LEFT)
+            
+            profit_label = tk.Label(header, text="", bg=self.bg_light, fg=self.fg_color, 
+                                   font=('Arial', 9, 'bold'))
+            profit_label.pack(side=tk.RIGHT)
+            
+            # Entry info (entry price + time held)
+            entry_info = tk.Label(card_content, text="", bg=self.bg_light, fg=self.fg_color, 
+                                 font=('Arial', 8), anchor=tk.W)
+            entry_info.pack(fill=tk.X, pady=(3,0))
+            
+            # Exit signals container
+            exit_signals_frame = tk.Frame(card_content, bg=self.bg_light)
+            exit_signals_frame.pack(fill=tk.X, pady=(5,0))
+            
+            exit_signals_label = tk.Label(exit_signals_frame, text="Exit Signals:", 
+                                         bg=self.bg_light, fg=self.neutral_color, 
+                                         font=('Arial', 7, 'bold'))
+            exit_signals_label.pack(anchor=tk.W)
+            
+            # Exit condition labels (will be populated dynamically)
+            exit_labels = []
+            for j in range(5):  # 5 exit conditions (price info + 4 conditions)
+                label = tk.Label(exit_signals_frame, text="", bg=self.bg_light, 
+                               fg=self.fg_color, font=('Arial', 7), anchor=tk.W)
+                label.pack(fill=tk.X, pady=1)
+                exit_labels.append(label)
+            
+            widgets['position_cards'].append({
+                'frame': card_frame,
+                'ticket_label': ticket_label,
+                'profit_label': profit_label,
+                'entry_info': entry_info,
+                'exit_labels': exit_labels
+            })
+        
+        # === LOG (REDUCED SIZE) ===
         log_frame = ttk.LabelFrame(bot_frame, text="Log", padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         log_text = tk.Text(log_frame, wrap=tk.WORD, bg=self.bg_medium, fg=self.fg_color,
-                          insertbackground=self.fg_color, font=('Consolas', 8))
+                          insertbackground=self.fg_color, font=('Consolas', 8), height=8)
         log_scrollbar = ttk.Scrollbar(log_frame, command=log_text.yview)
         log_text.config(yscrollcommand=log_scrollbar.set)
         
@@ -371,6 +497,7 @@ class BotGUI:
                     line = self.m5_queue.get_nowait()
                     self.m5_log_widget.insert(tk.END, line)
                     self.m5_log_widget.see(tk.END)
+                    self.parse_m5_line(line)
             except queue.Empty:
                 pass
         
@@ -381,6 +508,7 @@ class BotGUI:
                     line = self.m1_queue.get_nowait()
                     self.m1_log_widget.insert(tk.END, line)
                     self.m1_log_widget.see(tk.END)
+                    self.parse_m1_line(line)
             except queue.Empty:
                 pass
         
@@ -395,6 +523,18 @@ class BotGUI:
         self.account_balance_label.config(text=f"${self.market_data['balance']:.2f}")
         self.account_equity_label.config(text=f"${self.market_data['equity']:.2f}")
         self.shared_price_label.config(text=f"${self.market_data['price']:.2f}")
+        
+        # Update M5 display
+        self.update_bot_display('M5', self.m5_data, self.m5_widgets, 
+                               self.market_data['atr_m5'],
+                               self.market_data['ema_fast_m5'], self.market_data['ema_slow_m5'],
+                               self.market_data['rsi_m5'], self.market_data['trend_m5'])
+        
+        # Update M1 display
+        self.update_bot_display('M1', self.m1_data, self.m1_widgets,
+                               self.market_data['atr_m1'],
+                               self.market_data['ema_fast_m1'], self.market_data['ema_slow_m1'],
+                               self.market_data['rsi_m1'], self.market_data['trend_m1'])
         
         # Schedule next update
         self.root.after(1000, self.update_displays)
@@ -570,6 +710,409 @@ class BotGUI:
             
         except Exception as e:
             print(f"Error updating chart: {e}")
+    
+    def fetch_market_data(self):
+        """Fetch market data from MT5"""
+        if not self.mt5_connected:
+            return
+        
+        try:
+            account = mt5.account_info()
+            if account:
+                self.market_data['balance'] = account.balance
+                self.market_data['equity'] = account.equity
+            
+            tick = mt5.symbol_info_tick(self.mt5_symbol)
+            if tick:
+                self.market_data['price'] = tick.bid
+            
+            # Get M5 data
+            rates_m5 = mt5.copy_rates_from_pos(self.mt5_symbol, mt5.TIMEFRAME_M5, 0, 100)
+            if rates_m5 is not None and len(rates_m5) > 0:
+                df_m5 = pd.DataFrame(rates_m5)
+                df_m5['time'] = pd.to_datetime(df_m5['time'], unit='s')
+                
+                # Calculate indicators for M5
+                df_m5 = self.compute_indicators(df_m5, 9, 21, 14)
+                latest_m5 = df_m5.iloc[-1]
+                
+                self.market_data['atr_m5'] = latest_m5['ATR']
+                self.market_data['ema_fast_m5'] = latest_m5['ema_fast']
+                self.market_data['ema_slow_m5'] = latest_m5['ema_slow']
+                self.market_data['rsi_m5'] = latest_m5['RSI']
+                
+                if latest_m5['uptrend']:
+                    self.market_data['trend_m5'] = 'UP ↑'
+                elif latest_m5['downtrend']:
+                    self.market_data['trend_m5'] = 'DOWN ↓'
+                else:
+                    self.market_data['trend_m5'] = 'SIDE →'
+            
+            # Get M1 data
+            rates_m1 = mt5.copy_rates_from_pos(self.mt5_symbol, mt5.TIMEFRAME_M1, 0, 100)
+            if rates_m1 is not None and len(rates_m1) > 0:
+                df_m1 = pd.DataFrame(rates_m1)
+                df_m1['time'] = pd.to_datetime(df_m1['time'], unit='s')
+                
+                # Calculate indicators for M1
+                df_m1 = self.compute_indicators(df_m1, 5, 12, 14)
+                latest_m1 = df_m1.iloc[-1]
+                
+                self.market_data['atr_m1'] = latest_m1['ATR']
+                self.market_data['ema_fast_m1'] = latest_m1['ema_fast']
+                self.market_data['ema_slow_m1'] = latest_m1['ema_slow']
+                self.market_data['rsi_m1'] = latest_m1['RSI']
+                
+                if latest_m1['uptrend']:
+                    self.market_data['trend_m1'] = 'UP ↑'
+                elif latest_m1['downtrend']:
+                    self.market_data['trend_m1'] = 'DOWN ↓'
+                else:
+                    self.market_data['trend_m1'] = 'SIDE →'
+            
+            # Get open positions
+            positions = mt5.positions_get(symbol=self.mt5_symbol)
+            if positions:
+                m5_positions = [p for p in positions if p.magic == 234000]
+                m1_positions = [p for p in positions if p.magic == 234001]
+                
+                self.m5_data['positions'] = len(m5_positions)
+                self.m1_data['positions'] = len(m1_positions)
+                
+                # Update position details for M5
+                self.m5_data['position_details'] = []
+                for pos in m5_positions:
+                    self.m5_data['position_details'].append({
+                        'ticket': str(pos.ticket),
+                        'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
+                        'entry': pos.price_open,
+                        'current': pos.price_current,
+                        'sl': pos.sl,
+                        'tp': pos.tp,
+                        'profit': pos.profit,
+                        'time_held': (datetime.now().timestamp() - pos.time) / 60
+                    })
+                
+                # Update position details for M1
+                self.m1_data['position_details'] = []
+                for pos in m1_positions:
+                    self.m1_data['position_details'].append({
+                        'ticket': str(pos.ticket),
+                        'type': 'LONG' if pos.type == mt5.ORDER_TYPE_BUY else 'SHORT',
+                        'entry': pos.price_open,
+                        'current': pos.price_current,
+                        'sl': pos.sl,
+                        'tp': pos.tp,
+                        'profit': pos.profit,
+                        'time_held': (datetime.now().timestamp() - pos.time) / 60
+                    })
+            else:
+                self.m5_data['positions'] = 0
+                self.m1_data['positions'] = 0
+                self.m5_data['position_details'] = []
+                self.m1_data['position_details'] = []
+                
+        except Exception as e:
+            print(f"Error fetching market data: {e}")
+    
+    def compute_indicators(self, df, ema_fast_period, ema_slow_period, rsi_period):
+        """Compute technical indicators"""
+        # EMAs
+        df['ema_fast'] = df['close'].ewm(span=ema_fast_period, adjust=False).mean()
+        df['ema_slow'] = df['close'].ewm(span=ema_slow_period, adjust=False).mean()
+        
+        # Trend
+        df['uptrend'] = df['ema_fast'] > df['ema_slow']
+        df['downtrend'] = df['ema_fast'] < df['ema_slow']
+        
+        # RSI
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
+        rs = gain / loss
+        df['RSI'] = 100 - (100 / (1 + rs))
+        
+        # ATR
+        df['high_low'] = df['high'] - df['low']
+        df['high_close'] = abs(df['high'] - df['close'].shift())
+        df['low_close'] = abs(df['low'] - df['close'].shift())
+        df['tr'] = df[['high_low', 'high_close', 'low_close']].max(axis=1)
+        df['ATR'] = df['tr'].rolling(window=14).mean()
+        
+        return df
+    
+    def parse_m5_line(self, line):
+        """Parse M5 log line to extract bot status"""
+        # Extract signal
+        if 'LONG SIGNAL ACTIVE' in line:
+            self.m5_data['signal'] = 'LONG'
+            self.m5_data['has_signal'] = True
+        elif 'SHORT SIGNAL ACTIVE' in line:
+            self.m5_data['signal'] = 'SHORT'
+            self.m5_data['has_signal'] = True
+        elif 'No entry signal' in line:
+            self.m5_data['signal'] = 'None'
+            self.m5_data['has_signal'] = False
+        
+        # Extract entry status
+        if '[X] Max positions reached' in line:
+            self.m5_data['max_positions'] = True
+            self.m5_data['ready_for_entry'] = False
+        elif '[WAIT] Gap warmup active' in line:
+            self.m5_data['gap_warmup'] = True
+            self.m5_data['ready_for_entry'] = False
+        elif '[WAIT] Cooldown active' in line:
+            self.m5_data['cooldown_active'] = True
+            self.m5_data['ready_for_entry'] = False
+        elif '[OK] Ready for new entry' in line or '[OK] Cooldown skipped' in line:
+            self.m5_data['ready_for_entry'] = True
+            self.m5_data['gap_warmup'] = False
+            self.m5_data['cooldown_active'] = False
+            self.m5_data['max_positions'] = False
+    
+    def parse_m1_line(self, line):
+        """Parse M1 log line to extract bot status"""
+        # Extract signal
+        if 'LONG SIGNAL ACTIVE' in line:
+            self.m1_data['signal'] = 'LONG'
+            self.m1_data['has_signal'] = True
+        elif 'SHORT SIGNAL ACTIVE' in line:
+            self.m1_data['signal'] = 'SHORT'
+            self.m1_data['has_signal'] = True
+        elif 'No entry signal' in line:
+            self.m1_data['signal'] = 'None'
+            self.m1_data['has_signal'] = False
+        
+        # Extract entry status
+        if '[X] Max positions reached' in line:
+            self.m1_data['max_positions'] = True
+            self.m1_data['ready_for_entry'] = False
+        elif '[WAIT] Gap warmup active' in line:
+            self.m1_data['gap_warmup'] = True
+            self.m1_data['ready_for_entry'] = False
+        elif '[WAIT] Cooldown active' in line:
+            self.m1_data['cooldown_active'] = True
+            self.m1_data['ready_for_entry'] = False
+        elif '[OK] Ready for new entry' in line or '[OK] Cooldown skipped' in line:
+            self.m1_data['ready_for_entry'] = True
+            self.m1_data['gap_warmup'] = False
+            self.m1_data['cooldown_active'] = False
+            self.m1_data['max_positions'] = False
+    
+    def update_bot_display(self, bot_name, data, widgets, atr, ema_fast, ema_slow, rsi, trend):
+        """Update display for a specific bot"""
+        # Status
+        status_color = self.success_color if data['status'] == 'Running' else self.neutral_color
+        widgets['status_label'].config(text=data['status'], foreground=status_color)
+        
+        # Market indicators
+        trend_color = self.success_color if 'UP' in trend else self.error_color if 'DOWN' in trend else self.neutral_color
+        widgets['trend_label'].config(text=trend, fg=trend_color)
+        
+        # RSI with color coding
+        buy_threshold = 25 if bot_name == "M5" else 35
+        sell_threshold = 70 if bot_name == "M5" else 75
+        
+        if rsi < buy_threshold:
+            rsi_color = self.success_color
+        elif rsi > sell_threshold:
+            rsi_color = self.error_color
+        else:
+            rsi_color = self.accent_color
+        
+        widgets['rsi_label'].config(text=f"{rsi:.1f}", fg=rsi_color)
+        widgets['atr_label'].config(text=f"${atr:.2f}")
+        widgets['ema_fast_label'].config(text=f"${ema_fast:.2f}")
+        widgets['ema_slow_label'].config(text=f"${ema_slow:.2f}")
+        
+        # Entry conditions
+        price = self.market_data['price']
+        
+        # Get thresholds
+        if bot_name == "M5":
+            rsi_buy = 25
+            rsi_sell = 75
+        else:
+            rsi_buy = 35
+            rsi_sell = 65
+        
+        conditions = []
+        
+        # 1. RSI condition for LONG
+        if rsi < rsi_buy:
+            conditions.append(f"✅ RSI: {rsi:.1f} < {rsi_buy} (Buy zone)")
+        else:
+            conditions.append(f"❌ RSI: {rsi:.1f} >= {rsi_buy} (Not oversold)")
+        
+        # 2. Trend condition
+        if 'UP' in trend:
+            conditions.append(f"✅ Trend: Uptrend (EMA {ema_fast:.2f} > {ema_slow:.2f})")
+        elif 'DOWN' in trend:
+            conditions.append(f"⚠ Trend: Downtrend (EMA {ema_fast:.2f} < {ema_slow:.2f})")
+        else:
+            conditions.append(f"⚠ Trend: Sideways")
+        
+        # 3. Position availability
+        if data['positions'] < 2:
+            conditions.append(f"✅ Positions: {data['positions']}/2 available")
+        else:
+            conditions.append(f"❌ Positions: {data['positions']}/2 (Max reached)")
+        
+        # 4. Bot readiness
+        if data['gap_warmup']:
+            conditions.append(f"❌ Status: Gap warmup active")
+        elif data['cooldown_active']:
+            conditions.append(f"❌ Status: Cooldown after loss")
+        else:
+            conditions.append(f"✅ Status: Ready to trade")
+        
+        # 5. Overall signal
+        if data['has_signal']:
+            signal_type = data['signal']
+            conditions.append(f"🔔 Signal: {signal_type} active")
+        else:
+            conditions.append(f"⚪ Signal: None")
+        
+        # Update labels
+        for i, condition in enumerate(conditions):
+            if i < len(widgets['entry_labels']):
+                widgets['entry_labels'][i].config(text=condition)
+        
+        # Positions - update position count in frame title
+        widgets['positions_frame'].config(text=f"Open Positions ({data['positions']}/2)")
+        self.update_position_cards(widgets['position_cards'], data['position_details'], price, rsi, bot_name)
+    
+    def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
+        """Update 2 static position cards with exit signals"""
+        # Get exit thresholds
+        if bot_name == "M5":
+            rsi_exit_long = 75
+            rsi_exit_short = 25
+        else:
+            rsi_exit_long = 75
+            rsi_exit_short = 25
+        
+        # Update each card slot
+        for i in range(2):
+            card = cards[i]
+            
+            if i < len(positions):
+                # Position exists
+                pos = positions[i]
+                
+                # Update header
+                type_color = self.success_color if pos['type'] == 'LONG' else self.error_color
+                card['ticket_label'].config(
+                    text=f"#{pos['ticket']} {pos['type']}", 
+                    fg=type_color
+                )
+                
+                # Update profit
+                profit_color = self.success_color if pos['profit'] > 0 else self.error_color if pos['profit'] < 0 else self.fg_color
+                card['profit_label'].config(
+                    text=f"${pos['profit']:.2f}", 
+                    fg=profit_color
+                )
+                
+                # Update entry info
+                card['entry_info'].config(
+                    text=f"Entry: ${pos['entry']:.2f} | Held: {pos['time_held']:.0f} min"
+                )
+                
+                # Calculate exit signals
+                exit_conditions = []
+                
+                # 0. Price info (Current, SL, TP)
+                price_info = f"Current: ${pos.get('current', current_price):.2f}"
+                if pos.get('sl', 0) > 0:
+                    price_info += f" | SL: ${pos['sl']:.2f}"
+                if pos.get('tp', 0) > 0:
+                    price_info += f" | TP: ${pos['tp']:.2f}"
+                exit_conditions.append(price_info)
+                
+                if pos['type'] == 'LONG':
+                    # LONG exit conditions
+                    # 1. RSI exit
+                    if rsi >= rsi_exit_long:
+                        exit_conditions.append(f"✅ RSI Exit: {rsi:.1f} >= {rsi_exit_long}")
+                    else:
+                        exit_conditions.append(f"❌ RSI Exit: {rsi:.1f} < {rsi_exit_long}")
+                    
+                    # 2. Profit target
+                    target_pct = 0.008 if bot_name == "M1" else 0.015
+                    target_price = pos['entry'] * (1 + target_pct)
+                    if current_price >= target_price:
+                        exit_conditions.append(f"✅ TP Hit: ${current_price:.2f} >= ${target_price:.2f}")
+                    else:
+                        exit_conditions.append(f"❌ TP: ${current_price:.2f} < ${target_price:.2f}")
+                    
+                    # 3. Time-based exit (M1 only)
+                    if bot_name == "M1":
+                        if pos['time_held'] >= 10 and current_price < pos['entry']:
+                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
+                        elif pos['time_held'] >= 10:
+                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
+                        else:
+                            time_remaining = 10 - pos['time_held']
+                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
+                    
+                    # 4. Current P/L
+                    pnl_pct = ((current_price - pos['entry']) / pos['entry']) * 100
+                    exit_conditions.append(f"P/L: {pnl_pct:+.2f}%")
+                
+                else:  # SHORT
+                    # SHORT exit conditions
+                    # 1. RSI exit
+                    if rsi <= rsi_exit_short:
+                        exit_conditions.append(f"✅ RSI Exit: {rsi:.1f} <= {rsi_exit_short}")
+                    else:
+                        exit_conditions.append(f"❌ RSI Exit: {rsi:.1f} > {rsi_exit_short}")
+                    
+                    # 2. Profit target
+                    target_pct = 0.008 if bot_name == "M1" else 0.015
+                    target_price = pos['entry'] * (1 - target_pct)
+                    if current_price <= target_price:
+                        exit_conditions.append(f"✅ TP Hit: ${current_price:.2f} <= ${target_price:.2f}")
+                    else:
+                        exit_conditions.append(f"❌ TP: ${current_price:.2f} > ${target_price:.2f}")
+                    
+                    # 3. Time-based exit (M1 only)
+                    if bot_name == "M1":
+                        if pos['time_held'] >= 10 and current_price > pos['entry']:
+                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
+                        elif pos['time_held'] >= 10:
+                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
+                        else:
+                            time_remaining = 10 - pos['time_held']
+                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
+                    
+                    # 4. Current P/L
+                    pnl_pct = ((pos['entry'] - current_price) / pos['entry']) * 100
+                    exit_conditions.append(f"P/L: {pnl_pct:+.2f}%")
+                
+                # Update exit labels
+                for j, condition in enumerate(exit_conditions):
+                    if j < len(card['exit_labels']):
+                        card['exit_labels'][j].config(text=condition)
+                
+                # Show card
+                card['frame'].pack(fill=tk.X, pady=3)
+                
+            else:
+                # No position - show empty
+                card['ticket_label'].config(
+                    text=f"Position {i+1}: Empty", 
+                    fg=self.neutral_color
+                )
+                card['profit_label'].config(text="")
+                card['entry_info'].config(text="")
+                
+                # Clear all exit labels
+                for label in card['exit_labels']:
+                    label.config(text="")
+                
+                # Show card
+                card['frame'].pack(fill=tk.X, pady=3)
     
     def fetch_market_data(self):
         """Fetch market data from MT5"""
