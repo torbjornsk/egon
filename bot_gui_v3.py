@@ -230,48 +230,20 @@ class BotGUI:
                         exit_deal = buy_deals[0]
                         position_type = 'SHORT'
                     
+                    # Adjust timestamps for MT5 being 1 hour ahead
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
                         'type': position_type,
-                        'entry_time': datetime.fromtimestamp(entry_deal.time),
-                        'exit_time': datetime.fromtimestamp(exit_deal.time),
+                        'entry_time': datetime.fromtimestamp(entry_deal.time - 3600),
+                        'exit_time': datetime.fromtimestamp(exit_deal.time - 3600),
                         'entry_price': entry_deal.price,
                         'exit_price': exit_deal.price,
                         'volume': entry_deal.volume,
                         'profit': exit_deal.profit,
                         'is_closed': True
                     })
-                elif len(buy_deals) > 0:
-                    # Open LONG position (only BUY, no SELL yet)
-                    entry_deal = buy_deals[0]
-                    completed_positions.append({
-                        'position_id': pos_id,
-                        'bot': data['bot'],
-                        'type': 'LONG',
-                        'entry_time': datetime.fromtimestamp(entry_deal.time),
-                        'exit_time': None,
-                        'entry_price': entry_deal.price,
-                        'exit_price': None,
-                        'volume': entry_deal.volume,
-                        'profit': 0,
-                        'is_closed': False
-                    })
-                elif len(sell_deals) > 0:
-                    # Open SHORT position (only SELL, no BUY yet)
-                    entry_deal = sell_deals[0]
-                    completed_positions.append({
-                        'position_id': pos_id,
-                        'bot': data['bot'],
-                        'type': 'SHORT',
-                        'entry_time': datetime.fromtimestamp(entry_deal.time),
-                        'exit_time': None,
-                        'entry_price': entry_deal.price,
-                        'exit_price': None,
-                        'volume': entry_deal.volume,
-                        'profit': 0,
-                        'is_closed': False
-                    })
+                # Skip open positions - they don't appear in MT5 history
             
             # Sort by entry time descending and take last 100
             completed_positions.sort(key=lambda x: x['entry_time'], reverse=True)
@@ -587,29 +559,19 @@ class BotGUI:
         for item in self.trade_tree.get_children():
             self.trade_tree.delete(item)
         
-        # Add positions
+        # Add closed positions only
         for pos in self.trade_history:
             entry_time_str = pos['entry_time'].strftime('%Y-%m-%d %H:%M')
             
-            if pos['is_closed']:
-                # Closed position - show entry and exit
-                exit_str = f"${pos['exit_price']:.2f}"
-                profit_str = f"${pos['profit']:.2f}"
-                
-                # Color coding for closed positions
-                if pos['profit'] > 0:
-                    tag = 'profit'  # Green for profit (both LONG and SHORT)
-                else:
-                    tag = 'loss'  # Red for loss (both LONG and SHORT)
+            # All positions in history are closed
+            exit_str = f"${pos['exit_price']:.2f}"
+            profit_str = f"${pos['profit']:.2f}"
+            
+            # Color coding based on profit/loss
+            if pos['profit'] > 0:
+                tag = 'profit'  # Green for profit
             else:
-                # Open position - show as white (LONG) or yellow (SHORT)
-                exit_str = "OPEN"
-                profit_str = "-"
-                
-                if pos['type'] == 'LONG':
-                    tag = 'open_long'  # White for open LONG
-                else:
-                    tag = 'open_short'  # Yellow for open SHORT
+                tag = 'loss'  # Red for loss
             
             values = (
                 entry_time_str,
@@ -626,8 +588,6 @@ class BotGUI:
         # Configure tags with colors
         self.trade_tree.tag_configure('profit', foreground=self.success_color)  # Green
         self.trade_tree.tag_configure('loss', foreground=self.error_color)  # Red
-        self.trade_tree.tag_configure('open_long', foreground=self.fg_color)  # White
-        self.trade_tree.tag_configure('open_short', foreground=self.warning_color)  # Yellow
     
     def update_displays(self):
         """Update all displays"""
