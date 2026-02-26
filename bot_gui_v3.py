@@ -227,7 +227,7 @@ class BotGUI:
         
         # Title
         tk.Label(bot_frame, text=f"{bot_name} Bot", bg=self.bg_dark, fg=self.accent_color,
-                font=('Arial', 12, 'bold')).pack(pady=5)
+                font=('Arial', 11, 'bold')).pack(pady=(5, 3))
         
         # Store widgets
         if bot_name == "M5":
@@ -239,7 +239,7 @@ class BotGUI:
         
         # === INFO GRID (2 columns) ===
         info_container = tk.Frame(bot_frame, bg=self.bg_dark)
-        info_container.pack(fill=tk.BOTH, expand=False, padx=10, pady=5)
+        info_container.pack(fill=tk.BOTH, expand=False, padx=8, pady=0)
         
         # Configure grid weights
         info_container.columnconfigure(0, weight=1)  # Left column
@@ -247,70 +247,69 @@ class BotGUI:
         
         # === LEFT COLUMN ===
         left_column = tk.Frame(info_container, bg=self.bg_dark)
-        left_column.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(0, 5))
+        left_column.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(0, 4))
         
         # === CONTROLS ===
-        controls_frame = ttk.LabelFrame(left_column, text="Controls", padding="8")
-        controls_frame.pack(fill=tk.X, pady=(0, 5))
+        controls_frame = ttk.LabelFrame(left_column, text="Controls", padding="5")
+        controls_frame.pack(fill=tk.X, pady=(0, 3))
         
         controls = tk.Frame(controls_frame, bg=self.bg_dark)
         controls.pack(fill=tk.X)
         
         start_btn = ttk.Button(controls, text="Start",
                               command=lambda: self.start_m5() if bot_name == "M5" else self.start_m1(),
-                              width=10)
-        start_btn.pack(side=tk.LEFT, padx=5)
+                              width=8)
+        start_btn.pack(side=tk.LEFT, padx=(0, 3))
         
         stop_btn = ttk.Button(controls, text="Stop",
                              command=lambda: self.stop_m5() if bot_name == "M5" else self.stop_m1(),
-                             state=tk.DISABLED, width=10)
-        stop_btn.pack(side=tk.LEFT, padx=5)
+                             state=tk.DISABLED, width=8)
+        stop_btn.pack(side=tk.LEFT, padx=(0, 5))
         
-        status_label = ttk.Label(controls, text="Stopped", foreground=self.neutral_color, font=('Arial', 9))
-        status_label.pack(side=tk.LEFT, padx=10)
+        status_label = ttk.Label(controls, text="Stopped", foreground=self.neutral_color, font=('Arial', 8))
+        status_label.pack(side=tk.LEFT)
         
         widgets['start_btn'] = start_btn
         widgets['stop_btn'] = stop_btn
         widgets['status_label'] = status_label
         
         # === MARKET INDICATORS ===
-        market_frame = ttk.LabelFrame(left_column, text="Market Indicators", padding="5")
-        market_frame.pack(fill=tk.X, pady=(0, 5))
+        market_frame = ttk.LabelFrame(left_column, text="Market", padding="4")
+        market_frame.pack(fill=tk.X, pady=(0, 3))
         
         market_grid = tk.Frame(market_frame, bg=self.bg_dark)
         market_grid.pack(fill=tk.X)
         
-        # Trend
-        tk.Label(market_grid, text="Trend:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=0, sticky=tk.W, padx=(0,3))
-        trend_label = tk.Label(market_grid, text="N/A", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 9))
-        trend_label.grid(row=0, column=1, sticky=tk.W, padx=(0,10))
+        # Row 0: Trend and RSI
+        tk.Label(market_grid, text="Trend:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 7)).grid(row=0, column=0, sticky=tk.W, padx=(0,2))
+        trend_label = tk.Label(market_grid, text="N/A", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8))
+        trend_label.grid(row=0, column=1, sticky=tk.W, padx=(0,8))
         widgets['trend_label'] = trend_label
         
-        # RSI
-        tk.Label(market_grid, text="RSI:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=0, column=2, sticky=tk.W, padx=(0,3))
-        rsi_label = tk.Label(market_grid, text="0.0", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 9, 'bold'))
+        tk.Label(market_grid, text="RSI:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 7)).grid(row=0, column=2, sticky=tk.W, padx=(0,2))
+        rsi_label = tk.Label(market_grid, text="0.0", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 8, 'bold'))
         rsi_label.grid(row=0, column=3, sticky=tk.W)
         widgets['rsi_label'] = rsi_label
         
-        # ATR
-        tk.Label(market_grid, text="ATR:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=1, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
-        atr_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8))
-        atr_label.grid(row=1, column=1, sticky=tk.W, pady=(3,0))
+        # Row 1: ATR
+        tk.Label(market_grid, text="ATR:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 7)).grid(row=1, column=0, sticky=tk.W, padx=(0,2), pady=(2,0))
+        atr_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 7))
+        atr_label.grid(row=1, column=1, sticky=tk.W, pady=(2,0))
         widgets['atr_label'] = atr_label
         
-        # EMAs
-        tk.Label(market_grid, text="EMA Fast:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=2, column=0, sticky=tk.W, padx=(0,3), pady=(3,0))
-        ema_fast_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.success_color, font=('Arial', 8))
-        ema_fast_label.grid(row=2, column=1, sticky=tk.W, pady=(3,0))
+        # Row 2: EMAs
+        tk.Label(market_grid, text="EMA:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 7)).grid(row=2, column=0, sticky=tk.W, padx=(0,2), pady=(2,0))
+        ema_fast_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.success_color, font=('Arial', 7))
+        ema_fast_label.grid(row=2, column=1, sticky=tk.W, pady=(2,0))
         widgets['ema_fast_label'] = ema_fast_label
         
-        tk.Label(market_grid, text="EMA Slow:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8)).grid(row=2, column=2, sticky=tk.W, padx=(0,3), pady=(3,0))
-        ema_slow_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 8))
-        ema_slow_label.grid(row=2, column=3, sticky=tk.W, pady=(3,0))
+        tk.Label(market_grid, text="/", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 7)).grid(row=2, column=2, sticky=tk.W, padx=2, pady=(2,0))
+        ema_slow_label = tk.Label(market_grid, text="$0.00", bg=self.bg_dark, fg=self.accent_color, font=('Arial', 7))
+        ema_slow_label.grid(row=2, column=3, sticky=tk.W, pady=(2,0))
         widgets['ema_slow_label'] = ema_slow_label
         
         # === ENTRY CONDITIONS ===
-        entry_frame = ttk.LabelFrame(left_column, text="Entry Conditions", padding="5")
+        entry_frame = ttk.LabelFrame(left_column, text="Entry", padding="4")
         entry_frame.pack(fill=tk.X)
         
         entry_container = tk.Frame(entry_frame, bg=self.bg_dark)
@@ -319,16 +318,16 @@ class BotGUI:
         # Create labels for entry conditions
         widgets['entry_labels'] = []
         for i in range(5):  # 5 condition rows
-            label = tk.Label(entry_container, text="", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 8), anchor=tk.W)
-            label.pack(fill=tk.X, pady=1)
+            label = tk.Label(entry_container, text="", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 7), anchor=tk.W)
+            label.pack(fill=tk.X, pady=0)
             widgets['entry_labels'].append(label)
         
         # === RIGHT COLUMN ===
         right_column = tk.Frame(info_container, bg=self.bg_dark)
-        right_column.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(5, 0))
+        right_column.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.W, tk.E), padx=(4, 0))
         
         # === POSITIONS (2 STATIC CARDS) ===
-        positions_frame = ttk.LabelFrame(right_column, text="Open Positions (0/2)", padding="5")
+        positions_frame = ttk.LabelFrame(right_column, text="Positions (0/2)", padding="4")
         positions_frame.pack(fill=tk.BOTH, expand=True)
         widgets['positions_frame'] = positions_frame
         
@@ -340,44 +339,44 @@ class BotGUI:
         widgets['position_cards'] = []
         for i in range(2):
             card_frame = tk.Frame(positions_container, bg=self.bg_light, relief=tk.RAISED, bd=1)
-            card_frame.pack(fill=tk.X, pady=3)
+            card_frame.pack(fill=tk.X, pady=(0, 2) if i == 0 else 0)
             
             # Card content container
             card_content = tk.Frame(card_frame, bg=self.bg_light)
-            card_content.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+            card_content.pack(fill=tk.BOTH, expand=True, padx=4, pady=3)
             
             # Header (ticket + type + profit)
             header = tk.Frame(card_content, bg=self.bg_light)
             header.pack(fill=tk.X)
             
-            ticket_label = tk.Label(header, text=f"Position {i+1}: Empty", bg=self.bg_light, 
-                                   fg=self.neutral_color, font=('Arial', 8, 'bold'))
+            ticket_label = tk.Label(header, text=f"Pos {i+1}: Empty", bg=self.bg_light, 
+                                   fg=self.neutral_color, font=('Arial', 7, 'bold'))
             ticket_label.pack(side=tk.LEFT)
             
             profit_label = tk.Label(header, text="", bg=self.bg_light, fg=self.fg_color, 
-                                   font=('Arial', 9, 'bold'))
+                                   font=('Arial', 8, 'bold'))
             profit_label.pack(side=tk.RIGHT)
             
             # Entry info (entry price + time held)
             entry_info = tk.Label(card_content, text="", bg=self.bg_light, fg=self.fg_color, 
-                                 font=('Arial', 8), anchor=tk.W)
-            entry_info.pack(fill=tk.X, pady=(3,0))
+                                 font=('Arial', 7), anchor=tk.W)
+            entry_info.pack(fill=tk.X, pady=(2,0))
             
             # Exit signals container
             exit_signals_frame = tk.Frame(card_content, bg=self.bg_light)
-            exit_signals_frame.pack(fill=tk.X, pady=(5,0))
+            exit_signals_frame.pack(fill=tk.X, pady=(3,0))
             
-            exit_signals_label = tk.Label(exit_signals_frame, text="Exit Signals:", 
+            exit_signals_label = tk.Label(exit_signals_frame, text="Exit:", 
                                          bg=self.bg_light, fg=self.neutral_color, 
-                                         font=('Arial', 7, 'bold'))
+                                         font=('Arial', 6, 'bold'))
             exit_signals_label.pack(anchor=tk.W)
             
             # Exit condition labels (will be populated dynamically)
             exit_labels = []
             for j in range(5):  # 5 exit conditions (price info + 4 conditions)
                 label = tk.Label(exit_signals_frame, text="", bg=self.bg_light, 
-                               fg=self.fg_color, font=('Arial', 7), anchor=tk.W)
-                label.pack(fill=tk.X, pady=1)
+                               fg=self.fg_color, font=('Arial', 6), anchor=tk.W)
+                label.pack(fill=tk.X, pady=0)
                 exit_labels.append(label)
             
             widgets['position_cards'].append({
@@ -389,11 +388,11 @@ class BotGUI:
             })
         
         # === LOG (MORE VERTICAL SPACE) ===
-        log_frame = ttk.LabelFrame(bot_frame, text="Log", padding="5")
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        log_frame = ttk.LabelFrame(bot_frame, text="Log", padding="4")
+        log_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(3, 8))
         
         log_text = tk.Text(log_frame, wrap=tk.WORD, bg=self.bg_medium, fg=self.fg_color,
-                          insertbackground=self.fg_color, font=('Consolas', 8))
+                          insertbackground=self.fg_color, font=('Consolas', 7))
         log_scrollbar = ttk.Scrollbar(log_frame, command=log_text.yview)
         log_text.config(yscrollcommand=log_scrollbar.set)
         
@@ -411,33 +410,33 @@ class BotGUI:
         parent.add(center_frame, width=800, minsize=600)
         
         # Account info
-        account_frame = ttk.LabelFrame(center_frame, text="Account", padding="10")
-        account_frame.pack(fill=tk.X, padx=10, pady=5)
+        account_frame = ttk.LabelFrame(center_frame, text="Account", padding="5")
+        account_frame.pack(fill=tk.X, padx=8, pady=(5, 3))
         
         acc_grid = tk.Frame(account_frame, bg=self.bg_dark)
         acc_grid.pack()
         
-        tk.Label(acc_grid, text="Balance:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 9, 'bold')).grid(row=0, column=0, sticky=tk.W, padx=(0,5))
-        self.account_balance_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 11, 'bold'))
-        self.account_balance_label.grid(row=0, column=1, sticky=tk.W, padx=(0,20))
+        tk.Label(acc_grid, text="Balance:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8, 'bold')).grid(row=0, column=0, sticky=tk.W, padx=(0,3))
+        self.account_balance_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 10, 'bold'))
+        self.account_balance_label.grid(row=0, column=1, sticky=tk.W, padx=(0,15))
         
-        tk.Label(acc_grid, text="Equity:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 9, 'bold')).grid(row=0, column=2, sticky=tk.W, padx=(0,5))
-        self.account_equity_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 11, 'bold'))
-        self.account_equity_label.grid(row=0, column=3, sticky=tk.W, padx=(0,20))
+        tk.Label(acc_grid, text="Equity:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8, 'bold')).grid(row=0, column=2, sticky=tk.W, padx=(0,3))
+        self.account_equity_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.fg_color, font=('Arial', 10, 'bold'))
+        self.account_equity_label.grid(row=0, column=3, sticky=tk.W, padx=(0,15))
         
-        tk.Label(acc_grid, text="Price:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 9, 'bold')).grid(row=0, column=4, sticky=tk.W, padx=(0,5))
-        self.shared_price_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.warning_color, font=('Arial', 11, 'bold'))
+        tk.Label(acc_grid, text="Price:", bg=self.bg_dark, fg=self.neutral_color, font=('Arial', 8, 'bold')).grid(row=0, column=4, sticky=tk.W, padx=(0,3))
+        self.shared_price_label = tk.Label(acc_grid, text="$0.00", bg=self.bg_dark, fg=self.warning_color, font=('Arial', 10, 'bold'))
         self.shared_price_label.grid(row=0, column=5, sticky=tk.W)
         
         # Price chart
         if MATPLOTLIB_AVAILABLE:
-            chart_frame = ttk.LabelFrame(center_frame, text="Price Chart (Last 50 M5 candles)", padding="5")
-            chart_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+            chart_frame = ttk.LabelFrame(center_frame, text="Price Chart (Last 50 M5)", padding="3")
+            chart_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 3))
             
             self.fig = Figure(figsize=(8, 4), dpi=100, facecolor='#1e1e1e')
             self.ax = self.fig.add_subplot(111, facecolor='#2d2d2d')
             
-            self.ax.tick_params(colors='#e0e0e0', labelsize=8)
+            self.ax.tick_params(colors='#e0e0e0', labelsize=7)
             self.ax.spines['bottom'].set_color('#3e3e3e')
             self.ax.spines['top'].set_color('#3e3e3e')
             self.ax.spines['left'].set_color('#3e3e3e')
@@ -449,8 +448,8 @@ class BotGUI:
             self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
         # Trade history
-        history_frame = ttk.LabelFrame(center_frame, text="Trade History (Last 100 trades)", padding="5")
-        history_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        history_frame = ttk.LabelFrame(center_frame, text="Trade History (Last 100)", padding="3")
+        history_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
         
         # Create treeview for trade history
         columns = ('Time', 'Bot', 'Type', 'Volume', 'Price', 'Profit')
@@ -465,12 +464,12 @@ class BotGUI:
         self.trade_tree.heading('Profit', text='Profit')
         
         # Define column widths
-        self.trade_tree.column('Time', width=150)
-        self.trade_tree.column('Bot', width=50)
-        self.trade_tree.column('Type', width=60)
-        self.trade_tree.column('Volume', width=80)
-        self.trade_tree.column('Price', width=100)
-        self.trade_tree.column('Profit', width=100)
+        self.trade_tree.column('Time', width=140)
+        self.trade_tree.column('Bot', width=40)
+        self.trade_tree.column('Type', width=50)
+        self.trade_tree.column('Volume', width=70)
+        self.trade_tree.column('Price', width=90)
+        self.trade_tree.column('Profit', width=90)
         
         # Scrollbar
         tree_scroll = ttk.Scrollbar(history_frame, orient=tk.VERTICAL, command=self.trade_tree.yview)
@@ -997,7 +996,7 @@ class BotGUI:
                 widgets['entry_labels'][i].config(text=condition)
         
         # Positions - update position count in frame title
-        widgets['positions_frame'].config(text=f"Open Positions ({data['positions']}/2)")
+        widgets['positions_frame'].config(text=f"Positions ({data['positions']}/2)")
         self.update_position_cards(widgets['position_cards'], data['position_details'], price, rsi, bot_name)
     
     def update_position_cards(self, cards, positions, current_price, rsi, bot_name):
