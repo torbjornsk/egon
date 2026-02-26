@@ -185,7 +185,7 @@ class BotGUI:
             if deals is None or len(deals) == 0:
                 return
             
-            # Group deals by position_id to match entry and exit
+            # Group deals by position_id
             position_map = {}
             
             for deal in deals:
@@ -211,14 +211,25 @@ class BotGUI:
                 # Sort deals by time
                 deals_list.sort(key=lambda d: d.time)
                 
-                # First deal is entry, last deal is exit (if closed)
-                entry_deal = deals_list[0]
-                exit_deal = deals_list[-1] if len(deals_list) > 1 else None
+                # Find entry and exit deals by type
+                # For LONG: entry is BUY (type=0), exit is SELL (type=1)
+                # For SHORT: entry is SELL (type=1), exit is BUY (type=0)
+                buy_deals = [d for d in deals_list if d.type == 0]  # BUY
+                sell_deals = [d for d in deals_list if d.type == 1]  # SELL
                 
-                position_type = 'LONG' if entry_deal.type == 0 else 'SHORT'  # 0=BUY, 1=SELL
-                
-                if exit_deal and exit_deal.time != entry_deal.time:
-                    # Closed position
+                if len(buy_deals) > 0 and len(sell_deals) > 0:
+                    # Closed position - determine if LONG or SHORT
+                    first_deal = deals_list[0]
+                    
+                    if first_deal.type == 0:  # First deal is BUY = LONG position
+                        entry_deal = buy_deals[0]
+                        exit_deal = sell_deals[0]
+                        position_type = 'LONG'
+                    else:  # First deal is SELL = SHORT position
+                        entry_deal = sell_deals[0]
+                        exit_deal = buy_deals[0]
+                        position_type = 'SHORT'
+                    
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
@@ -231,12 +242,28 @@ class BotGUI:
                         'profit': exit_deal.profit,
                         'is_closed': True
                     })
-                else:
-                    # Open position (only one deal)
+                elif len(buy_deals) > 0:
+                    # Open LONG position (only BUY, no SELL yet)
+                    entry_deal = buy_deals[0]
                     completed_positions.append({
                         'position_id': pos_id,
                         'bot': data['bot'],
-                        'type': position_type,
+                        'type': 'LONG',
+                        'entry_time': datetime.fromtimestamp(entry_deal.time),
+                        'exit_time': None,
+                        'entry_price': entry_deal.price,
+                        'exit_price': None,
+                        'volume': entry_deal.volume,
+                        'profit': 0,
+                        'is_closed': False
+                    })
+                elif len(sell_deals) > 0:
+                    # Open SHORT position (only SELL, no BUY yet)
+                    entry_deal = sell_deals[0]
+                    completed_positions.append({
+                        'position_id': pos_id,
+                        'bot': data['bot'],
+                        'type': 'SHORT',
                         'entry_time': datetime.fromtimestamp(entry_deal.time),
                         'exit_time': None,
                         'entry_price': entry_deal.price,
