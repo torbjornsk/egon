@@ -6,20 +6,21 @@
   "fast_ema": 9,
   "slow_ema": 21,
   "rsi_period": 14,
-  "rsi_buy": 25,
-  "rsi_sell": 75,
-  "rsi_exit_long": 70,
-  "rsi_exit_short": 30,
+  "rsi_buy": 35,
+  "rsi_sell": 65,
+  "rsi_exit_long": 65,
+  "rsi_exit_short": 35,
   "atr_multiplier": 2.0,
-  "profit_target_pct": 0.01,
+  "profit_target_pct": 0.025,
   "enable_shorts": true,
   "_optimization_results": {
-    "return_pct": 73.0,
-    "win_rate": 48.9,
-    "max_drawdown": 13.1,
-    "sharpe_ratio": 559.32,
-    "trades": 223,
-    "test_period": "90 days",
-    "improvement_vs_old": "+88720%"
+    "return_pct": 43.5,
+    "win_rate": 58.9,
+    "max_drawdown": 5.9,
+    "sharpe_ratio": 2.83,
+    "trades": 382,
+    "test_period": "178 days (recent market)",
+    "improvement_vs_old": "+44.2%",
+    "optimized_date": "2026-02-26"
   }
 }
