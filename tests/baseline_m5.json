@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-27T20:08:54.565725",
+  "timestamp": "2026-02-27T22:02:44.043034",
   "config": {
     "strategy": "m5_scalping_optimized",
     "position_size_pct": 0.15,
@@ -33,15 +33,15 @@
       "total_return": 18.101470094232912,
       "profit_factor": 1.7077501746711499,
       "max_drawdown": -5.9320559115554925,
-      "sharpe": 3.1085047887718584
+      "sharpe": 3.1248225113293064
     },
     "recent_60d": {
-      "total_trades": 195,
-      "win_rate": 59.48717948717949,
-      "total_return": 27.343363925885996,
-      "profit_factor": 1.722263956741752,
+      "total_trades": 193,
+      "win_rate": 59.067357512953365,
+      "total_return": 27.226975748759436,
+      "profit_factor": 1.7191896098707071,
       "max_drawdown": -5.932055911555495,
-      "sharpe": 3.038493279409945
+      "sharpe": 3.0492230437179244
     },
     "recent_90d": {
       "total_trades": 298,
@@ -49,7 +49,7 @@
       "total_return": 41.05822413410263,
       "profit_factor": 1.7165786398208402,
       "max_drawdown": -5.932055911555489,
-      "sharpe": 3.141628272466712
+      "sharpe": 3.146912764464766
     },
     "recent_120d": {
       "total_trades": 381,
@@ -57,7 +57,7 @@
       "total_return": 43.05350106875904,
       "profit_factor": 1.6239052029135388,
       "max_drawdown": -5.932055911555489,
-      "sharpe": 2.8071152720565196
+      "sharpe": 2.810806417992949
     },
     "full_history": {
       "total_trades": 820,
@@ -65,7 +65,7 @@
       "total_return": 65.089521651927,
       "profit_factor": 1.506654534842469,
       "max_drawdown": -12.545334581729392,
-      "sharpe": 2.3650902208604343
+      "sharpe": 2.366533669405465
     }
   }
 }

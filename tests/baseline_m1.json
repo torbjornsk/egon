@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-27T20:08:57.206915",
+  "timestamp": "2026-02-27T22:02:44.120670",
   "config": {
     "strategy": "m1_scalping",
     "position_size_pct": 0.15,
@@ -19,20 +19,20 @@
   },
   "results": {
     "recent_30d": {
-      "total_trades": 3423,
-      "win_rate": 64.76774758983348,
-      "total_return": 70.29963350148608,
-      "profit_factor": 1.1872869943048003,
+      "total_trades": 3427,
+      "win_rate": 64.72133060986286,
+      "total_return": 69.50023158116592,
+      "profit_factor": 1.1850103638154428,
       "max_drawdown": -13.73683512721453,
-      "sharpe": 0.829864016667072
+      "sharpe": 0.8202542762368134
     },
     "recent_60d": {
-      "total_trades": 6835,
-      "win_rate": 64.38917337234821,
-      "total_return": 103.87814635016932,
-      "profit_factor": 1.181821316842311,
+      "total_trades": 6842,
+      "win_rate": 64.3817597193803,
+      "total_return": 105.00382345901329,
+      "profit_factor": 1.1840851794641152,
       "max_drawdown": -13.736835127214464,
-      "sharpe": 0.7948930263556343
+      "sharpe": 0.8038784620498924
     }
   }
 }

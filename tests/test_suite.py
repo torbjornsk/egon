@@ -95,14 +95,14 @@ class TestSuite:
                 # We'll compute for common parameter ranges
                 print(f"  {period_name}: Computing indicators...")
                 
-                # EMA variations (fast: 8-15, slow: 20-30)
-                for fast in [8, 9, 10, 12, 15]:
+                # EMA variations (fast: 5-15, slow: 12-30)
+                for fast in [5, 6, 7, 8, 9, 10, 12, 15]:
                     df[f'ema_{fast}'] = df['close'].ewm(span=fast, adjust=False).mean()
-                for slow in [20, 21, 24, 26, 30]:
+                for slow in [12, 15, 18, 20, 21, 24, 26, 30]:
                     df[f'ema_{slow}'] = df['close'].ewm(span=slow, adjust=False).mean()
                 
-                # RSI variations (period: 10-20)
-                for period in [10, 12, 14, 16, 20]:
+                # RSI variations (period: 5-20)
+                for period in [5, 7, 10, 12, 14, 16, 20]:
                     delta = df['close'].diff()
                     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
                     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
@@ -126,7 +126,7 @@ class TestSuite:
         mt5.shutdown()
         
         print(f"\nData cached in: {self.cache_dir}")
-        print("Indicators pre-computed: EMA (8,9,10,12,15,20,21,24,26,30), RSI (10,12,14,16,20), ATR (14)")
+        print("Indicators pre-computed: EMA (5-15,18,20,21,24,26,30), RSI (5,7,10,12,14,16,20), ATR (14)")
         return cached_data
 
     
