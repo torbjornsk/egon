@@ -1,0 +1,386 @@
+{
+  "settings": {
+    "n_samples": 50,
+    "window_days": 14,
+    "test_period": 120,
+    "confidence": "~85%"
+  },
+  "top_10": [
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 20,
+        "rsi_sell": 75,
+        "rsi_exit_long": 70,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.025,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 1.0991322268099468,
+        "std_return": 2.7936195829008508,
+        "mean_wr": 66.2779397473275,
+        "mean_pf": 0.4210192649039243,
+        "mean_sharpe": 33.300214813445706
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 20,
+        "rsi_sell": 75,
+        "rsi_exit_long": 70,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.03,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 1.0991322268099468,
+        "std_return": 2.7936195829008508,
+        "mean_wr": 66.2779397473275,
+        "mean_pf": 0.4210192649039243,
+        "mean_sharpe": 33.300214813445706
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 20,
+        "rsi_sell": 75,
+        "rsi_exit_long": 70,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.02,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 1.0760994043053544,
+        "std_return": 2.7390374482992206,
+        "mean_wr": 66.2779397473275,
+        "mean_pf": 0.4210192649039243,
+        "mean_sharpe": 33.44380730551327
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 20,
+        "rsi_sell": 75,
+        "rsi_exit_long": 70,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.015,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 0.9404406287174174,
+        "std_return": 2.4192697478551155,
+        "mean_wr": 66.2779397473275,
+        "mean_pf": 0.4210192649039243,
+        "mean_sharpe": 34.29986409116349
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 40,
+        "rsi_sell": 65,
+        "rsi_exit_long": 75,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.025,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 8.96914299343663,
+        "std_return": 14.305381126660752,
+        "mean_wr": 49.69506407502362,
+        "mean_pf": 1.6783424570159278,
+        "mean_sharpe": 2.6224217085532233
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 40,
+        "rsi_sell": 65,
+        "rsi_exit_long": 65,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.02,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 7.62570228618677,
+        "std_return": 9.551917046129386,
+        "mean_wr": 59.86142146521405,
+        "mean_pf": 1.6744318738733133,
+        "mean_sharpe": 3.0832551086319757
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 40,
+        "rsi_sell": 65,
+        "rsi_exit_long": 65,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.025,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 7.62570228618677,
+        "std_return": 9.551917046129386,
+        "mean_wr": 59.86142146521405,
+        "mean_pf": 1.6744318738733133,
+        "mean_sharpe": 3.0832551086319757
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 40,
+        "rsi_sell": 65,
+        "rsi_exit_long": 65,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.03,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 7.62570228618677,
+        "std_return": 9.551917046129386,
+        "mean_wr": 59.86142146521405,
+        "mean_pf": 1.6744318738733133,
+        "mean_sharpe": 3.0832551086319757
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 40,
+        "rsi_sell": 65,
+        "rsi_exit_long": 75,
+        "rsi_exit_short": 35,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.03,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 8.964581358352751,
+        "std_return": 14.29414173060984,
+        "mean_wr": 49.69506407502362,
+        "mean_pf": 1.6781209208404875,
+        "mean_sharpe": 2.6224489823212447
+      }
+    },
+    {
+      "config": {
+        "strategy": "m5_scalping_optimized",
+        "position_size_pct": 0.15,
+        "leverage": 25,
+        "max_drawdown_limit": 0.35,
+        "fast_ema": 9,
+        "slow_ema": 21,
+        "rsi_period": 14,
+        "rsi_buy": 20,
+        "rsi_sell": 75,
+        "rsi_exit_long": 70,
+        "rsi_exit_short": 40,
+        "atr_multiplier": 2.0,
+        "profit_target_pct": 0.015,
+        "enable_shorts": true,
+        "_optimization_results": {
+          "return_pct": 43.5,
+          "win_rate": 58.9,
+          "max_drawdown": 5.9,
+          "sharpe_ratio": 2.83,
+          "trades": 382,
+          "test_period": "178 days (recent market)",
+          "improvement_vs_old": "+44.2%",
+          "optimized_date": "2026-02-26"
+        }
+      },
+      "metrics": {
+        "mean_return": 0.5511194298243406,
+        "std_return": 1.6132922819936977,
+        "mean_wr": 73.42079689018463,
+        "mean_pf": 0.2736031968919135,
+        "mean_sharpe": 42.22260641688697
+      }
+    }
+  ],
+  "best_config": {
+    "strategy": "m5_scalping_optimized",
+    "position_size_pct": 0.15,
+    "leverage": 25,
+    "max_drawdown_limit": 0.35,
+    "fast_ema": 9,
+    "slow_ema": 21,
+    "rsi_period": 14,
+    "rsi_buy": 20,
+    "rsi_sell": 75,
+    "rsi_exit_long": 70,
+    "rsi_exit_short": 35,
+    "atr_multiplier": 2.0,
+    "profit_target_pct": 0.025,
+    "enable_shorts": true,
+    "_optimization_results": {
+      "return_pct": 43.5,
+      "win_rate": 58.9,
+      "max_drawdown": 5.9,
+      "sharpe_ratio": 2.83,
+      "trades": 382,
+      "test_period": "178 days (recent market)",
+      "improvement_vs_old": "+44.2%",
+      "optimized_date": "2026-02-26"
+    }
+  }
+}

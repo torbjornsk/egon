@@ -40,15 +40,15 @@ def optimize_m5_monte_carlo():
     ))
     
     # Monte Carlo settings
-    n_samples = 30  # 30 samples = ~95% confidence (adjust as needed)
+    n_samples = 50  # 50 samples = ~99% confidence
     window_days = 14  # 2-week windows
     test_period = 120  # Sample from last 120 days
     
     print(f"\nMonte Carlo Settings:")
     print(f"  Testing {len(combinations)} parameter combinations")
     print(f"  Sampling {n_samples} random {window_days}-day windows from {test_period}-day period")
-    print(f"  Confidence level: ~95%")
-    print(f"  Expected time: ~3-5 minutes")
+    print(f"  Confidence level: ~99%")
+    print(f"  Expected time: ~30 seconds")
     print(f"\n  To adjust: Edit n_samples in this file (10=80%, 20=90%, 30=95%, 50=99%)\n")
     
     start_time = time.time()
