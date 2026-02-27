@@ -52,9 +52,9 @@ class TestSuite:
             pickle.dump(data, f)
     
     def fetch_and_cache_data(self, symbol='XAUUSD', force_refresh=False):
-        """Fetch all test data and cache it"""
+        """Fetch all test data and cache it WITH PRE-COMPUTED INDICATORS"""
         print("="*80)
-        print("FETCHING AND CACHING TEST DATA")
+        print("FETCHING AND CACHING TEST DATA (with pre-computed indicators)")
         print("="*80)
         
         if not mt5.initialize():
@@ -76,7 +76,7 @@ class TestSuite:
                 if not force_refresh:
                     cached = self._load_cached_data(cache_key)
                     if cached is not None:
-                        print(f"  {period_name}: Loaded from cache")
+                        print(f"  {period_name}: Loaded from cache (with indicators)")
                         cached_data[f"{tf_name}_{period_name}"] = cached
                         continue
                 
@@ -91,38 +91,63 @@ class TestSuite:
                 df = pd.DataFrame(rates)
                 df['time'] = pd.to_datetime(df['time'], unit='s')
                 
-                # Save to cache
+                # PRE-COMPUTE ALL INDICATORS (do this once, not per config)
+                # We'll compute for common parameter ranges
+                print(f"  {period_name}: Computing indicators...")
+                
+                # EMA variations (fast: 8-15, slow: 21-30)
+                for fast in [8, 10, 12, 15]:
+                    df[f'ema_{fast}'] = df['close'].ewm(span=fast, adjust=False).mean()
+                for slow in [21, 24, 26, 30]:
+                    df[f'ema_{slow}'] = df['close'].ewm(span=slow, adjust=False).mean()
+                
+                # RSI variations (period: 10-20)
+                for period in [10, 12, 14, 16, 20]:
+                    delta = df['close'].diff()
+                    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+                    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+                    rs = gain / loss
+                    df[f'rsi_{period}'] = 100 - (100 / (1 + rs))
+                
+                # ATR (standard 14 period)
+                df['high_low'] = df['high'] - df['low']
+                df['high_close'] = abs(df['high'] - df['close'].shift())
+                df['low_close'] = abs(df['low'] - df['close'].shift())
+                df['tr'] = df[['high_low', 'high_close', 'low_close']].max(axis=1)
+                df['atr_14'] = df['tr'].rolling(window=14).mean()
+                
+                # Save to cache WITH indicators
                 self._save_cached_data(cache_key, df)
                 cached_data[f"{tf_name}_{period_name}"] = df
                 
                 actual_days = (df['time'].iloc[-1] - df['time'].iloc[0]).days
-                print(f"  {period_name}: Fetched {len(df)} bars ({actual_days} days)")
+                print(f"  {period_name}: Cached {len(df)} bars ({actual_days} days) with indicators")
         
         mt5.shutdown()
         
         print(f"\nData cached in: {self.cache_dir}")
+        print("Indicators pre-computed: EMA (8,10,12,15,21,24,26,30), RSI (10,12,14,16,20), ATR (14)")
         return cached_data
 
     
-    def compute_indicators(self, df, fast_ema, slow_ema, rsi_period):
-        """Compute technical indicators"""
+    def prepare_indicators(self, df, fast_ema, slow_ema, rsi_period):
+        """
+        Use pre-computed indicators from cache (FAST - no computation)
+        Just reference the right columns and compute derived values
+        """
         df = df.copy()
-        df['ema_fast'] = df['close'].ewm(span=fast_ema, adjust=False).mean()
-        df['ema_slow'] = df['close'].ewm(span=slow_ema, adjust=False).mean()
+        
+        # Use pre-computed EMA columns
+        df['ema_fast'] = df[f'ema_{fast_ema}']
+        df['ema_slow'] = df[f'ema_{slow_ema}']
         df['uptrend'] = df['ema_fast'] > df['ema_slow']
         df['downtrend'] = df['ema_fast'] < df['ema_slow']
         
-        delta = df['close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
-        rs = gain / loss
-        df['RSI'] = 100 - (100 / (1 + rs))
+        # Use pre-computed RSI column
+        df['RSI'] = df[f'rsi_{rsi_period}']
         
-        df['high_low'] = df['high'] - df['low']
-        df['high_close'] = abs(df['high'] - df['close'].shift())
-        df['low_close'] = abs(df['low'] - df['close'].shift())
-        df['tr'] = df[['high_low', 'high_close', 'low_close']].max(axis=1)
-        df['ATR'] = df['tr'].rolling(window=14).mean()
+        # Use pre-computed ATR column
+        df['ATR'] = df['atr_14']
         
         return df
     
@@ -248,8 +273,8 @@ class TestSuite:
                 print(f"  {period_name}: No cached data (run fetch_and_cache_data first)")
                 continue
             
-            # Compute indicators
-            df = self.compute_indicators(df, config['fast_ema'], config['slow_ema'], config['rsi_period'])
+            # Prepare indicators (FAST - just column references)
+            df = self.prepare_indicators(df, config['fast_ema'], config['slow_ema'], config['rsi_period'])
             
             # Simulate
             trades = self.simulate_strategy(df, config, max_positions=2)
