@@ -19,6 +19,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from src.strategies.trend_following import TrendFollowingStrategy
 from src.integrations.alpha_vantage import AlphaVantageSentiment, ManualSentiment
+from src.integrations.mrktedge_scraper import MRKTedgeScraper
 
 # Setup logging
 logging.basicConfig(
@@ -83,7 +84,10 @@ class TrendTradingBot:
         
         sentiment_source = self.config.get('sentiment_source', 'manual')
         
-        if sentiment_source == 'alpha_vantage':
+        if sentiment_source == 'mrktedge':
+            self.sentiment = MRKTedgeScraper()
+            logging.info("Sentiment filter: MRKTedge ENABLED")
+        elif sentiment_source == 'alpha_vantage':
             api_key = self.config.get('alpha_vantage_api_key', '')
             if api_key:
                 self.sentiment = AlphaVantageSentiment(api_key)

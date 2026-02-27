@@ -63,6 +63,7 @@ desktop.ini
 config/*_live.json
 config/*_production.json
 config/*_secret.json
+config/mrktedge_credentials.json
 
 # Documentation builds
 docs/_build/

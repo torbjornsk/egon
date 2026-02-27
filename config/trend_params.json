@@ -18,7 +18,7 @@
   
   "_comment_sentiment": "News sentiment integration",
   "use_sentiment_filter": true,
-  "sentiment_source": "alpha_vantage",
+  "sentiment_source": "mrktedge",
   "alpha_vantage_api_key": "",
   
   "_comment_positions": "Position management",
@@ -30,6 +30,8 @@
     "Targets 5-15% moves over hours to days",
     "Uses trailing stops to lock in profits",
     "Sentiment filter improves win rate",
-    "Get free Alpha Vantage API key: https://www.alphavantage.co/support/#api-key"
+    "Sentiment sources: 'mrktedge' (scraper), 'alpha_vantage' (API), or 'manual'",
+    "For mrktedge: Add credentials to config/mrktedge_credentials.json",
+    "For alpha_vantage: Get free API key at https://www.alphavantage.co/support/#api-key"
   ]
 }
