@@ -95,10 +95,10 @@ class TestSuite:
                 # We'll compute for common parameter ranges
                 print(f"  {period_name}: Computing indicators...")
                 
-                # EMA variations (fast: 8-15, slow: 21-30)
-                for fast in [8, 10, 12, 15]:
+                # EMA variations (fast: 8-15, slow: 20-30)
+                for fast in [8, 9, 10, 12, 15]:
                     df[f'ema_{fast}'] = df['close'].ewm(span=fast, adjust=False).mean()
-                for slow in [21, 24, 26, 30]:
+                for slow in [20, 21, 24, 26, 30]:
                     df[f'ema_{slow}'] = df['close'].ewm(span=slow, adjust=False).mean()
                 
                 # RSI variations (period: 10-20)
@@ -126,7 +126,7 @@ class TestSuite:
         mt5.shutdown()
         
         print(f"\nData cached in: {self.cache_dir}")
-        print("Indicators pre-computed: EMA (8,10,12,15,21,24,26,30), RSI (10,12,14,16,20), ATR (14)")
+        print("Indicators pre-computed: EMA (8,9,10,12,15,20,21,24,26,30), RSI (10,12,14,16,20), ATR (14)")
         return cached_data
 
     
@@ -152,15 +152,28 @@ class TestSuite:
         return df
     
     def simulate_strategy(self, df, config, max_positions=2):
-        """Simulate trading strategy"""
+        """Simulate trading strategy (optimized with NumPy arrays)"""
         positions = []
         closed_trades = []
         
         position_size = 0.15 / max_positions
         leverage = 25
         
-        for idx in range(len(df)):
-            row = df.iloc[idx]
+        # Convert DataFrame columns to NumPy arrays (10-20x faster than df.iloc[])
+        close_prices = df['close'].values
+        rsi_values = df['RSI'].values
+        atr_values = df['ATR'].values
+        uptrend_values = df['uptrend'].values
+        downtrend_values = df['downtrend'].values
+        
+        n_candles = len(close_prices)
+        
+        for idx in range(n_candles):
+            close = close_prices[idx]
+            rsi = rsi_values[idx]
+            atr = atr_values[idx]
+            uptrend = uptrend_values[idx]
+            downtrend = downtrend_values[idx]
             
             # Check exits
             for pos in positions[:]:
@@ -169,19 +182,19 @@ class TestSuite:
                 exit_price = None
                 
                 if pos['type'] == 'LONG':
-                    if row['close'] >= pos['tp']:
+                    if close >= pos['tp']:
                         exit_signal, exit_reason, exit_price = True, 'TP', pos['tp']
-                    elif row['close'] <= pos['sl']:
+                    elif close <= pos['sl']:
                         exit_signal, exit_reason, exit_price = True, 'SL', pos['sl']
-                    elif row['RSI'] >= config['rsi_exit_long']:
-                        exit_signal, exit_reason, exit_price = True, 'RSI_EXIT', row['close']
+                    elif rsi >= config['rsi_exit_long']:
+                        exit_signal, exit_reason, exit_price = True, 'RSI_EXIT', close
                 else:  # SHORT
-                    if row['close'] <= pos['tp']:
+                    if close <= pos['tp']:
                         exit_signal, exit_reason, exit_price = True, 'TP', pos['tp']
-                    elif row['close'] >= pos['sl']:
+                    elif close >= pos['sl']:
                         exit_signal, exit_reason, exit_price = True, 'SL', pos['sl']
-                    elif row['RSI'] <= config['rsi_exit_short']:
-                        exit_signal, exit_reason, exit_price = True, 'RSI_EXIT', row['close']
+                    elif rsi <= config['rsi_exit_short']:
+                        exit_signal, exit_reason, exit_price = True, 'RSI_EXIT', close
                 
                 if exit_signal:
                     if pos['type'] == 'LONG':
@@ -199,53 +212,64 @@ class TestSuite:
             
             # Check entries
             if len(positions) < max_positions:
-                if row['RSI'] < config['rsi_buy'] and row['uptrend']:
+                if rsi < config['rsi_buy'] and uptrend:
                     positions.append({
                         'type': 'LONG',
-                        'entry': row['close'],
+                        'entry': close,
                         'entry_idx': idx,
-                        'sl': row['close'] - (row['ATR'] * config['atr_multiplier']),
-                        'tp': row['close'] * (1 + config['profit_target_pct'])
+                        'sl': close - (atr * config['atr_multiplier']),
+                        'tp': close * (1 + config['profit_target_pct'])
                     })
-                elif config.get('enable_shorts', True) and row['RSI'] > config['rsi_sell'] and row['downtrend']:
+                elif config.get('enable_shorts', True) and rsi > config['rsi_sell'] and downtrend:
                     positions.append({
                         'type': 'SHORT',
-                        'entry': row['close'],
+                        'entry': close,
                         'entry_idx': idx,
-                        'sl': row['close'] + (row['ATR'] * config['atr_multiplier']),
-                        'tp': row['close'] * (1 - config['profit_target_pct'])
+                        'sl': close + (atr * config['atr_multiplier']),
+                        'tp': close * (1 - config['profit_target_pct'])
                     })
         
         return closed_trades
 
     
     def analyze_results(self, trades):
-        """Analyze trading results"""
+        """Analyze trading results (optimized with NumPy)"""
         if len(trades) == 0:
             return None
         
-        df = pd.DataFrame(trades)
-        winning = df[df['profit_pct'] > 0]
-        losing = df[df['profit_pct'] <= 0]
+        # Convert to numpy array for speed (much faster than pandas)
+        profits = np.array([t['profit_pct'] for t in trades])
         
-        total_return = df['profit_pct'].sum()
-        win_rate = len(winning) / len(trades) * 100
+        # Basic metrics
+        total_return = profits.sum()
+        win_mask = profits > 0
+        n_wins = win_mask.sum()
+        win_rate = (n_wins / len(trades)) * 100
         
-        avg_win = winning['profit_pct'].mean() if len(winning) > 0 else 0
-        avg_loss = losing['profit_pct'].mean() if len(losing) > 0 else 0
+        # Win/loss metrics
+        if n_wins > 0:
+            gross_profit = profits[win_mask].sum()
+        else:
+            gross_profit = 0
         
-        gross_profit = winning['profit_pct'].sum() if len(winning) > 0 else 0
-        gross_loss = abs(losing['profit_pct'].sum()) if len(losing) > 0 else 0
+        n_losses = len(trades) - n_wins
+        if n_losses > 0:
+            gross_loss = abs(profits[~win_mask].sum())
+        else:
+            gross_loss = 0
+        
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0
         
-        cumulative = df['profit_pct'].cumsum()
-        running_max = cumulative.expanding().max()
-        drawdown = (cumulative - running_max)
+        # Drawdown calculation (vectorized)
+        cumulative = np.cumsum(profits)
+        running_max = np.maximum.accumulate(cumulative)
+        drawdown = cumulative - running_max
         max_drawdown = drawdown.min()
         
+        # Sharpe ratio
         if len(trades) > 1:
-            returns_std = df['profit_pct'].std()
-            sharpe = (df['profit_pct'].mean() / returns_std * np.sqrt(252)) if returns_std > 0 else 0
+            returns_std = profits.std()
+            sharpe = (profits.mean() / returns_std * np.sqrt(252)) if returns_std > 0 else 0
         else:
             sharpe = 0
         
