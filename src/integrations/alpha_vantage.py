@@ -63,8 +63,7 @@ class AlphaVantageSentiment:
         # Get news sentiment for gold-related topics
         params = {
             'function': 'NEWS_SENTIMENT',
-            'topics': 'economy_monetary,economy_fiscal,finance',
-            'tickers': 'FOREX:USD',  # USD strength affects gold
+            'topics': 'finance',
             'apikey': self.api_key,
             'limit': 50  # Get recent 50 articles
         }
@@ -72,6 +71,14 @@ class AlphaVantageSentiment:
         response = requests.get(self.base_url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
+        
+        # Check for API errors
+        if 'Error Message' in data:
+            raise ValueError(f"API Error: {data['Error Message']}")
+        if 'Information' in data:
+            raise ValueError(f"API Info: {data['Information']}")
+        if 'Note' in data:
+            raise ValueError(f"API Note (rate limit?): {data['Note']}")
         
         if 'feed' not in data:
             raise ValueError(f"Unexpected API response: {data}")
