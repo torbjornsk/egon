@@ -42,7 +42,8 @@ class MRKTedgeScraper:
             with open(self.credentials_path, 'r') as f:
                 creds = json.load(f)
             
-            if creds.get('email') == 'your_email@example.com':
+            email = creds.get('email', '')
+            if not email or email == 'your_email@example.com' or '@' not in email:
                 self.logger.warning("Please update mrktedge credentials in config/mrktedge_credentials.json")
                 return None
             
@@ -58,47 +59,69 @@ class MRKTedgeScraper:
             return False
         
         try:
-            # First, get the login page to extract any CSRF tokens
-            login_page = self.session.get(f"{self.base_url}/login", timeout=10)
+            # Modern web apps often use different auth endpoints
+            # Try multiple common patterns
             
-            if login_page.status_code != 200:
-                self.logger.error(f"Failed to load login page: {login_page.status_code}")
-                return False
+            auth_endpoints = [
+                f"{self.base_url}/api/auth/signin",
+                f"{self.base_url}/api/auth/login",
+                f"{self.base_url}/api/login",
+                f"{self.base_url}/auth/login",
+            ]
             
-            # Parse the page to find the login form
-            soup = BeautifulSoup(login_page.content, 'html.parser')
-            
-            # Look for CSRF token (common in modern web apps)
-            csrf_token = None
-            csrf_input = soup.find('input', {'name': re.compile(r'csrf|token', re.I)})
-            if csrf_input:
-                csrf_token = csrf_input.get('value')
-            
-            # Prepare login data
             login_data = {
                 'email': self.credentials['email'],
                 'password': self.credentials['password']
             }
             
-            if csrf_token:
-                login_data['csrf_token'] = csrf_token
+            for endpoint in auth_endpoints:
+                try:
+                    self.logger.debug(f"Trying endpoint: {endpoint}")
+                    
+                    # Try POST with JSON
+                    response = self.session.post(
+                        endpoint,
+                        json=login_data,
+                        timeout=10,
+                        allow_redirects=True
+                    )
+                    
+                    self.logger.debug(f"Response status: {response.status_code}")
+                    
+                    # Check for success indicators
+                    if response.status_code == 200:
+                        # Check if we got a token or session cookie
+                        if 'token' in response.text.lower() or len(self.session.cookies) > 0:
+                            self.logged_in = True
+                            self.logger.info("Successfully logged in to mrktedge.ai")
+                            return True
+                    
+                    # Try with form data instead of JSON
+                    response = self.session.post(
+                        endpoint,
+                        data=login_data,
+                        timeout=10,
+                        allow_redirects=True
+                    )
+                    
+                    if response.status_code == 200:
+                        if 'token' in response.text.lower() or len(self.session.cookies) > 0:
+                            self.logged_in = True
+                            self.logger.info("Successfully logged in to mrktedge.ai")
+                            return True
+                    
+                except Exception as e:
+                    self.logger.debug(f"Endpoint {endpoint} failed: {e}")
+                    continue
             
-            # Submit login form
-            login_response = self.session.post(
-                f"{self.base_url}/api/auth/login",  # Common API endpoint
-                json=login_data,
-                timeout=10
-            )
-            
-            # Check if login was successful
-            if login_response.status_code == 200:
-                self.logged_in = True
-                self.logger.info("Successfully logged in to mrktedge.ai")
-                return True
-            else:
-                self.logger.error(f"Login failed: {login_response.status_code}")
-                self.logger.debug(f"Response: {login_response.text[:200]}")
-                return False
+            # If all endpoints failed, log detailed error
+            self.logger.error("All login endpoints failed")
+            self.logger.error("This likely means:")
+            self.logger.error("1. The site uses a different authentication method")
+            self.logger.error("2. They may use OAuth or third-party auth")
+            self.logger.error("3. The site structure has changed")
+            self.logger.error("\nRecommendation: Use Alpha Vantage API instead")
+            return False
                 
         except Exception as e:
             self.logger.error(f"Login error: {e}")
