@@ -109,7 +109,7 @@ class LiveTradingBot:
             }
         return None
     
-    def get_historical_data(self, symbol='XAUUSD', timeframe=mt5.TIMEFRAME_M1, bars=500):
+    def get_historical_data(self, symbol='XAUUSD.p', timeframe=mt5.TIMEFRAME_M1, bars=500):
         """Get historical price data"""
         # Ensure symbol is visible
         symbol_info = mt5.symbol_info(symbol)
@@ -239,7 +239,7 @@ class LiveTradingBot:
             return True
         return False
     
-    def emergency_close_all(self, symbol='XAUUSD'):
+    def emergency_close_all(self, symbol='XAUUSD.p'):
         """Emergency: Close all positions immediately"""
         logging.critical("EMERGENCY: Closing all positions!")
         
@@ -345,7 +345,7 @@ class LiveTradingBot:
         
         return False, 0, time_gap
     
-    def get_open_positions(self, symbol='XAUUSD'):
+    def get_open_positions(self, symbol='XAUUSD.p'):
         """Get all open positions with this bot's magic number"""
         positions = mt5.positions_get(symbol=symbol)
         bot_positions = []
@@ -555,11 +555,7 @@ class LiveTradingBot:
     
     def trading_logic(self):
         """Main trading logic"""
-        symbol = 'XAUUSD'
-        
-    def trading_logic(self):
-        """Main trading logic"""
-        symbol = 'XAUUSD'
+        symbol = 'XAUUSD.p'
         
         # Get account info
         account_info = self.get_account_info()
@@ -938,7 +934,7 @@ class LiveTradingBot:
                 logging.info(f"EXIT SIGNAL (ticket {ticket}): {reason}, Current P/L: ${current_profit:.2f}")
                 self.close_position(open_position)
     
-    def has_new_candle(self, symbol='XAUUSD', timeframe=mt5.TIMEFRAME_M1):
+    def has_new_candle(self, symbol='XAUUSD.p', timeframe=mt5.TIMEFRAME_M1):
         """Check if a new candle has formed since last check"""
         rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 1)
         if rates is None or len(rates) == 0:
@@ -1038,10 +1034,49 @@ class LiveTradingBot:
             logging.error("Failed to connect to MT5")
             return
         
+        # Print initial state on startup
+        logging.info("\nFetching initial data...")
+        try:
+            df = self.get_historical_data(bars=200)  # Need enough bars for indicators
+            if df is not None and len(df) > 0:
+                df = self.compute_indicators(df)
+                if len(df) > 0:  # Check we have data after indicator calculation
+                    latest = df.iloc[-1]
+                    
+                    logging.info(f"\nCurrent Market State:")
+                    logging.info(f"  Time: {latest['time'].strftime('%Y-%m-%d %H:%M:%S')}")
+                    logging.info(f"  Close: {latest['close']:.2f}")
+                    
+                    # Check if indicators exist
+                    if 'ema_5' in df.columns:
+                        logging.info(f"  EMA 5: {latest['ema_5']:.2f}")
+                        logging.info(f"  EMA 12: {latest['ema_12']:.2f}")
+                        logging.info(f"  RSI: {latest['rsi']:.2f}")
+                        logging.info(f"  ATR: {latest['atr']:.2f}")
+                    
+                    # Check if data is fresh
+                    now = pd.Timestamp.now()
+                    age_minutes = (now - latest['time']).total_seconds() / 60
+                    
+                    if age_minutes > 10:
+                        logging.info(f"\n  Market Status: CLOSED (last data {age_minutes:.0f} minutes ago)")
+                        logging.info(f"  Waiting for market to open...")
+                    else:
+                        logging.info(f"\n  Market Status: OPEN")
+                        logging.info(f"  Monitoring for signals...")
+        except Exception as e:
+            logging.warning(f"Could not fetch initial data: {e}")
+        
+        logging.info("\n" + "="*80)
+        
+        # Track last status message time
+        last_status_time = time.time()
+        status_interval = 60  # Print status every 60 seconds when waiting
+        
         try:
             while True:
                 try:
-                    # Check for new M5 candle
+                    # Check for new M1 candle
                     has_new, candle_time = self.has_new_candle()
                     
                     if has_new:
@@ -1052,18 +1087,31 @@ class LiveTradingBot:
                         # Run trading logic
                         self.trading_logic()
                         
-                        # Log status
-                        account_info = self.get_account_info()
-                        if account_info:
-                            drawdown = (self.peak_balance - account_info['balance']) / self.peak_balance * 100
-                            logging.info(f"Status: Balance=${account_info['balance']:.2f}, "
-                                       f"Equity=${account_info['equity']:.2f}, "
-                                       f"Profit=${account_info['profit']:.2f}, "
-                                       f"Drawdown={drawdown:.2f}%, "
-                                       f"Trades Today={self.trades_today}")
+                        # Reset status timer after processing candle
+                        last_status_time = time.time()
                     else:
-                        # No new candle yet
-                        logging.debug(f"Waiting for new candle...")
+                        # No new candle yet - print periodic status
+                        current_time = time.time()
+                        if current_time - last_status_time >= status_interval:
+                            # Get latest data to show we're alive
+                            df = self.get_historical_data(bars=10)
+                            if df is not None and len(df) > 0:
+                                latest = df.iloc[-1]
+                                latest_time = latest['time']
+                                latest_close = latest['close']
+                                
+                                # Check if market is likely closed
+                                now = pd.Timestamp.now()
+                                age_minutes = (now - latest_time).total_seconds() / 60
+                                
+                                if age_minutes > 10:
+                                    logging.info(f"[WAITING] Market closed - last data: {latest_time.strftime('%Y-%m-%d %H:%M')}, {age_minutes:.0f}min ago")
+                                else:
+                                    logging.info(f"[MONITORING] Waiting for new candle - current: {latest_time.strftime('%H:%M')}, price: {latest_close:.2f}")
+                            else:
+                                logging.info(f"Waiting for new candle...")
+                            
+                            last_status_time = current_time
                     
                     # Sleep for check interval
                     time.sleep(check_interval)

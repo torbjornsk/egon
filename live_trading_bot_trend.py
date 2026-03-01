@@ -35,7 +35,7 @@ class TrendTradingBot:
     def __init__(self, config_path='config/trend_params.json'):
         """Initialize the trend trading bot"""
         self.magic_number = 234002  # Unique magic number for trend bot
-        self.symbol = 'XAUUSD'
+        self.symbol = 'XAUUSD.p'
         self.timeframe = mt5.TIMEFRAME_H1
         self.positions = []
         self.load_config(config_path)
@@ -442,14 +442,72 @@ class TrendTradingBot:
         logging.info(f"Check interval: {self.check_interval_minutes} minutes")
         logging.info("="*60)
         
+        # Print initial state on startup
+        logging.info("\nFetching initial data...")
+        h1_data = self.get_h1_data()
+        h4_data = self.get_h4_data()
+        
+        if h1_data is not None and len(h1_data) > 0:
+            latest_h1 = h1_data.iloc[-1]
+            logging.info(f"\nCurrent Market State (H1):")
+            logging.info(f"  Time: {latest_h1['time'].strftime('%Y-%m-%d %H:%M:%S')}")
+            logging.info(f"  Close: {latest_h1['close']:.2f}")
+            logging.info(f"  EMA 20: {latest_h1['ema_20']:.2f}")
+            logging.info(f"  EMA 50: {latest_h1['ema_50']:.2f}")
+            logging.info(f"  RSI: {latest_h1['rsi']:.2f}")
+            logging.info(f"  MACD: {latest_h1['macd']:.3f}")
+            
+            # Check if data is fresh
+            now = pd.Timestamp.now()
+            age_minutes = (now - latest_h1['time']).total_seconds() / 60
+            
+            if age_minutes > 60:
+                logging.info(f"\n  Market Status: CLOSED (last data {age_minutes:.0f} minutes ago)")
+                logging.info(f"  Waiting for market to open...")
+            else:
+                logging.info(f"\n  Market Status: OPEN")
+                logging.info(f"  Monitoring for signals...")
+        
+        if h4_data is not None and len(h4_data) > 0:
+            latest_h4 = h4_data.iloc[-1]
+            logging.info(f"\nH4 Trend:")
+            logging.info(f"  EMA 50: {latest_h4['ema_50']:.2f}")
+            logging.info(f"  EMA 200: {latest_h4['ema_200']:.2f}")
+            logging.info(f"  ADX: {latest_h4['adx']:.2f}")
+            
+            if latest_h4['ema_50'] > latest_h4['ema_200'] and latest_h4['adx'] > 25:
+                logging.info(f"  Trend: UPTREND")
+            elif latest_h4['ema_50'] < latest_h4['ema_200'] and latest_h4['adx'] > 25:
+                logging.info(f"  Trend: DOWNTREND")
+            else:
+                logging.info(f"  Trend: NO CLEAR TREND")
+        
+        logging.info("\n" + "="*60)
+        
         try:
             iteration = 0
             while True:
                 iteration += 1
                 
-                # Print status every 10 iterations
+                # Print status every 10 iterations (50 minutes)
                 if iteration % 10 == 0:
                     self.print_status()
+                else:
+                    # Show we're alive every iteration
+                    h1_data = self.get_h1_data()
+                    if h1_data is not None and len(h1_data) > 0:
+                        latest = h1_data.iloc[-1]
+                        latest_time = latest['time']
+                        latest_close = latest['close']
+                        
+                        # Check if market is likely closed
+                        now = pd.Timestamp.now()
+                        age_minutes = (now - latest_time).total_seconds() / 60
+                        
+                        if age_minutes > 60:
+                            logging.info(f"[WAITING] Market closed - last H1: {latest_time.strftime('%Y-%m-%d %H:%M')}, {age_minutes:.0f}min ago")
+                        else:
+                            logging.info(f"[MONITORING] H1: {latest_time.strftime('%H:%M')}, price: {latest_close:.2f}")
                 
                 # Check safety mechanisms
                 self.check_safety_mechanisms()
