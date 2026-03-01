@@ -14,16 +14,35 @@ This is **NOT** an AutoTrading/AlgoTrading button issue. The demo account itself
 
 ## Why This Happens
 
-Dominion Markets has disabled trading on this specific demo account. This can happen when:
+The account shows `Trade Allowed: False`. This can happen when:
 
-1. **Demo account expired** - Demo accounts often have time limits (30-90 days)
-2. **Account restrictions** - Some demo accounts are view-only
-3. **Server-side limitation** - Broker disabled trading on this account
-4. **Account type** - Account may be set as "Investor" (read-only) instead of "Trade"
+1. **Wrong password type** - Using investor (read-only) password instead of master password ⭐ MOST COMMON
+2. **Demo account expired** - Demo accounts often have time limits (30-90 days)
+3. **Account restrictions** - Some demo accounts are view-only
+4. **Server-side limitation** - Broker disabled trading on this account
+5. **Account type** - Account may be set as "Investor" (read-only) instead of "Trade"
 
 ## Solutions
 
-### Solution 1: Create a New Demo Account (Recommended)
+### Solution 0: Check Password Type (Try This First!) ⭐
+
+MT5 accounts have TWO passwords:
+- **Master Password** - Full trading access ✅
+- **Investor Password** - Read-only access ❌
+
+If you're using the investor password, you'll get `Trade Allowed: False`.
+
+**Fix:**
+1. **File → Login to Trade Account** in MT5
+2. **Enter your account number**
+3. **Use MASTER password** (check your registration email)
+4. **Select server**: DominionMarkets-Live
+5. **Click Login**
+6. **Run diagnostic** to verify: `python diagnose_trade_issue.py`
+
+See `MT5_PASSWORD_TYPES.md` for more details.
+
+### Solution 1: Create a New Demo Account
 
 1. **Open MT5**
 2. **File → Open an Account**
