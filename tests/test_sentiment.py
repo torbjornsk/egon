@@ -42,7 +42,7 @@ def test_manual_sentiment():
         if should_trade:
             base_size = 0.10
             adjusted = sentiment.adjust_position_size(base_size)
-            print(f"  Position size: {base_size:.2f} → {adjusted:.2f} ({(adjusted/base_size-1)*100:+.0f}%)")
+            print(f"  Position size: {base_size:.2f} -> {adjusted:.2f} ({(adjusted/base_size-1)*100:+.0f}%)")
     
     print("\n" + "="*60)
     print("✓ Manual sentiment test complete")
@@ -90,7 +90,7 @@ def test_alpha_vantage(api_key=None):
             if should_trade:
                 base_size = 0.10
                 adjusted = sentiment.adjust_position_size(base_size, result)
-                print(f"  Position size: {base_size:.2f} → {adjusted:.2f} ({(adjusted/base_size-1)*100:+.0f}%)")
+                print(f"  Position size: {base_size:.2f} -> {adjusted:.2f} ({(adjusted/base_size-1)*100:+.0f}%)")
         
         print("\n" + "="*60)
         print("✓ Alpha Vantage test complete")
