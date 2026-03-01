@@ -25,8 +25,12 @@ class AlphaVantageSentiment:
         # Ensure data directory exists
         self.cache_file.parent.mkdir(exist_ok=True)
         
-    def get_gold_sentiment(self):
-        """Get current market sentiment for gold
+    def get_gold_sentiment(self, time_from=None, time_to=None):
+        """Get market sentiment for gold
+        
+        Args:
+            time_from: Start time in YYYYMMDDTHHMM format (optional)
+            time_to: End time in YYYYMMDDTHHMM format (optional)
         
         Returns:
             dict: {
@@ -34,14 +38,15 @@ class AlphaVantageSentiment:
                 'confidence': 0.0-1.0,
                 'score': -1.0 to 1.0,
                 'last_updated': timestamp,
-                'source': 'alpha_vantage'|'cache'|'manual'
+                'source': 'alpha_vantage'|'cache'
             }
         """
-        # Check cache first
-        cached = self._load_cache()
-        if cached and self._is_cache_valid(cached):
-            self.logger.info(f"Using cached sentiment: {cached['sentiment']} ({cached['confidence']:.2f})")
-            return cached
+        # If no time range specified, check cache first
+        if not time_from and not time_to:
+            cached = self._load_cache()
+            if cached and self._is_cache_valid(cached):
+                self.logger.info(f"Using cached sentiment: {cached['sentiment']} ({cached['confidence']:.2f})")
+                return cached
         
         # If no API key, return neutral
         if not self.api_key:
@@ -50,16 +55,26 @@ class AlphaVantageSentiment:
         
         # Fetch fresh sentiment
         try:
-            sentiment = self._fetch_sentiment()
-            self._save_cache(sentiment)
+            sentiment = self._fetch_sentiment(time_from, time_to)
+            # Only cache if no time range (current sentiment)
+            if not time_from and not time_to:
+                self._save_cache(sentiment)
             return sentiment
         except Exception as e:
             self.logger.error(f"Error fetching sentiment: {e}")
             # Return cached even if expired, or neutral
-            return cached if cached else self._neutral_sentiment()
+            if not time_from and not time_to:
+                return cached if cached else self._neutral_sentiment()
+            else:
+                return self._neutral_sentiment()
     
-    def _fetch_sentiment(self):
-        """Fetch sentiment from Alpha Vantage API"""
+    def _fetch_sentiment(self, time_from=None, time_to=None):
+        """Fetch sentiment from Alpha Vantage API
+        
+        Args:
+            time_from: Start time in YYYYMMDDTHHMM format
+            time_to: End time in YYYYMMDDTHHMM format
+        """
         # Get news sentiment for gold-related topics
         params = {
             'function': 'NEWS_SENTIMENT',
@@ -67,6 +82,12 @@ class AlphaVantageSentiment:
             'apikey': self.api_key,
             'limit': 50  # Get recent 50 articles
         }
+        
+        # Add time range if specified
+        if time_from:
+            params['time_from'] = time_from
+        if time_to:
+            params['time_to'] = time_to
         
         response = requests.get(self.base_url, params=params, timeout=10)
         response.raise_for_status()
