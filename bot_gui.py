@@ -67,7 +67,7 @@ class BotGUI:
         
         # MT5 connection
         self.mt5_connected = False
-        self.mt5_symbol = 'XAUUSD'
+        self.mt5_symbol = 'XAUUSD.p'
         
         # Bot states
         self.m5_data = {

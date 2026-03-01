@@ -70,7 +70,7 @@ class BotGUI:
         
         # MT5 connection
         self.mt5_connected = False
-        self.mt5_symbol = 'XAUUSD'
+        self.mt5_symbol = 'XAUUSD.p'
         
         # Chart settings
         self.chart_timeframe = 'M5'  # Default to M5
@@ -209,7 +209,7 @@ class BotGUI:
             
             for deal in deals:
                 # Only process XAUUSD deals from our bots
-                if deal.symbol != 'XAUUSD' or deal.magic not in [234000, 234001]:
+                if deal.symbol != 'XAUUSD.p' or deal.magic not in [234000, 234001]:
                     continue
                 
                 pos_id = deal.position_id

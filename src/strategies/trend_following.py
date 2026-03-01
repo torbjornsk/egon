@@ -79,7 +79,7 @@ class TrendFollowingStrategy(BaseStrategy):
         
         return df
     
-    def get_h4_trend(self, symbol='XAUUSD'):
+    def get_h4_trend(self, symbol='XAUUSD.p'):
         """Get H4 trend direction
         
         Returns:
