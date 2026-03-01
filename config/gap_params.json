@@ -1,0 +1,9 @@
+{
+  "strategy": "Gap Trading - M15 Momentum",
+  "position_size_pct": 0.15,
+  "leverage": 15,
+  "min_gap_pct": 0.3,
+  "atr_multiplier": 2.5,
+  "max_drawdown_limit": 0.35,
+  "enable_shorts": true
+}
