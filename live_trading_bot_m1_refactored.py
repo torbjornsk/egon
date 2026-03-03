@@ -6,6 +6,7 @@ Refactored to use BaseTradingBot and M1ScalpingStrategy
 import MetaTrader5 as mt5
 import argparse
 import logging
+import pytz
 from datetime import datetime
 from src.base_trading_bot import BaseTradingBot
 from src.strategies.m1_scalping import M1ScalpingStrategy
@@ -29,6 +30,11 @@ class M1TradingBot(BaseTradingBot):
         self.position_open_times = {}
         self.cooldown_candles = 2
         self.warmup_candles = 2
+        
+        # Timezone handling: MT5 uses EET (Eastern European Time)
+        # This automatically handles daylight savings (EET/EEST)
+        self.mt5_timezone = pytz.timezone('Europe/Athens')  # EET/EEST (GMT+2/GMT+3)
+        self.local_timezone = pytz.timezone('Europe/Berlin')  # CET/CEST (GMT+1/GMT+2)
         self.last_trade_profitable = False
         
         # Adjust position size for multiple positions
@@ -120,7 +126,7 @@ class M1TradingBot(BaseTradingBot):
             
             # Track position
             ticket = result.order
-            self.position_open_times[ticket] = datetime.now()
+            self.position_open_times[ticket] = datetime.now(self.local_timezone)
             
             logging.info(f">>> TRADE OPENED [{order_type_str}]")
             logging.info(f"  Entry Price: ${price:.2f}")
@@ -199,7 +205,9 @@ class M1TradingBot(BaseTradingBot):
         # Initialize position tracking for existing positions
         for pos in open_positions:
             if pos.ticket not in self.position_open_times:
-                self.position_open_times[pos.ticket] = datetime.fromtimestamp(pos.time)
+                # Convert MT5 timestamp to local timezone (handles DST automatically)
+                mt5_time = datetime.fromtimestamp(pos.time, tz=self.mt5_timezone)
+                self.position_open_times[pos.ticket] = mt5_time.astimezone(self.local_timezone)
         
         # Check for new entry if we have room
         if len(open_positions) < self.max_positions:

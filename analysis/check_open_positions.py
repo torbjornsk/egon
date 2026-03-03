@@ -6,10 +6,15 @@ import sys
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
+import pytz
 
 sys.path.append('.')
 from src.mt5_connector import MT5Connector
 import MetaTrader5 as mt5
+
+# Timezone configuration
+MT5_TIMEZONE = pytz.timezone('Europe/Athens')  # EET/EEST (GMT+2/GMT+3)
+LOCAL_TIMEZONE = pytz.timezone('Europe/Berlin')  # CET/CEST (GMT+1/GMT+2)
 
 def compute_indicators(df):
     df = df.copy()
@@ -53,8 +58,9 @@ def main():
     
     for pos in positions:
         pos_type = "LONG" if pos.type == mt5.ORDER_TYPE_BUY else "SHORT"
-        time_open = datetime.fromtimestamp(pos.time)
-        time_held = datetime.now() - time_open
+        # Convert MT5 timestamp to local timezone (handles DST automatically)
+        time_open = datetime.fromtimestamp(pos.time, tz=MT5_TIMEZONE).astimezone(LOCAL_TIMEZONE)
+        time_held = datetime.now(LOCAL_TIMEZONE) - time_open
         minutes_held = time_held.total_seconds() / 60
         
         print(f"Position: {pos_type}")

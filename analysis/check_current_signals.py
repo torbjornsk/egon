@@ -10,6 +10,7 @@ import numpy as np
 
 sys.path.append('.')
 from src.mt5_connector import MT5Connector
+from src.timezone_utils import mt5_to_local, calculate_hold_time, format_time_local
 import MetaTrader5 as mt5
 
 def compute_indicators(df):
@@ -101,9 +102,9 @@ def main():
     current_price = latest['close']
     current_profit = m5_position.profit
     
-    time_open = datetime.fromtimestamp(m5_position.time)
-    time_held = datetime.now() - time_open
-    minutes_held = time_held.total_seconds() / 60
+    # Convert MT5 timestamp to local timezone (handles DST automatically)
+    time_open = mt5_to_local(m5_position.time)
+    time_held, minutes_held = calculate_hold_time(time_open)
     
     print(f"Position: LONG")
     print(f"Entry: ${entry_price:.2f}")

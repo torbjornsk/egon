@@ -222,7 +222,7 @@ class MonteCarloTestSuite:
         }
     
     def test_config_monte_carlo(self, config, timeframe='M5', period_days=60, 
-                                window_days=14, n_samples=10):
+                                window_days=14, n_samples=10, symbol='XAUUSD'):
         """
         Test configuration using Monte Carlo sampling
         
@@ -232,12 +232,13 @@ class MonteCarloTestSuite:
             period_days: Total period to sample from (e.g., 60 days)
             window_days: Length of each sample window (e.g., 14 days)
             n_samples: Number of windows to test (more = higher confidence)
+            symbol: Trading symbol (default: 'XAUUSD')
         
         Returns:
             Dictionary with mean, std, confidence interval, and all sample results
         """
         # Load full dataset
-        cache_key = self._get_cache_key('XAUUSD', timeframe, period_days)
+        cache_key = self._get_cache_key(symbol, timeframe, period_days)
         df_full = self._load_cached_data(cache_key)
         
         if df_full is None:

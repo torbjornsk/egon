@@ -9,6 +9,7 @@ import numpy as np
 
 sys.path.append('.')
 from src.mt5_connector import MT5Connector
+from src.timezone_utils import mt5_to_local, format_time_local
 import MetaTrader5 as mt5
 
 def compute_indicators(df):
@@ -53,7 +54,8 @@ def main():
         return
     
     entry_price = m5_position.price_open
-    entry_time = datetime.fromtimestamp(m5_position.time)
+    # Convert MT5 timestamp to local timezone (handles DST automatically)
+    entry_time = mt5_to_local(m5_position.time)
     current_profit = m5_position.profit
     
     print(f"Position Details:")

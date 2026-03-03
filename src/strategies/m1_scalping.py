@@ -81,68 +81,72 @@ class M1ScalpingStrategy:
         
         return None, None, None
     
-    def check_exit_signal(self, position, df, position_open_times, logging):
+    def check_exit_signal(self, position, df, position_open_times, rsi_confirmation_tracker, logging):
         """Check if position should be closed
         
         Returns: (should_close, reason)
         """
         latest = df.iloc[-1]
+        previous = df.iloc[-2] if len(df) >= 2 else latest
         position_type = position.type
-        current_profit = position.profit
         ticket = position.ticket
-        current_price = latest['close']
         
-        # ADAPTIVE EXIT: Signal-based early exit for M1 scalping
-        # For short-term signals, exit if signal clearly fails
-        if ticket in position_open_times:
-            time_held = datetime.now() - position_open_times[ticket]
-            minutes_held = time_held.total_seconds() / 60
-            
-            # Only apply adaptive exits if losing and held for at least 3 minutes
-            if current_profit < 0 and minutes_held >= 3:
-                price_change = abs(current_price - position.price_open)
-                is_sideways = price_change < latest['ATR'] * 0.3
-                
-                if position_type == mt5.ORDER_TYPE_BUY:
-                    # LONG position: exit if trend reverses to downtrend while losing
-                    if latest['downtrend']:
-                        reason = f"Adaptive: trend reversed to downtrend while losing ${abs(current_profit):.2f} after {minutes_held:.1f} min"
-                        logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Trend reversal against LONG")
-                        return True, reason
-                    # OR exit if signal fades (RSI > 50) and price sideways
-                    elif latest['RSI'] > 50 and is_sideways:
-                        reason = f"Adaptive: signal faded + sideways movement after {minutes_held:.1f} min"
-                        logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Signal fading for LONG")
-                        return True, reason
-                
-                else:
-                    # SHORT position: exit if trend reverses to uptrend while losing
-                    if latest['uptrend']:
-                        reason = f"Adaptive: trend reversed to uptrend while losing ${abs(current_profit):.2f} after {minutes_held:.1f} min"
-                        logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Trend reversal against SHORT")
-                        return True, reason
-                    # OR exit if signal fades (RSI < 50) and price sideways
-                    elif latest['RSI'] < 50 and is_sideways:
-                        reason = f"Adaptive: signal faded + sideways movement after {minutes_held:.1f} min"
-                        logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Signal fading for SHORT")
-                        return True, reason
-            
-            # Fallback: Time-based exit if still losing after 10 minutes
-            if current_profit < 0 and minutes_held >= 10:
-                reason = f"Adaptive: losing ${abs(current_profit):.2f} after {minutes_held:.1f} minutes"
-                logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Time-based fallback")
-                return True, reason
+        # RSI CONFIRMATION: Require 2 consecutive candles above/below threshold
+        # This prevents false exits on brief RSI spikes (100% of M1 spikes are false signals)
+        use_confirmation = self.config.get('rsi_exit_confirmation', True)
         
-        # Standard RSI exits
         if position_type == mt5.ORDER_TYPE_BUY:
             # LONG POSITION
             exit_threshold = self.config.get('rsi_exit_long', self.config['rsi_sell'])
-            if latest['RSI'] > exit_threshold:
-                return True, f"RSI exit threshold ({latest['RSI']:.2f} > {exit_threshold})"
+            
+            if use_confirmation:
+                # Check if RSI is above threshold NOW and was above threshold LAST candle
+                current_above = latest['RSI'] > exit_threshold
+                previous_above = previous['RSI'] > exit_threshold
+                
+                if current_above and previous_above:
+                    return True, f"RSI exit confirmed ({latest['RSI']:.2f} > {exit_threshold} for 2 candles)"
+                elif current_above:
+                    # First candle above threshold - track it but don't exit yet
+                    if ticket not in rsi_confirmation_tracker:
+                        rsi_confirmation_tracker[ticket] = {'count': 1, 'threshold': exit_threshold}
+                        logging.info(f"RSI {latest['RSI']:.2f} > {exit_threshold} - waiting for confirmation")
+                    return False, None
+                else:
+                    # RSI dropped back below - reset tracker
+                    if ticket in rsi_confirmation_tracker:
+                        del rsi_confirmation_tracker[ticket]
+                    return False, None
+            else:
+                # No confirmation - exit immediately (old behavior)
+                if latest['RSI'] > exit_threshold:
+                    return True, f"RSI exit threshold ({latest['RSI']:.2f} > {exit_threshold})"
+                    
         else:
             # SHORT POSITION
             exit_threshold = self.config.get('rsi_exit_short', self.config['rsi_buy'])
-            if latest['RSI'] < exit_threshold:
-                return True, f"RSI exit threshold ({latest['RSI']:.2f} < {exit_threshold})"
+            
+            if use_confirmation:
+                # Check if RSI is below threshold NOW and was below threshold LAST candle
+                current_below = latest['RSI'] < exit_threshold
+                previous_below = previous['RSI'] < exit_threshold
+                
+                if current_below and previous_below:
+                    return True, f"RSI exit confirmed ({latest['RSI']:.2f} < {exit_threshold} for 2 candles)"
+                elif current_below:
+                    # First candle below threshold - track it but don't exit yet
+                    if ticket not in rsi_confirmation_tracker:
+                        rsi_confirmation_tracker[ticket] = {'count': 1, 'threshold': exit_threshold}
+                        logging.info(f"RSI {latest['RSI']:.2f} < {exit_threshold} - waiting for confirmation")
+                    return False, None
+                else:
+                    # RSI rose back above - reset tracker
+                    if ticket in rsi_confirmation_tracker:
+                        del rsi_confirmation_tracker[ticket]
+                    return False, None
+            else:
+                # No confirmation - exit immediately (old behavior)
+                if latest['RSI'] < exit_threshold:
+                    return True, f"RSI exit threshold ({latest['RSI']:.2f} < {exit_threshold})"
         
         return False, None

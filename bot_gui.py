@@ -782,16 +782,7 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} < ${target_price:.2f}")
                     
-                    # 3. Time-based exit (10 min for M1 only when losing)
-                    if bot_name == "M1":
-                        if pos['time_held'] >= 10 and current_price < pos['entry']:
-                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
-                        elif pos['time_held'] >= 10:
-                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
-                        else:
-                            time_remaining = 10 - pos['time_held']
-                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
-                    # M5 doesn't show time condition (no time-based exits)
+                    # No time-based exits for M1 (removed adaptive exits)
                     
                     # 4. Current P/L
                     pnl_pct = ((current_price - pos['entry']) / pos['entry']) * 100
@@ -814,16 +805,7 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} > ${target_price:.2f}")
                     
-                    # 3. Time-based exit (10 min for M1 only when losing)
-                    if bot_name == "M1":
-                        if pos['time_held'] >= 10 and current_price > pos['entry']:
-                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
-                        elif pos['time_held'] >= 10:
-                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
-                        else:
-                            time_remaining = 10 - pos['time_held']
-                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
-                    # M5 doesn't show time condition (no time-based exits)
+                    # No time-based exits for M1 (removed adaptive exits)
                     
                     # 4. Current P/L
                     pnl_pct = ((pos['entry'] - current_price) / pos['entry']) * 100

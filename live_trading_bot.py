@@ -9,9 +9,12 @@ import pandas as pd
 import numpy as np
 import json
 import time
+import os
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
+import pytz
+from src.timezone_utils import mt5_to_local, get_local_now
 
 # Setup logging
 logging.basicConfig(
@@ -42,9 +45,14 @@ class LiveTradingBot:
         self.warmup_candles = 2  # Wait 2 candles after market open/gap before trading
         self.last_processed_candle = None  # Track last processed candle to avoid duplicates
         self.trade_log = []  # Track all trades for reporting
-        self.session_start = datetime.now()  # Track when bot started
+        self.session_start = get_local_now()  # Track when bot started
         self.position_open_times = {}  # Track when each position was opened (by ticket)
         self.peak_position_profits = {}  # Track peak profit for each position (by ticket)
+        
+        # Timezone handling: MT5 uses EET (Eastern European Time)
+        # This automatically handles daylight savings (EET/EEST)
+        self.mt5_timezone = pytz.timezone('Europe/Athens')  # EET/EEST (GMT+2/GMT+3)
+        self.local_timezone = pytz.timezone('Europe/Berlin')  # CET/CEST (GMT+1/GMT+2)
         
         # DEAD MAN'S SWITCH - Safety mechanisms
         self.consecutive_losses = 0
@@ -69,6 +77,21 @@ class LiveTradingBot:
         logging.info(f"Position Size: {base_position_size*100}% (split into {self.max_positions} positions of {self.config['position_size_pct']*100}% each)")
         logging.info(f"Leverage: {self.config['leverage']}x")
         logging.info(f"Effective Position: {self.config['position_size_pct']*self.config['leverage']*100}% per position, {base_position_size*self.config['leverage']*100}% total")
+    
+    def mt5_timestamp_to_local(self, mt5_timestamp):
+        """Convert MT5 timestamp (EET/EEST) to local timezone-aware datetime
+        
+        Args:
+            mt5_timestamp: Unix timestamp from MT5 (in EET/EEST timezone)
+            
+        Returns:
+            datetime: Timezone-aware datetime in local timezone
+        """
+        # Create timezone-aware datetime in MT5's timezone (EET/EEST)
+        mt5_time = datetime.fromtimestamp(mt5_timestamp, tz=self.mt5_timezone)
+        # Convert to local timezone
+        local_time = mt5_time.astimezone(self.local_timezone)
+        return local_time
         
     def connect_mt5(self):
         """Connect to MetaTrader5"""
@@ -187,7 +210,7 @@ class LiveTradingBot:
             return False
         
         # Reset daily tracking at midnight
-        now = datetime.now()
+        now = get_local_now()
         if now.date() > self.session_start.date():
             self.daily_start_balance = current_balance
             self.session_start = now
@@ -206,7 +229,7 @@ class LiveTradingBot:
     
     def check_rapid_loss(self, current_balance):
         """Check for rapid losses (circuit breaker for flash crashes)"""
-        now = datetime.now()
+        now = get_local_now()
         self.balance_history.append({'time': now, 'balance': current_balance})
         
         # Keep only last hour of data
@@ -245,7 +268,7 @@ class LiveTradingBot:
         
         positions = self.get_open_positions(symbol)
         for pos in positions:
-            self.close_position(pos, emergency=True)
+            self.close_position(pos, emergency=True, reason="Emergency stop - equity threshold")
         
         self.trading_paused = True
         self.pause_reason = "Emergency equity threshold"
@@ -345,6 +368,34 @@ class LiveTradingBot:
         
         return False, 0, time_gap
     
+    def get_adaptive_atr_multiplier(self, df):
+        """
+        Calculate adaptive ATR multiplier based on volatility regime
+        
+        Returns lower multiplier in high volatility to limit losses
+        """
+        current_atr = df.iloc[-1]['ATR']
+        
+        # Calculate ATR percentile over last 100 candles
+        recent_atrs = df['ATR'].tail(100)
+        atr_80th_percentile = recent_atrs.quantile(0.80)
+        atr_median = recent_atrs.median()
+        
+        base_multiplier = self.config['atr_multiplier']  # 2.0 for M5
+        
+        # High volatility regime (top 20%)
+        if current_atr > atr_80th_percentile:
+            # Reduce multiplier by 25% in high volatility (2.0 * 0.75 = 1.5)
+            adjusted_multiplier = base_multiplier * 0.75
+            regime = "HIGH VOLATILITY"
+            logging.info(f"[VOLATILITY REGIME] {regime}: ATR ${current_atr:.2f} > 80th percentile ${atr_80th_percentile:.2f}")
+            logging.info(f"[ADAPTIVE STOP] Reducing multiplier: {base_multiplier}x → {adjusted_multiplier:.2f}x to limit losses")
+            return adjusted_multiplier
+        
+        # Normal volatility regime
+        else:
+            return base_multiplier
+    
     def get_open_positions(self, symbol='XAUUSD.p'):
         """Get all open positions with this bot's magic number"""
         positions = mt5.positions_get(symbol=symbol)
@@ -355,6 +406,80 @@ class LiveTradingBot:
                 if pos.magic == self.magic_number:
                     bot_positions.append(pos)
         return bot_positions
+    
+    def simplify_exit_reason(self, reason):
+        """Simplify exit reason for GUI display"""
+        reason_lower = reason.lower()
+        
+        # Profit protection
+        if 'profit protection' in reason_lower:
+            return 'Profit protection'
+        
+        # RSI exits
+        if 'rsi exit' in reason_lower:
+            return 'RSI exit'
+        
+        # Weekend protection
+        if 'weekend' in reason_lower:
+            return 'Weekend close'
+        
+        # Emergency stops
+        if 'emergency' in reason_lower:
+            if 'consecutive loss' in reason_lower:
+                return 'Emergency (losses)'
+            elif 'daily loss' in reason_lower:
+                return 'Emergency (daily loss)'
+            elif 'rapid loss' in reason_lower:
+                return 'Emergency (rapid loss)'
+            elif 'equity' in reason_lower:
+                return 'Emergency (equity)'
+            else:
+                return 'Emergency stop'
+        
+        # Default: return first 30 characters
+        return reason[:30] + '...' if len(reason) > 30 else reason
+    
+    def save_exit_reason(self, ticket, reason, exit_time):
+        """Save exit reason to JSON file for GUI display"""
+        exit_reasons_file = 'data/exit_reasons_m5.json'
+        
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Simplify reason for GUI display
+        short_reason = self.simplify_exit_reason(reason)
+        
+        # Load existing reasons
+        exit_reasons = {}
+        if os.path.exists(exit_reasons_file):
+            try:
+                with open(exit_reasons_file, 'r') as f:
+                    exit_reasons = json.load(f)
+            except:
+                pass
+        
+        # Add new reason
+        exit_reasons[str(ticket)] = {
+            'reason': short_reason,
+            'full_reason': reason,  # Keep full reason for logs
+            'exit_time': exit_time.isoformat(),
+            'bot': 'M5'
+        }
+        
+        # Keep only last 200 entries to prevent file from growing too large
+        if len(exit_reasons) > 200:
+            # Sort by exit time and keep most recent
+            sorted_tickets = sorted(exit_reasons.items(), 
+                                   key=lambda x: x[1].get('exit_time', ''), 
+                                   reverse=True)
+            exit_reasons = dict(sorted_tickets[:200])
+        
+        # Save to file
+        try:
+            with open(exit_reasons_file, 'w') as f:
+                json.dump(exit_reasons, f, indent=2)
+        except Exception as e:
+            logging.error(f"Failed to save exit reason: {e}")
     
     def calculate_position_size(self, symbol, current_price, stop_loss_price):
         """Calculate position size based on configuration"""
@@ -443,7 +568,7 @@ class LiveTradingBot:
             # Log trade opening
             trade_record = {
                 'action': 'OPEN',
-                'time': datetime.now(),
+                'time': get_local_now(),
                 'type': order_type_str,
                 'entry_price': price,
                 'sl': sl,
@@ -455,7 +580,7 @@ class LiveTradingBot:
             
             # Track position by ticket
             ticket = result.order
-            self.position_open_times[ticket] = datetime.now()
+            self.position_open_times[ticket] = datetime.now(self.local_timezone)
             self.peak_position_profits[ticket] = 0
             
             logging.info(f">>> TRADE OPENED [{order_type_str}]")
@@ -470,8 +595,14 @@ class LiveTradingBot:
             logging.error(f"Order failed: {result.retcode} - {result.comment}")
             return None
     
-    def close_position(self, position, emergency=False):
-        """Close an open position"""
+    def close_position(self, position, emergency=False, reason="Manual close"):
+        """Close an open position
+        
+        Args:
+            position: MT5 position object
+            emergency: Whether this is an emergency close
+            reason: Exit reason (e.g., "RSI exit", "Stop loss", "Profit protection")
+        """
         symbol = position.symbol
         ticket = position.ticket
         volume = position.volume
@@ -520,19 +651,24 @@ class LiveTradingBot:
             # Log trade closing
             trade_record = {
                 'action': 'CLOSE',
-                'time': datetime.now(),
+                'time': get_local_now(),
+                'exit_time': get_local_now(),  # Add explicit exit time
                 'type': position_type_str,
                 'entry_price': entry_price,
                 'exit_price': exit_price,
                 'profit': profit,
                 'price_change_pct': price_change_pct,
                 'ticket': ticket,
-                'emergency': emergency
+                'emergency': emergency,
+                'exit_reason': reason  # Add exit reason
             }
             self.trade_log.append(trade_record)
             
+            # Save exit reason to file for GUI
+            self.save_exit_reason(ticket, reason, get_local_now())
+            
             close_type_str = "EMERGENCY CLOSE" if emergency else "TRADE CLOSED"
-            logging.info(f"<<< {close_type_str} [{position_type_str}]")
+            logging.info(f"<<< {close_type_str} [{position_type_str}] - {reason}")
             logging.info(f"  Entry: ${entry_price:.2f} -> Exit: ${exit_price:.2f}")
             logging.info(f"  Price Change: ${price_change:.2f} ({price_change_pct:+.3f}%)")
             logging.info(f"  Profit/Loss: ${profit:.2f}")
@@ -541,13 +677,18 @@ class LiveTradingBot:
                 logging.info(f"  Consecutive losses: {self.consecutive_losses}")
             
             # Track close time to prevent immediate re-entry
-            self.last_close_time = datetime.now()
+            self.last_close_time = get_local_now()
             
             # Remove position tracking
             if ticket in self.position_open_times:
                 del self.position_open_times[ticket]
             if ticket in self.peak_position_profits:
                 del self.peak_position_profits[ticket]
+            
+            # Mark as bot-closed to prevent MT5 detection from logging it again
+            if not hasattr(self, 'bot_closed_positions'):
+                self.bot_closed_positions = set()
+            self.bot_closed_positions.add(ticket)
             
             return result
         else:
@@ -583,7 +724,7 @@ class LiveTradingBot:
                 logging.warning(f"Closing {len(open_positions)} position(s) to avoid weekend gap risk")
                 for pos in open_positions:
                     logging.warning(f"Position ticket {pos.ticket}: P/L ${pos.profit:.2f}")
-                    self.close_position(pos, emergency=False)
+                    self.close_position(pos, emergency=False, reason=f"Weekend protection - {close_reason}")
                 return
             else:
                 logging.info(f"Weekend close approaching - no new positions will be opened")
@@ -601,7 +742,7 @@ class LiveTradingBot:
         gap_warmup_active = False
         if has_gap:
             # Reset last_close_time to trigger warm-up period for NEW entries
-            self.last_close_time = datetime.now()
+            self.last_close_time = get_local_now()
             gap_warmup_active = True
             logging.warning(f"Market gap detected - entering {self.warmup_candles} candle warm-up period for NEW entries")
             logging.warning(f"Gap details: {time_gap:.0f} min time gap, {gap_pct:.2f}% price change")
@@ -622,6 +763,21 @@ class LiveTradingBot:
         rsi = latest['RSI']
         
         # ============================================================================
+        # INITIALIZE POSITION TRACKING FIRST (before diagnostic logging)
+        # ============================================================================
+        # Initialize peak profit trackers for existing positions FIRST (before any logging)
+        for pos in open_positions:
+            if pos.ticket not in self.peak_position_profits:
+                self.peak_position_profits[pos.ticket] = max(0, pos.profit)
+                # Convert MT5 timestamp to local timezone (handles DST automatically)
+                self.position_open_times[pos.ticket] = self.mt5_timestamp_to_local(pos.time)
+                
+                # Calculate hold time for logging
+                time_held = datetime.now(self.local_timezone) - self.position_open_times[pos.ticket]
+                minutes_held = time_held.total_seconds() / 60
+                logging.info(f"Detected existing position {pos.ticket}, initializing: peak profit ${self.peak_position_profits[pos.ticket]:.2f}, held {minutes_held:.1f} min")
+        
+        # ============================================================================
         # DIAGNOSTIC LOGGING - Show bot's "thought process" (COMPACT MODE)
         # ============================================================================
         
@@ -637,7 +793,7 @@ class LiveTradingBot:
             log_this_candle = True
         
         # Log if gap warmup or cooldown active
-        if gap_warmup_active or (self.last_close_time is not None and (datetime.now() - self.last_close_time).total_seconds() < self.warmup_candles * 5 * 60):
+        if gap_warmup_active or (self.last_close_time is not None and (get_local_now() - self.last_close_time).total_seconds() < self.warmup_candles * 5 * 60):
             log_this_candle = True
         
         if log_this_candle:
@@ -675,7 +831,7 @@ class LiveTradingBot:
                     profit_status = "PROFIT" if pos.profit > 0 else "LOSS" if pos.profit < 0 else "BREAKEVEN"
                     
                     if pos.ticket in self.position_open_times:
-                        time_held = datetime.now() - self.position_open_times[pos.ticket]
+                        time_held = datetime.now(self.local_timezone) - self.position_open_times[pos.ticket]
                         minutes_held = time_held.total_seconds() / 60
                     else:
                         minutes_held = 0
@@ -697,13 +853,6 @@ class LiveTradingBot:
         # END DIAGNOSTIC LOGGING
         # ============================================================================
         
-        # Initialize peak profit trackers for existing positions if not set
-        for pos in open_positions:
-            if pos.ticket not in self.peak_position_profits:
-                self.peak_position_profits[pos.ticket] = max(0, pos.profit)
-                self.position_open_times[pos.ticket] = datetime.fromtimestamp(pos.time)
-                logging.info(f"Detected existing position {pos.ticket}, initializing peak profit: ${self.peak_position_profits[pos.ticket]:.2f}")
-        
         # Check for new entry if we have room for more positions
         if len(open_positions) < self.max_positions:
             # Skip new entries if gap warmup is active
@@ -713,50 +862,80 @@ class LiveTradingBot:
                 # Check cooldown/warm-up period after closing a position or market gap
                 can_enter = True
                 if self.last_close_time is not None:
-                    time_since_close = datetime.now() - self.last_close_time
-                    cooldown_seconds = self.warmup_candles * 5 * 60  # warmup_candles * 5 minutes * 60 seconds
+                    time_since_close = get_local_now() - self.last_close_time
                     
-                    if time_since_close.total_seconds() < cooldown_seconds:
-                        remaining = cooldown_seconds - time_since_close.total_seconds()
-                        logging.info(f"Warm-up/cooldown active: {remaining/60:.1f} minutes remaining before next entry")
-                        can_enter = False
+                    # Apply loss backoff if enabled
+                    if self.config.get('use_loss_backoff', False) and self.consecutive_losses > 0:
+                        # Get backoff multiplier based on consecutive losses
+                        multipliers = self.config.get('loss_backoff_multipliers', [1, 3, 7, 15])
+                        loss_index = min(self.consecutive_losses - 1, len(multipliers) - 1)
+                        backoff_multiplier = multipliers[loss_index]
+                        cooldown_seconds = self.warmup_candles * 5 * 60 * backoff_multiplier  # warmup_candles * 5 minutes * 60 seconds * multiplier
+                        
+                        if time_since_close.total_seconds() < cooldown_seconds:
+                            remaining = cooldown_seconds - time_since_close.total_seconds()
+                            logging.info(f"Loss backoff active: {remaining/60:.1f} minutes remaining (after {self.consecutive_losses} losses, {backoff_multiplier}x multiplier)")
+                            can_enter = False
+                    else:
+                        # Standard cooldown logic
+                        cooldown_seconds = self.warmup_candles * 5 * 60  # warmup_candles * 5 minutes * 60 seconds
+                        
+                        if time_since_close.total_seconds() < cooldown_seconds:
+                            remaining = cooldown_seconds - time_since_close.total_seconds()
+                            logging.info(f"Warm-up/cooldown active: {remaining/60:.1f} minutes remaining before next entry")
+                            can_enter = False
                 
                 if can_enter:
+                    # Check if we already have positions in opposite direction
+                    has_long = any(pos.type == mt5.ORDER_TYPE_BUY for pos in open_positions)
+                    has_short = any(pos.type == mt5.ORDER_TYPE_SELL for pos in open_positions)
+                    
                     # LONG ENTRY
                     if latest['RSI'] < self.config['rsi_buy']:
-                        logging.info(f"LONG SIGNAL: RSI={latest['RSI']:.2f}")
-                        
-                        # Calculate stop loss and take profit
-                        stop_distance = latest['ATR'] * self.config['atr_multiplier']
-                        sl = current_price - stop_distance
-                        tp = current_price + (current_price * self.config['profit_target_pct'])
-                        
-                        # Calculate position size
-                        volume = self.calculate_position_size(symbol, current_price, sl)
-                        
-                        if volume:
-                            logging.info(f"Placing LONG order: Volume={volume}, SL={sl:.2f}, TP={tp:.2f}")
-                            result = self.place_order(symbol, mt5.ORDER_TYPE_BUY, volume, sl, tp)
-                            if result:
-                                self.trades_today += 1
-                                self.last_trade_time = datetime.now()
+                        # If we have SHORT positions, skip this signal (BLOCK behavior)
+                        if has_short:
+                            logging.info(f"LONG signal detected but skipping - already have SHORT position(s)")
+                        else:
+                            logging.info(f"LONG SIGNAL: RSI={latest['RSI']:.2f}")
+                            
+                            # Calculate stop loss with adaptive multiplier based on volatility
+                            adaptive_multiplier = self.get_adaptive_atr_multiplier(df)
+                            stop_distance = latest['ATR'] * adaptive_multiplier
+                            sl = current_price - stop_distance
+                            tp = current_price + (current_price * self.config['profit_target_pct'])
+                            
+                            # Calculate position size
+                            volume = self.calculate_position_size(symbol, current_price, sl)
+                            
+                            if volume:
+                                logging.info(f"Placing LONG order: Volume={volume}, SL={sl:.2f}, TP={tp:.2f}")
+                                result = self.place_order(symbol, mt5.ORDER_TYPE_BUY, volume, sl, tp)
+                                if result:
+                                    self.trades_today += 1
+                                    self.last_trade_time = get_local_now()
                     
                     # SHORT ENTRY
                     elif self.config['enable_shorts'] and latest['RSI'] > self.config['rsi_sell'] and latest['downtrend']:
-                        logging.info(f"SHORT SIGNAL: RSI={latest['RSI']:.2f}")
-                        
-                        stop_distance = latest['ATR'] * self.config['atr_multiplier']
-                        sl = current_price + stop_distance
-                        tp = current_price - (current_price * self.config['profit_target_pct'])
-                        
-                        volume = self.calculate_position_size(symbol, current_price, sl)
-                        
-                        if volume:
-                            logging.info(f"Placing SHORT order: Volume={volume}, SL={sl:.2f}, TP={tp:.2f}")
-                            result = self.place_order(symbol, mt5.ORDER_TYPE_SELL, volume, sl, tp)
-                            if result:
-                                self.trades_today += 1
-                                self.last_trade_time = datetime.now()
+                        # If we have LONG positions, skip this signal (BLOCK behavior)
+                        if has_long:
+                            logging.info(f"SHORT signal detected but skipping - already have LONG position(s)")
+                        else:
+                            logging.info(f"SHORT SIGNAL: RSI={latest['RSI']:.2f}")
+                            
+                            # Calculate stop loss with adaptive multiplier based on volatility
+                            adaptive_multiplier = self.get_adaptive_atr_multiplier(df)
+                            stop_distance = latest['ATR'] * adaptive_multiplier
+                            sl = current_price + stop_distance
+                            tp = current_price - (current_price * self.config['profit_target_pct'])
+                            
+                            volume = self.calculate_position_size(symbol, current_price, sl)
+                            
+                            if volume:
+                                logging.info(f"Placing SHORT order: Volume={volume}, SL={sl:.2f}, TP={tp:.2f}")
+                                result = self.place_order(symbol, mt5.ORDER_TYPE_SELL, volume, sl, tp)
+                                if result:
+                                    self.trades_today += 1
+                                    self.last_trade_time = get_local_now()
         
         # Check exit signals for all open positions
         for open_position in open_positions:
@@ -768,41 +947,53 @@ class LiveTradingBot:
             should_close = False
             reason = ""
             
-            # ADAPTIVE PROFIT TAKING: Lock in profits if they start declining
-            if ticket in self.position_open_times:
-                time_held = datetime.now() - self.position_open_times[ticket]
-                minutes_held = time_held.total_seconds() / 60
-                
+            # PROFIT PROTECTION: Exit if profit drops significantly from peak
+            if self.config.get('use_profit_protection', False):
                 # Track peak profit for this position
                 if ticket not in self.peak_position_profits:
-                    self.peak_position_profits[ticket] = current_profit
+                    self.peak_position_profits[ticket] = max(0, current_profit)
                 else:
                     self.peak_position_profits[ticket] = max(self.peak_position_profits[ticket], current_profit)
                 
-                # Adaptive profit taking: if profit > $100 and dropped 30% from peak
-                if current_profit > 100 and self.peak_position_profits[ticket] > 100:
-                    profit_decline = self.peak_position_profits[ticket] - current_profit
-                    decline_pct = (profit_decline / self.peak_position_profits[ticket]) * 100
-                    
-                    if decline_pct > 30:
-                        should_close = True
-                        reason = f"Adaptive profit taking: profit declined {decline_pct:.1f}% from peak ${self.peak_position_profits[ticket]:.2f}"
-                        logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Locking in ${current_profit:.2f} (was ${self.peak_position_profits[ticket]:.2f})")
+                peak_profit = self.peak_position_profits[ticket]
                 
-                # Also exit if profitable and RSI shows reversal signal
-                if not should_close and current_profit > 50 and minutes_held >= 15:
-                    if position_type == mt5.ORDER_TYPE_BUY:
-                        # LONG: exit if RSI > 60 and trend reversing
-                        if latest['RSI'] > 60 and latest['downtrend']:
-                            should_close = True
-                            reason = f"Adaptive: profitable ${current_profit:.2f}, RSI {latest['RSI']:.1f}, trend reversing"
-                            logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Taking profit on trend reversal")
+                # Calculate profit as percentage of position value
+                position_value = open_position.volume * open_position.price_open * 100  # 100 oz per lot
+                profit_pct = current_profit / position_value if position_value > 0 else 0
+                peak_profit_pct = peak_profit / position_value if position_value > 0 else 0
+                
+                # Only protect if we've reached the threshold
+                protection_threshold = self.config.get('profit_protection_threshold_pct', 0.003)
+                if peak_profit_pct > protection_threshold and peak_profit > 0:
+                    # Calculate time-based drawdown limit (tightens over time)
+                    # Start at 40%, after 30min drop to 30%, then -5% every 10min
+                    if ticket in self.position_open_times:
+                        time_held = datetime.now(self.local_timezone) - self.position_open_times[ticket]
+                        minutes_held = time_held.total_seconds() / 60
+                        
+                        base_limit = self.config.get('profit_protection_drawdown_limit_pct', 0.40)
+                        
+                        if minutes_held <= 30:
+                            drawdown_limit = base_limit  # 40% for first 30 minutes
+                        else:
+                            # After 30 min: 30%, then -5% every 10 min
+                            # 30-40 min: 30%
+                            # 40-50 min: 25%
+                            # 50-60 min: 20%
+                            # 60+ min: 15%
+                            minutes_over_30 = minutes_held - 30
+                            reduction = min(0.15, 0.10 + (int(minutes_over_30 / 10) * 0.05))  # Cap at 15% reduction
+                            drawdown_limit = max(0.15, base_limit - reduction)  # Minimum 15%
                     else:
-                        # SHORT: exit if RSI < 40 and trend reversing
-                        if latest['RSI'] < 40 and latest['uptrend']:
-                            should_close = True
-                            reason = f"Adaptive: profitable ${current_profit:.2f}, RSI {latest['RSI']:.1f}, trend reversing"
-                            logging.info(f"ADAPTIVE EXIT (ticket {ticket}): Taking profit on trend reversal")
+                        drawdown_limit = self.config.get('profit_protection_drawdown_limit_pct', 0.40)
+                    
+                    # Calculate drawdown from peak
+                    profit_drawdown = (peak_profit - current_profit) / peak_profit
+                    
+                    if profit_drawdown > drawdown_limit:
+                        should_close = True
+                        reason = f"Profit protection: profit dropped {profit_drawdown*100:.1f}% from peak ${peak_profit:.2f} to ${current_profit:.2f} (limit {drawdown_limit*100:.0f}% after {minutes_held:.0f}min)"
+                        logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: Peak ${peak_profit:.2f} -> Current ${current_profit:.2f} ({profit_drawdown*100:.1f}% drop, limit {drawdown_limit*100:.0f}% after {minutes_held:.0f}min)")
             
             # Standard RSI exits (only if not already closing)
             if not should_close:
@@ -810,16 +1001,138 @@ class LiveTradingBot:
                     # Long position
                     if latest['RSI'] > self.config['rsi_sell']:
                         should_close = True
-                        reason = f"RSI overbought ({latest['RSI']:.2f})"
+                        reason = f"RSI overbought ({latest['RSI']:.2f} > {self.config['rsi_sell']})"
                 else:
                     # Short position
                     if latest['RSI'] < self.config['rsi_buy']:
                         should_close = True
-                        reason = f"RSI oversold ({latest['RSI']:.2f})"
+                        reason = f"RSI oversold ({latest['RSI']:.2f} < {self.config['rsi_buy']})"
             
             if should_close:
                 logging.info(f"EXIT SIGNAL (ticket {ticket}): {reason}, Current P/L: ${current_profit:.2f}")
-                self.close_position(open_position)
+                self.close_position(open_position, reason=reason)
+    
+    def check_profit_protection_continuous(self, symbol='XAUUSD.p'):
+        """
+        Check profit protection on ALL open positions (runs every second)
+        
+        This runs independently of candle closes to catch intra-candle profit swings.
+        Example: Position goes from +$30 to -$10 to +$33 within one candle.
+        Without continuous checking, we miss the exit opportunity at +$18.
+        """
+        if not self.config.get('use_profit_protection', False):
+            return
+        
+        open_positions = self.get_open_positions(symbol)
+        if len(open_positions) == 0:
+            return
+        
+        for open_position in open_positions:
+            ticket = open_position.ticket
+            current_profit = open_position.profit
+            
+            # Track peak profit for this position
+            if ticket not in self.peak_position_profits:
+                self.peak_position_profits[ticket] = max(0, current_profit)
+                # Calculate threshold as % of invested amount (not leveraged)
+                account_info = self.get_account_info()
+                if account_info:
+                    balance = account_info['balance']
+                    invested_amount = balance * self.config.get('position_size_pct', 0.075)
+                    protection_threshold = self.config.get('profit_protection_threshold_pct', 0.02)
+                    threshold_dollars = invested_amount * protection_threshold
+                    logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: Initialized peak at ${current_profit:.2f} (will activate at ${threshold_dollars:.2f})")
+                else:
+                    logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: Initialized peak at ${current_profit:.2f}")
+            else:
+                old_peak = self.peak_position_profits[ticket]
+                self.peak_position_profits[ticket] = max(self.peak_position_profits[ticket], current_profit)
+                if self.peak_position_profits[ticket] > old_peak:
+                    # Check if protection is already activated
+                    if not hasattr(self, 'protection_activated'):
+                        self.protection_activated = {}
+                    
+                    if ticket in self.protection_activated:
+                        # Already activated - show exit trigger level
+                        if ticket in self.position_open_times:
+                            time_held = datetime.now(self.local_timezone) - self.position_open_times[ticket]
+                            minutes_held = time_held.total_seconds() / 60
+                            base_limit = self.config.get('profit_protection_drawdown_limit_pct', 0.40)
+                            if minutes_held <= 30:
+                                drawdown_limit = base_limit
+                            else:
+                                minutes_over_30 = minutes_held - 30
+                                reduction = min(0.15, 0.10 + (int(minutes_over_30 / 10) * 0.05))
+                                drawdown_limit = max(0.15, base_limit - reduction)
+                            trigger_at = self.peak_position_profits[ticket] * (1 - drawdown_limit)
+                            logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: New peak ${self.peak_position_profits[ticket]:.2f} (was ${old_peak:.2f}, will exit at ${trigger_at:.2f})")
+                        else:
+                            logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: New peak ${self.peak_position_profits[ticket]:.2f} (was ${old_peak:.2f})")
+                    else:
+                        # Not yet activated - just log the peak without threshold
+                        logging.info(f"[PROFIT PROTECTION] Ticket {ticket}: New peak ${self.peak_position_profits[ticket]:.2f} (was ${old_peak:.2f})")
+            
+            peak_profit = self.peak_position_profits[ticket]
+            
+            # Calculate profit as percentage of INVESTED amount (not leveraged position value)
+            account_info = self.get_account_info()
+            if account_info:
+                balance = account_info['balance']
+                invested_amount = balance * self.config.get('position_size_pct', 0.075)
+                profit_pct = current_profit / invested_amount if invested_amount > 0 else 0
+                peak_profit_pct = peak_profit / invested_amount if invested_amount > 0 else 0
+            else:
+                profit_pct = 0
+                peak_profit_pct = 0
+            
+            # Only protect if we've reached the threshold (4% of invested amount)
+            protection_threshold = self.config.get('profit_protection_threshold_pct', 0.04)
+            
+            # Check if we just crossed the threshold (activated protection)
+            if not hasattr(self, 'protection_activated'):
+                self.protection_activated = {}
+            
+            if ticket not in self.protection_activated:
+                if peak_profit_pct > protection_threshold and peak_profit > 0:
+                    # Calculate threshold in dollars (2% of invested amount)
+                    account_info = self.get_account_info()
+                    if account_info:
+                        balance = account_info['balance']
+                        invested_amount = balance * self.config.get('position_size_pct', 0.075)
+                        threshold_dollars = invested_amount * protection_threshold
+                        logging.info(f"[PROFIT PROTECTION ACTIVATED] Ticket {ticket}: Profit ${peak_profit:.2f} exceeded threshold ${threshold_dollars:.2f} ({protection_threshold*100:.2f}% of invested amount ${invested_amount:.2f})")
+                    else:
+                        logging.info(f"[PROFIT PROTECTION ACTIVATED] Ticket {ticket}: Profit ${peak_profit:.2f} exceeded threshold")
+                    self.protection_activated[ticket] = True
+            
+            if peak_profit_pct > protection_threshold and peak_profit > 0:
+                # Calculate time-based drawdown limit (tightens over time)
+                # Start at 40%, after 30min drop to 30%, then -5% every 10min
+                if ticket in self.position_open_times:
+                    time_held = datetime.now(self.local_timezone) - self.position_open_times[ticket]
+                    minutes_held = time_held.total_seconds() / 60
+                    
+                    base_limit = self.config.get('profit_protection_drawdown_limit_pct', 0.40)
+                    
+                    if minutes_held <= 30:
+                        drawdown_limit = base_limit  # 40% for first 30 minutes
+                    else:
+                        # After 30 min: 30%, then -5% every 10 min
+                        minutes_over_30 = minutes_held - 30
+                        reduction = min(0.15, 0.10 + (int(minutes_over_30 / 10) * 0.05))  # Cap at 15% reduction
+                        drawdown_limit = max(0.15, base_limit - reduction)  # Minimum 15%
+                else:
+                    minutes_held = 0  # Position time not tracked
+                    drawdown_limit = self.config.get('profit_protection_drawdown_limit_pct', 0.40)
+                
+                # Calculate drawdown from peak
+                profit_drawdown = (peak_profit - current_profit) / peak_profit
+                
+                if profit_drawdown > drawdown_limit:
+                    reason = f"Profit protection (continuous): profit dropped {profit_drawdown*100:.1f}% from peak ${peak_profit:.2f} to ${current_profit:.2f} (limit {drawdown_limit*100:.0f}% after {minutes_held:.0f}min)"
+                    logging.info(f"[PROFIT PROTECTION - CONTINUOUS] Ticket {ticket}: Peak ${peak_profit:.2f} -> Current ${current_profit:.2f} ({profit_drawdown*100:.1f}% drop, limit {drawdown_limit*100:.0f}% after {minutes_held:.0f}min)")
+                    logging.info(f"EXIT SIGNAL (ticket {ticket}): {reason}")
+                    self.close_position(open_position, reason=reason)
     
     def has_new_candle(self, symbol='XAUUSD.p', timeframe=mt5.TIMEFRAME_M5):
         """Check if a new candle has formed since last check"""
@@ -843,7 +1156,7 @@ class LiveTradingBot:
     
     def wait_for_next_candle(self, timeframe_minutes=5):
         """Wait until the next candle closes and return seconds waited"""
-        now = datetime.now()
+        now = get_local_now()
         
         # Calculate seconds into current candle
         seconds_into_candle = (now.minute % timeframe_minutes) * 60 + now.second
@@ -855,6 +1168,76 @@ class LiveTradingBot:
         seconds_until_next += 2
         
         return seconds_until_next
+    
+    def check_mt5_closed_positions(self, symbol='XAUUSD.p'):
+        """
+        Check for positions that were closed by MT5 (stop loss hit) and record the exit reason.
+        This runs every second to catch MT5-triggered exits.
+        """
+        if not hasattr(self, 'tracked_positions'):
+            self.tracked_positions = set()
+        if not hasattr(self, 'bot_closed_positions'):
+            self.bot_closed_positions = set()
+        
+        # Get currently open positions
+        current_positions = self.get_open_positions(symbol)
+        current_tickets = {pos.ticket for pos in current_positions}
+        
+        # Update tracked positions with any new ones
+        self.tracked_positions.update(current_tickets)
+        
+        # Find positions that were open but are now closed
+        closed_tickets = self.tracked_positions - current_tickets
+        
+        if closed_tickets:
+            # Check history for these closed positions
+            for ticket in closed_tickets:
+                # Skip if this was closed by the bot itself
+                if ticket in self.bot_closed_positions:
+                    self.bot_closed_positions.discard(ticket)
+                    self.tracked_positions.discard(ticket)
+                    continue
+                
+                # Get deal history for this position
+                deals = mt5.history_deals_get(position=ticket)
+                if deals and len(deals) > 0:
+                    # Find the exit deal (OUT)
+                    exit_deal = None
+                    for deal in deals:
+                        if deal.entry == mt5.DEAL_ENTRY_OUT:
+                            exit_deal = deal
+                            break
+                    
+                    if exit_deal:
+                        # Check if this was a stop loss exit
+                        # MT5 marks SL exits with specific comment or reason
+                        reason_code = exit_deal.reason
+                        profit = exit_deal.profit
+                        
+                        # Determine exit reason based on MT5 reason code
+                        if reason_code == mt5.DEAL_REASON_SL:
+                            exit_reason = "Stop loss"
+                        elif reason_code == mt5.DEAL_REASON_TP:
+                            exit_reason = "Take profit"
+                        else:
+                            # Could be manual close or other reason
+                            exit_reason = "MT5 close"
+                        
+                        # Track consecutive losses for backoff (same as bot-triggered closes)
+                        if profit < 0:
+                            self.consecutive_losses += 1
+                            self.last_trade_profitable = False
+                            logging.info(f"[MT5 EXIT DETECTED] Ticket {ticket}: {exit_reason} (profit: ${profit:.2f}) - Consecutive losses: {self.consecutive_losses}")
+                        else:
+                            self.consecutive_losses = 0  # Reset on win
+                            self.last_trade_profitable = True
+                            logging.info(f"[MT5 EXIT DETECTED] Ticket {ticket}: {exit_reason} (profit: ${profit:.2f})")
+                        
+                        # Record the exit reason
+                        self.save_exit_reason(ticket, exit_reason, get_local_now())
+                
+                # Remove from tracked positions
+                self.tracked_positions.discard(ticket)
     
     def generate_report(self):
         """Generate a trading report for this session"""
@@ -870,7 +1253,7 @@ class LiveTradingBot:
         winning = [t for t in closes if t['profit'] > 0]
         losing = [t for t in closes if t['profit'] < 0]
         
-        session_duration = (datetime.now() - self.session_start).total_seconds() / 3600
+        session_duration = (get_local_now() - self.session_start).total_seconds() / 3600
         
         report = []
         report.append("="*80)
@@ -963,6 +1346,13 @@ class LiveTradingBot:
         try:
             while True:
                 try:
+                    # CONTINUOUS PROFIT PROTECTION - Check every second (not just on candle close)
+                    # This catches intra-candle profit swings like +$30 -> -$10 -> +$33
+                    self.check_profit_protection_continuous()
+                    
+                    # CHECK FOR MT5-CLOSED POSITIONS - Detect stop loss hits
+                    self.check_mt5_closed_positions()
+                    
                     # Check for new M5 candle
                     has_new, candle_time = self.has_new_candle()
                     

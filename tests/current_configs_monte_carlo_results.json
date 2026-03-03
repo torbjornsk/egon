@@ -1,0 +1,28 @@
+{
+  "m1": {
+    "mean_return": 10.928518884176324,
+    "std_return": 6.081964104514241,
+    "mean_win_rate": 63.19703632438454,
+    "mean_profit_factor": 1.225152091620631,
+    "mean_sharpe": 1.1678218834768013,
+    "profitable_windows": 48,
+    "total_windows": 50
+  },
+  "m5": {
+    "mean_return": 5.316643129459343,
+    "std_return": 5.355659807069508,
+    "mean_win_rate": 60.298826161792114,
+    "mean_profit_factor": 1.433987981336202,
+    "mean_sharpe": 2.1174335453013406,
+    "profitable_windows": 43,
+    "total_windows": 50
+  },
+  "settings": {
+    "n_samples": 50,
+    "window_days_m1": 7,
+    "window_days_m5": 14,
+    "test_period_m1": 30,
+    "test_period_m5": 60,
+    "confidence": "~99%"
+  }
+}

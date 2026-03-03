@@ -252,6 +252,7 @@ class BotGUI:
                     # Adjust timestamps for MT5 being 1 hour ahead (GMT+2 vs GMT+1)
                     completed_positions.append({
                         'position_id': pos_id,
+                        'ticket': entry_deal.ticket,  # Add ticket for exit reason lookup
                         'bot': data['bot'],
                         'type': position_type,
                         'entry_time': datetime.fromtimestamp(entry_deal.time - 3600),
@@ -542,10 +543,11 @@ class BotGUI:
         history_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
         
         # Create treeview for trade history
-        columns = ('Entry Time', 'Bot', 'Type', 'Volume', 'Entry', 'Exit', 'Profit')
+        columns = ('Exit Time', 'Entry Time', 'Bot', 'Type', 'Volume', 'Entry', 'Exit', 'Profit', 'Reason')
         self.trade_tree = ttk.Treeview(history_frame, columns=columns, show='headings', height=10)
         
         # Define headings
+        self.trade_tree.heading('Exit Time', text='Exit Time', command=lambda: self.sort_trades_by('exit_time'))
         self.trade_tree.heading('Entry Time', text='Entry Time')
         self.trade_tree.heading('Bot', text='Bot')
         self.trade_tree.heading('Type', text='Type')
@@ -553,15 +555,18 @@ class BotGUI:
         self.trade_tree.heading('Entry', text='Entry')
         self.trade_tree.heading('Exit', text='Exit')
         self.trade_tree.heading('Profit', text='Profit')
+        self.trade_tree.heading('Reason', text='Exit Reason')
         
         # Define column widths
+        self.trade_tree.column('Exit Time', width=130)
         self.trade_tree.column('Entry Time', width=130)
         self.trade_tree.column('Bot', width=40)
         self.trade_tree.column('Type', width=50)
         self.trade_tree.column('Volume', width=50)
-        self.trade_tree.column('Entry', width=80)
-        self.trade_tree.column('Exit', width=80)
-        self.trade_tree.column('Profit', width=80)
+        self.trade_tree.column('Entry', width=70)
+        self.trade_tree.column('Exit', width=70)
+        self.trade_tree.column('Profit', width=70)
+        self.trade_tree.column('Reason', width=250)
         
         # Scrollbar
         tree_scroll = ttk.Scrollbar(history_frame, orient=tk.VERTICAL, command=self.trade_tree.yview)
@@ -574,13 +579,44 @@ class BotGUI:
     
     def update_trade_history_display(self):
         """Update the trade history treeview"""
+        # Load exit reasons from files
+        exit_reasons = self.load_exit_reasons()
+        
         # Clear existing items
         for item in self.trade_tree.get_children():
             self.trade_tree.delete(item)
         
+        # Sort by exit time (most recent first)
+        sorted_history = sorted(self.trade_history, 
+                               key=lambda x: x.get('exit_time', x.get('entry_time')), 
+                               reverse=True)
+        
         # Add closed positions only
-        for pos in self.trade_history:
+        for pos in sorted_history:
             entry_time_str = pos['entry_time'].strftime('%Y-%m-%d %H:%M')
+            exit_time_str = pos.get('exit_time', pos['entry_time']).strftime('%Y-%m-%d %H:%M')
+            
+            # Get exit reason from file or use default
+            # Try multiple lookups: ticket (new), position_id (old format)
+            ticket_str = str(pos.get('ticket', ''))
+            position_id_str = str(pos.get('position_id', ''))
+            
+            exit_reason = None
+            if ticket_str and ticket_str in exit_reasons:
+                exit_reason = exit_reasons[ticket_str].get('reason')
+            elif position_id_str and position_id_str in exit_reasons:
+                exit_reason = exit_reasons[position_id_str].get('reason')
+            
+            if not exit_reason:
+                exit_reason = 'Unknown'
+            
+            # Detect MT5 exits (stop loss/take profit)
+            if exit_reason == 'Unknown':
+                # Check if it hit SL or TP based on exit price
+                if abs(pos['exit_price'] - pos.get('sl', 0)) < 0.5:
+                    exit_reason = 'Stop loss (MT5)'
+                elif abs(pos['exit_price'] - pos.get('tp', 0)) < 0.5:
+                    exit_reason = 'Take profit (MT5)'
             
             # All positions in history are closed
             exit_str = f"${pos['exit_price']:.2f}"
@@ -593,13 +629,15 @@ class BotGUI:
                 tag = 'loss'  # Red for loss
             
             values = (
+                exit_time_str,
                 entry_time_str,
                 pos['bot'],
                 pos['type'],
                 f"{pos['volume']:.2f}",
                 f"${pos['entry_price']:.2f}",
                 exit_str,
-                profit_str
+                profit_str,
+                exit_reason
             )
             
             self.trade_tree.insert('', tk.END, values=values, tags=(tag,))
@@ -607,6 +645,32 @@ class BotGUI:
         # Configure tags with colors
         self.trade_tree.tag_configure('profit', foreground=self.success_color)  # Green
         self.trade_tree.tag_configure('loss', foreground=self.error_color)  # Red
+    
+    def load_exit_reasons(self):
+        """Load exit reasons from JSON files"""
+        exit_reasons = {}
+        
+        # Load M1 exit reasons
+        if os.path.exists('data/exit_reasons_m1.json'):
+            try:
+                with open('data/exit_reasons_m1.json', 'r') as f:
+                    exit_reasons.update(json.load(f))
+            except:
+                pass
+        
+        # Load M5 exit reasons
+        if os.path.exists('data/exit_reasons_m5.json'):
+            try:
+                with open('data/exit_reasons_m5.json', 'r') as f:
+                    exit_reasons.update(json.load(f))
+            except:
+                pass
+        
+        return exit_reasons
+    
+    def sort_trades_by(self, column):
+        """Sort trades by specified column (placeholder for future enhancement)"""
+        pass
     
     def update_displays(self):
         """Update all displays"""
@@ -1203,15 +1267,7 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} < ${target_price:.2f}")
                     
-                    # 3. Time-based exit (M1 only)
-                    if bot_name == "M1":
-                        if pos['time_held'] >= 10 and current_price < pos['entry']:
-                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
-                        elif pos['time_held'] >= 10:
-                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
-                        else:
-                            time_remaining = 10 - pos['time_held']
-                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
+                    # No time-based exits for M1 (removed adaptive exits)
                     
                     # 4. Current P/L
                     pnl_pct = ((current_price - pos['entry']) / pos['entry']) * 100
@@ -1233,15 +1289,7 @@ class BotGUI:
                     else:
                         exit_conditions.append(f"❌ TP: ${current_price:.2f} > ${target_price:.2f}")
                     
-                    # 3. Time-based exit (M1 only)
-                    if bot_name == "M1":
-                        if pos['time_held'] >= 10 and current_price > pos['entry']:
-                            exit_conditions.append(f"⚠ Time: Will exit if still losing at 10 min")
-                        elif pos['time_held'] >= 10:
-                            exit_conditions.append(f"✅ Time: Holding winner past 10 min")
-                        else:
-                            time_remaining = 10 - pos['time_held']
-                            exit_conditions.append(f"⏱ Time: {time_remaining:.0f} min until auto-exit check")
+                    # No time-based exits for M1 (removed adaptive exits)
                     
                     # 4. Current P/L
                     pnl_pct = ((pos['entry'] - current_price) / pos['entry']) * 100
