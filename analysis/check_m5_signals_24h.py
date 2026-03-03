@@ -85,7 +85,7 @@ def main():
     print(f"  Enable Shorts: {config.get('enable_shorts', True)}")
     
     # Get last 24 hours of M5 data
-    symbol = 'XAUUSD'
+    symbol = 'XAUUSD.p'
     timeframe = mt5.TIMEFRAME_M5
     
     # Get enough bars to calculate indicators properly

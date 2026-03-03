@@ -1,8 +1,0 @@
-{
-  "sentiment": "neutral",
-  "confidence": 0.5,
-  "score": 0.0,
-  "last_updated": "2026-02-27T12:00:00",
-  "source": "manual",
-  "notes": "Update this file based on mrktedge.ai or your analysis. Run: python update_sentiment.py"
-}

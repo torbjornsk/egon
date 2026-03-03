@@ -41,13 +41,13 @@ def analyze_trades(hours=24, magic_number=None):
     from_date = datetime.now() - timedelta(hours=hours)
     
     # Get all deals
-    deals = mt5.history_deals_get(from_date, datetime.now())
+    deals = mt5.history_deals_get(from_date, datetime.now() + timedelta(hours=3))
     
     if not deals:
         return []
     
     # Filter by symbol and magic number
-    filtered_deals = [d for d in deals if d.symbol == 'XAUUSD']
+    filtered_deals = [d for d in deals if 'XAUUSD' in d.symbol]
     if magic_number is not None:
         filtered_deals = [d for d in filtered_deals if d.magic == magic_number]
     

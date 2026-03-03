@@ -1,0 +1,32 @@
+{
+  "10407054": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-03-03T21:59:00.156680+01:00",
+    "bot": "M5"
+  },
+  "10407196": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 56.0% from peak $49.60 to $21.80 (limit 40% after 9min)",
+    "exit_time": "2026-03-03T22:11:01.047913+01:00",
+    "bot": "M5"
+  },
+  "10407080": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-03-03T22:11:01.048916+01:00",
+    "bot": "M5"
+  },
+  "10407415": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 31.5% from peak $58.96 to $40.40 (limit 25% after 101min)",
+    "exit_time": "2026-03-04T00:01:32.112220+01:00",
+    "bot": "M5"
+  },
+  "10407530": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 87.5% from peak $85.00 to $10.64 (limit 25% after 92min)",
+    "exit_time": "2026-03-04T00:01:47.143424+01:00",
+    "bot": "M5"
+  }
+}

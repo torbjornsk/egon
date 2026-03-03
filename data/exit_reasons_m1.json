@@ -1,0 +1,144 @@
+{
+  "10405769": {
+    "reason": "Profit protection",
+    "exit_time": "2026-03-03T20:35:44.347482+01:00",
+    "bot": "M1"
+  },
+  "10405843": {
+    "reason": "RSI exit",
+    "exit_time": "2026-03-03T20:40:01.619658+01:00",
+    "bot": "M1"
+  },
+  "10406171": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.06 > 75 for 2 candles)",
+    "exit_time": "2026-03-03T21:02:01.861610+01:00",
+    "bot": "M1"
+  },
+  "10406199": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.06 > 75 for 2 candles)",
+    "exit_time": "2026-03-03T21:02:01.892182+01:00",
+    "bot": "M1"
+  },
+  "10406384": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.75 > 75 for 2 candles)",
+    "exit_time": "2026-03-03T21:25:01.318225+01:00",
+    "bot": "M1"
+  },
+  "10406400": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.75 > 75 for 2 candles)",
+    "exit_time": "2026-03-03T21:25:01.348529+01:00",
+    "bot": "M1"
+  },
+  "10406752": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 52.0% from peak $18.18 to $8.73 (limit 50% after 1min)",
+    "exit_time": "2026-03-03T21:36:19.077569+01:00",
+    "bot": "M1"
+  },
+  "10406734": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 52.6% from peak $22.02 to $10.44 (limit 50% after 2min)",
+    "exit_time": "2026-03-03T21:36:28.114225+01:00",
+    "bot": "M1"
+  },
+  "10406826": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 54.1% from peak $17.97 to $8.25 (limit 50% after 3min)",
+    "exit_time": "2026-03-03T21:43:37.560239+01:00",
+    "bot": "M1"
+  },
+  "10407064": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-03-03T21:56:51.224516+01:00",
+    "bot": "M1"
+  },
+  "10407052": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-03-03T21:57:02.271505+01:00",
+    "bot": "M1"
+  },
+  "10407116": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-03-03T21:59:11.912446+01:00",
+    "bot": "M1"
+  },
+  "10407118": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (24.24 < 25 for 2 candles)",
+    "exit_time": "2026-03-03T22:11:02.216792+01:00",
+    "bot": "M1"
+  },
+  "10407199": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (24.24 < 25 for 2 candles)",
+    "exit_time": "2026-03-03T22:11:02.247833+01:00",
+    "bot": "M1"
+  },
+  "10407403": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 54.8% from peak $18.39 to $8.31 (limit 50% after 2min)",
+    "exit_time": "2026-03-03T22:20:46.820048+01:00",
+    "bot": "M1"
+  },
+  "10407379": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 75 for 2 candles)",
+    "exit_time": "2026-03-03T22:24:01.013843+01:00",
+    "bot": "M1"
+  },
+  "10407501": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-03T22:31:28.448237+01:00",
+    "bot": "M1"
+  },
+  "10407550": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 54.1% from peak $19.80 to $9.09 (limit 50% after 4min)",
+    "exit_time": "2026-03-03T22:36:01.757022+01:00",
+    "bot": "M1"
+  },
+  "10407525": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 62.2% from peak $18.87 to $7.14 (limit 50% after 14min)",
+    "exit_time": "2026-03-03T22:44:06.254768+01:00",
+    "bot": "M1"
+  },
+  "10407600": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 55.6% from peak $28.32 to $12.57 (limit 50% after 5min)",
+    "exit_time": "2026-03-03T22:44:15.293315+01:00",
+    "bot": "M1"
+  },
+  "10407645": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-03T22:48:34.560268+01:00",
+    "bot": "M1"
+  },
+  "10407650": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 69.0% from peak $12.60 to $3.90 (limit 50% after 2min)",
+    "exit_time": "2026-03-03T22:51:01.742886+01:00",
+    "bot": "M1"
+  },
+  "10407656": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 50.7% from peak $13.68 to $6.75 (limit 50% after 5min)",
+    "exit_time": "2026-03-03T22:56:04.078447+01:00",
+    "bot": "M1"
+  },
+  "10407647": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 59.1% from peak $15.84 to $6.48 (limit 50% after 8min)",
+    "exit_time": "2026-03-03T22:56:11.115018+01:00",
+    "bot": "M1"
+  }
+}

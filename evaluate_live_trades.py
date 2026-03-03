@@ -10,7 +10,7 @@ import pandas as pd
 def get_trade_details(hours=10):
     """Get detailed trade information from MT5"""
     from_date = datetime.now() - timedelta(hours=hours)
-    deals = mt5.history_deals_get(from_date, datetime.now())
+    deals = mt5.history_deals_get(from_date, datetime.now() + timedelta(hours=3))
     
     if not deals:
         return {'m5': [], 'm1': []}
@@ -18,7 +18,7 @@ def get_trade_details(hours=10):
     # Group deals by position
     positions = {}
     for deal in deals:
-        if deal.symbol != 'XAUUSD':
+        if 'XAUUSD' not in deal.symbol:
             continue
         pos_id = deal.position_id
         if pos_id not in positions:

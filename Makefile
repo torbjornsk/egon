@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format clean run backtest optimize
+.PHONY: install dev lint format clean m1 m5 gui
 
 install:
 	uv pip install -e .
@@ -6,30 +6,24 @@ install:
 dev:
 	uv pip install -e ".[dev]"
 
-notebook:
-	uv pip install -e ".[notebook]"
-
-test:
-	pytest
-
 lint:
-	ruff check src/ examples/
+	ruff check src/
 	mypy src/
 
 format:
-	black src/ examples/
-	ruff check --fix src/ examples/
+	black src/ run_m1.py run_m5.py run_gui.py
+	ruff check --fix src/
 
 clean:
 	rm -rf build/ dist/ *.egg-info
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
-run:
-	python src/bot.py
+m1:
+	python run_m1.py
 
-backtest:
-	python examples/run_backtest.py
+m5:
+	python run_m5.py
 
-optimize:
-	python examples/optimize_parameters.py
+gui:
+	python run_gui.py
