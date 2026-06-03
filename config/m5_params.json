@@ -2,7 +2,7 @@
   "strategy": "m5_scalping_balanced_aggressive",
   "position_size_pct": 0.18,
   "leverage": 27,
-  "max_positions": 2,
+  "max_positions": 1,
   "max_drawdown_limit": 0.35,
   "fast_ema": 9,
   "slow_ema": 21,
