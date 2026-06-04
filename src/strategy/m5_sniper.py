@@ -176,30 +176,41 @@ class M5SniperStrategy:
 
     def get_exit_rsi(self, df: pd.DataFrame, direction: str) -> float:
         """
-        Calculate the adaptive RSI exit threshold based on trend.
+        Calculate the adaptive RSI exit threshold based on trend strength.
 
-        Minor adjustment: in counter-trend trades exit slightly earlier (0.45),
-        sideways uses standard mean (0.50), with-trend lets it run slightly (0.55).
+        Uses EMA divergence (fast - slow) normalized by ATR to gauge trend strength.
+        Only shifts from 50 when there's a meaningful trend (> 0.5 ATR divergence).
+
+        Mild/sideways: exit at RSI 50 (standard mean revert)
+        Strong trend (> 0.5 ATR divergence): shift to 45 or 55
         """
         latest = df.iloc[-1]
-        uptrend = latest.get('uptrend', False)
-        downtrend = latest.get('downtrend', False)
+        ema_fast = latest.get('ema_fast', 0)
+        ema_slow = latest.get('ema_slow', 0)
+        atr = latest.get('ATR', 1)
+
+        if atr <= 0:
+            return 50.0
+
+        # Normalized EMA divergence: positive = uptrend, negative = downtrend
+        # Typical range: -2 to +2 ATR
+        divergence = (ema_fast - ema_slow) / atr
 
         if direction == 'LONG':
-            if downtrend:
-                # Counter-trend long: exit earlier
+            if divergence < -0.5:
+                # Strong downtrend: counter-trend long, exit earlier
                 return 45.0
-            elif uptrend:
-                # With-trend long: let it run
+            elif divergence > 0.5:
+                # Strong uptrend: with-trend long, let it run
                 return 55.0
             else:
                 return 50.0
         else:  # SHORT
-            if uptrend:
-                # Counter-trend short: exit earlier
+            if divergence > 0.5:
+                # Strong uptrend: counter-trend short, exit earlier
                 return 55.0
-            elif downtrend:
-                # With-trend short: let it run
+            elif divergence < -0.5:
+                # Strong downtrend: with-trend short, let it run
                 return 45.0
             else:
                 return 50.0
