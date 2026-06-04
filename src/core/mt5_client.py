@@ -240,8 +240,7 @@ class MT5Client:
             return False
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             # 10025 = "No changes" — not a real error, just SL already at that level
-            # 10016 = "Invalid stops" — position may have been closed (race condition)
-            if result.retcode not in (10025, 10016):
+            if result.retcode != 10025:
                 logger.error(f"Failed to modify SL: {result.retcode} - {result.comment}")
             return False
 
