@@ -165,6 +165,9 @@ class MT5Client:
         }
 
         result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"order_send returned None: {mt5.last_error()}")
+            return None
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             logger.error(f"Order failed: {result.retcode} - {result.comment}")
             return None
@@ -202,10 +205,85 @@ class MT5Client:
         }
 
         result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"close_position order_send returned None: {mt5.last_error()}")
+            return None
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             logger.error(f"Failed to close position: {result.retcode} - {result.comment}")
             return None
 
+        return result
+
+    def modify_sl(self, ticket: int, new_sl: float) -> bool:
+        """Modify the stop loss of an open position."""
+        # Get the position to find its current TP
+        positions = mt5.positions_get(ticket=ticket)
+        if not positions:
+            logger.error(f"Position {ticket} not found for SL modification")
+            return False
+
+        pos = positions[0]
+        request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": self.symbol,
+            "position": ticket,
+            "sl": new_sl,
+            "tp": pos.tp,
+        }
+
+        result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"modify_sl order_send returned None: {mt5.last_error()}")
+            return False
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            # 10025 = "No changes" — not a real error, just SL already at that level
+            if result.retcode != 10025:
+                logger.error(f"Failed to modify SL: {result.retcode} - {result.comment}")
+            return False
+
+        return True
+
+    def partial_close(self, position, close_volume: float, magic_number: int,
+                      comment: str = "partial_close") -> mt5.OrderSendResult | None:
+        """Partially close a position by closing a portion of the volume."""
+        close_type = ORDER_TYPE_SELL if position.type == ORDER_TYPE_BUY else ORDER_TYPE_BUY
+
+        tick = mt5.symbol_info_tick(self.symbol)
+        if tick is None:
+            logger.error("Failed to get tick data for partial close")
+            return None
+
+        price = tick.bid if position.type == ORDER_TYPE_BUY else tick.ask
+
+        # Round volume to step
+        sym_info = self.get_symbol_info()
+        if sym_info:
+            close_volume = round(close_volume / sym_info.volume_step) * sym_info.volume_step
+            close_volume = max(sym_info.volume_min, close_volume)
+
+        request = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": self.symbol,
+            "volume": close_volume,
+            "type": close_type,
+            "position": position.ticket,
+            "price": price,
+            "deviation": 20,
+            "magic": magic_number,
+            "comment": comment,
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+
+        result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"partial_close order_send returned None: {mt5.last_error()}")
+            return None
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            logger.error(f"Failed to partial close: {result.retcode} - {result.comment}")
+            return None
+
+        logger.info(f"Partial close: {close_volume} lots of ticket {position.ticket}")
         return result
 
     def calculate_lot_size(
