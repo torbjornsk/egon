@@ -80,7 +80,7 @@ class TickScalper:
         self._position_direction: str = ""
         self._velocity_tracker: VelocityTracker | None = None
         self._partial_closed: bool = False
-        self._exit_confirm_ticks: int = 0  # consecutive ticks with high exit score
+        self._exit_confirm_history: list[bool] = []  # rolling exit score hits
 
         # Entry state machine: IDLE -> ARMED -> CONFIRMING -> FILL
         # IDLE: no signal, waiting
@@ -90,6 +90,7 @@ class TickScalper:
         self._armed_signal: EntrySignal | None = None
         self._armed_at: datetime | None = None
         self._confirm_ticks: int = 0  # consecutive ticks of positive velocity
+        self._confirm_history: list[bool] = []  # rolling entry confirmation window
 
         # State
         self._stop_requested = False
@@ -350,34 +351,34 @@ class TickScalper:
 
     def _entry_confirming(self, tick, info: dict, now: datetime):
         """CONFIRMING: velocity flipped, counting confirmation ticks before entry."""
-        # Need 5 consecutive ticks of favorable velocity to confirm
-        required_confirms = 5
-
+        # Need 5 of last 6 ticks favorable (allows one dip without resetting)
         if len(self.analyzer.ticks) < 3:
             return
 
         recent_prices = [self.analyzer.ticks[-i].mid for i in range(1, 4)]
 
         if self._armed_signal.direction == "LONG":
-            # Confirm: price still rising (or at least not falling)
             still_rising = recent_prices[0] >= recent_prices[1]
         else:
             still_rising = recent_prices[0] <= recent_prices[1]
 
-        if still_rising:
-            self._confirm_ticks += 1
-        else:
-            # Lost confirmation — back to armed
-            self._entry_state = "ARMED"
-            self._confirm_ticks = 0
-            return
+        self._confirm_history.append(still_rising)
 
-        if self._confirm_ticks >= required_confirms:
-            # Confirmed! Place the order at current price (the turn point)
+        # Check: 5 of last 6 must be favorable
+        window = list(self._confirm_history)[-6:]
+        favorable_count = sum(window)
+
+        if favorable_count >= 5 and len(window) >= 5:
             self.logger.info(
                 f"[ENTRY CONFIRMED] {self._armed_signal.direction} "
-                f"after {self._confirm_ticks} ticks of favorable movement"
+                f"after {favorable_count}/{ len(window)} favorable ticks"
             )
+            self._execute_confirmed_entry(tick, info)
+            self._reset_entry_state()
+        elif len(window) >= 6 and favorable_count < 5:
+            # Window full and not enough favorable ticks — reset
+            self._entry_state = "ARMED"
+            self._confirm_history.clear()
             self._execute_confirmed_entry(tick, info)
             self._reset_entry_state()
 
@@ -466,6 +467,7 @@ class TickScalper:
         self._armed_signal = None
         self._armed_at = None
         self._confirm_ticks = 0
+        self._confirm_history.clear()
 
     def _execute_fill(self, order: dict, info: dict):
         """Execute a filled limit order."""
@@ -573,15 +575,18 @@ class TickScalper:
             m5_atr=self._get_m5_atr(),
         )
 
-        # 3. V4-style exit: score > threshold with 3-tick confirmation, only in profit
-        # Losers ride to SL. The exit score is a pure profit-taker.
-        # In practice, losers hit SL before the exit score builds up anyway.
-        if profit > 0 and exit_signal.score >= self.analyzer.exit_threshold:
-            self._exit_confirm_ticks += 1
-            if self._exit_confirm_ticks >= 3:
-                self._close_position(position, exit_signal.reason)
-        else:
-            self._exit_confirm_ticks = 0
+        # 3. V4-style exit: score > threshold, 3 of last 4 ticks above, only in profit
+        # Allows one tick to dip below without resetting the whole confirmation.
+        above_threshold = profit > 0 and exit_signal.score >= self.analyzer.exit_threshold
+        self._exit_confirm_history.append(above_threshold)
+
+        # Keep only last 4
+        if len(self._exit_confirm_history) > 4:
+            self._exit_confirm_history = self._exit_confirm_history[-4:]
+
+        # Need 3 of last 4 ticks above threshold
+        if sum(self._exit_confirm_history[-4:]) >= 3:
+            self._close_position(position, exit_signal.reason)
 
     def _close_position(self, position, reason: str):
         """Close a position."""
@@ -603,7 +608,7 @@ class TickScalper:
         self._peak_profit_price = 0
         self._velocity_tracker = None
         self._partial_closed = False
-        self._exit_confirm_ticks = 0
+        self._exit_confirm_history.clear()
         self._reset_entry_state()
 
         self.trade_log.append({
