@@ -575,17 +575,17 @@ class TickScalper:
             m5_atr=self._get_m5_atr(),
         )
 
-        # 3. V4-style exit: score > threshold, 3 of last 4 ticks above, only in profit
+        # 3. V4-style exit: score > threshold, 4 of last 5 ticks above, only in profit
         # Allows one tick to dip below without resetting the whole confirmation.
         above_threshold = profit > 0 and exit_signal.score >= self.analyzer.exit_threshold
         self._exit_confirm_history.append(above_threshold)
 
-        # Keep only last 4
-        if len(self._exit_confirm_history) > 4:
-            self._exit_confirm_history = self._exit_confirm_history[-4:]
+        # Keep only last 5
+        if len(self._exit_confirm_history) > 5:
+            self._exit_confirm_history = self._exit_confirm_history[-5:]
 
-        # Need 3 of last 4 ticks above threshold
-        if sum(self._exit_confirm_history[-4:]) >= 3:
+        # Need 4 of last 5 ticks above threshold
+        if sum(self._exit_confirm_history[-5:]) >= 4:
             self._close_position(position, exit_signal.reason)
 
     def _close_position(self, position, reason: str):
