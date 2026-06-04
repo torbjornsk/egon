@@ -547,9 +547,10 @@ class TickScalper:
 
         minutes_held = self.positions.get_minutes_held(ticket)
 
-        # 1. Simple trailing stop at 3x M5 ATR (V7)
-        m5_atr = self._get_m5_atr()
-        trail_distance = m5_atr * 3.0
+        # 1. Trailing stop using tick ATR (V4-style: very tight, rarely triggers
+        #    because exit score closes first in most cases)
+        tick_atr = self.analyzer._calc_tick_atr()
+        trail_distance = tick_atr * 2.5  # ~$0.50-0.75, effectively a tight safety net
 
         # Safety: don't trail if peak price is not set properly
         if self._peak_profit_price < 100:
@@ -572,12 +573,12 @@ class TickScalper:
             m5_atr=self._get_m5_atr(),
         )
 
-        # 3. V4-style exit: score > threshold with 5-tick confirmation
-        # No zones, no profit gates. If momentum exhausts, close regardless of P/L.
-        # In practice, losers hit SL before the exit score builds up (SL wins the race).
-        if exit_signal.score >= self.analyzer.exit_threshold:
+        # 3. V4-style exit: score > threshold with 3-tick confirmation, only in profit
+        # Losers ride to SL. The exit score is a pure profit-taker.
+        # In practice, losers hit SL before the exit score builds up anyway.
+        if profit > 0 and exit_signal.score >= self.analyzer.exit_threshold:
             self._exit_confirm_ticks += 1
-            if self._exit_confirm_ticks >= 5:
+            if self._exit_confirm_ticks >= 3:
                 self._close_position(position, exit_signal.reason)
         else:
             self._exit_confirm_ticks = 0
