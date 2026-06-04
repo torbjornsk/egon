@@ -156,13 +156,16 @@ class MT5Client:
             "type": order_type,
             "price": price,
             "sl": sl,
-            "tp": tp,
             "deviation": 20,
             "magic": magic_number,
             "comment": comment,
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
+
+        # Only include TP if it's a valid price (0 means no TP)
+        if tp and tp > 0:
+            request["tp"] = tp
 
         result = mt5.order_send(request)
         if result is None:
