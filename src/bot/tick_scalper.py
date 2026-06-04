@@ -400,13 +400,13 @@ class TickScalper:
         else:
             entry_price = tick.ask
 
-        # Use M5 ATR for SL/TP
+        # Use M5 ATR for SL/TP (V7: wide SL like V4)
         m5_atr = self._get_m5_atr()
         if signal.direction == "LONG":
-            sl = entry_price - m5_atr * 1.5
+            sl = entry_price - m5_atr * 6.0
             tp = entry_price + m5_atr * 20.0
         else:
-            sl = entry_price + m5_atr * 1.5
+            sl = entry_price + m5_atr * 6.0
             tp = entry_price - m5_atr * 20.0
 
         order = {
@@ -547,127 +547,40 @@ class TickScalper:
 
         minutes_held = self.positions.get_minutes_held(ticket)
 
-        # 1. Progressive trailing stop
-        # As profit grows, SL tightens from initial toward entry and beyond.
-        # Small profit: slightly tighten SL (still can be a loss)
-        # Large profit: lock in up to 50% of peak profit
-        # Uses sqrt curve: starts gentle, accelerates
-        entry = position.price_open
+        # 1. Simple trailing stop at 3x M5 ATR (V7)
         m5_atr = self._get_m5_atr()
-
-        if direction == "LONG":
-            profit_distance = self._peak_profit_price - entry
-        else:
-            profit_distance = entry - self._peak_profit_price
-
-        if profit_distance > 0 and m5_atr > 0:
-            import math
-            profit_atr = profit_distance / m5_atr
-
-            # Tighter trailing: lock-in starts earlier and rises faster
-            # 0.3 ATR profit -> ~17% locked
-            # 0.5 ATR profit -> ~22% locked
-            # 1.0 ATR profit -> ~31% locked (breakeven+)
-            # 2.0 ATR profit -> ~44% locked
-            # 4.0 ATR profit -> ~55% locked
-            # 6.0+ ATR profit -> 60% locked (cap)
-            lock_pct = min(0.60, 0.31 * math.sqrt(profit_atr))
-
-            # Faster progress: reach full trailing mode at 1.5 ATR (was 3.0)
-            initial_sl_distance = m5_atr * 1.5  # matches the entry SL multiplier
-            progress = min(1.0, profit_atr / 1.5)
-
-            # Blend between initial SL and profit-locked SL
-            initial_sl_level = entry - initial_sl_distance if direction == "LONG" else entry + initial_sl_distance
-            profit_sl_level = (entry + profit_distance * lock_pct) if direction == "LONG" else (entry - profit_distance * lock_pct)
-
-            # Smooth transition: starts at initial SL, moves toward profit lock
-            if direction == "LONG":
-                new_sl = initial_sl_level + (profit_sl_level - initial_sl_level) * progress
-            else:
-                new_sl = initial_sl_level - (initial_sl_level - profit_sl_level) * progress
-        else:
-            new_sl = position.sl
+        trail_distance = m5_atr * 3.0
 
         # Safety: don't trail if peak price is not set properly
         if self._peak_profit_price < 100:
             return
 
         if direction == "LONG":
+            new_sl = self._peak_profit_price - trail_distance
             if new_sl > position.sl + 0.10 and new_sl > current_price * 0.99 and hasattr(self.mt5, 'modify_sl'):
                 self.mt5.modify_sl(ticket, new_sl)
         else:
+            new_sl = self._peak_profit_price + trail_distance
             if new_sl < position.sl - 0.10 and new_sl < current_price * 1.01 and hasattr(self.mt5, 'modify_sl'):
                 self.mt5.modify_sl(ticket, new_sl)
 
         # 2. Exit score (velocity-aware)
+        entry = position.price_open
         exit_signal = self.analyzer.get_exit_score(
             self._position_direction, entry, profit, minutes_held,
             velocity_tracker=self._velocity_tracker,
             m5_atr=self._get_m5_atr(),
         )
 
-        # Calculate profit in price distance (direction-aware)
-        if direction == "LONG":
-            profit_distance_price = current_price - entry
+        # 3. V4-style exit: score > threshold with 5-tick confirmation
+        # No zones, no profit gates. If momentum exhausts, close regardless of P/L.
+        # In practice, losers hit SL before the exit score builds up (SL wins the race).
+        if exit_signal.score >= self.analyzer.exit_threshold:
+            self._exit_confirm_ticks += 1
+            if self._exit_confirm_ticks >= 5:
+                self._close_position(position, exit_signal.reason)
         else:
-            profit_distance_price = entry - current_price
-
-        min_exit_distance = m5_atr * 0.5  # Gate C: minimum 0.5 ATR before exit scoring
-
-        # 3. Partial close on velocity exhaustion (only if in meaningful profit)
-        if exit_signal.partial_close and not self._partial_closed and profit_distance_price >= min_exit_distance:
-            close_vol = round(position.volume * 0.5 / 0.01) * 0.01
-            if close_vol >= 0.01 and hasattr(self.mt5, 'partial_close'):
-                result = self.mt5.partial_close(position, close_vol, self.MAGIC_NUMBER, "tick_partial")
-                if result:
-                    self._partial_closed = True
-                    self.logger.info(
-                        f"[VELOCITY PARTIAL] Closed {close_vol} lots "
-                        f"(vel ratio {self._velocity_tracker.velocity_ratio:.2f}, "
-                        f"profit ${profit:.2f})"
-                    )
-
-        # 4. Full exit logic — hybrid C+B approach
-        # Zone 1: Losing position — exit early if structure is very bad
-        elif profit_distance_price < 0:
-            if exit_signal.score >= 0.85:
-                self._exit_confirm_ticks += 1
-                if self._exit_confirm_ticks >= 8:
-                    self._close_position(position, exit_signal.reason)
-            else:
-                self._exit_confirm_ticks = 0
-
-        # Zone 2: Small profit (< 0.5 ATR) — exit scoring disabled, only trailing/SL
-        elif profit_distance_price < min_exit_distance:
             self._exit_confirm_ticks = 0
-
-        # Zone 3: Meaningful profit (>= 0.5 ATR) — dynamic threshold (B)
-        else:
-            # Scale threshold: harder to exit at small profits, relaxes as profit grows
-            profit_ratio = min(1.0, profit_distance_price / (m5_atr * 1.5))
-            effective_threshold = self.analyzer.exit_threshold + (1.0 - profit_ratio) * 0.20
-
-            if exit_signal.score >= effective_threshold:
-                self._exit_confirm_ticks += 1
-
-                # Confirmation ticks
-                base_confirms = 5
-
-                # If trend is with us, be more reluctant to exit
-                if self._trend:
-                    if (self._position_direction == "LONG" and self._trend.score > 0.3) or \
-                       (self._position_direction == "SHORT" and self._trend.score < -0.3):
-                        base_confirms = 12  # With-trend: more confirmation needed
-
-                # Higher profit = more reluctant (add 1 tick per $5 of profit)
-                profit_reluctance = int(profit / 5)
-                required_confirms = base_confirms + profit_reluctance
-
-                if self._exit_confirm_ticks >= required_confirms:
-                    self._close_position(position, exit_signal.reason)
-            else:
-                self._exit_confirm_ticks = 0
 
     def _close_position(self, position, reason: str):
         """Close a position."""
