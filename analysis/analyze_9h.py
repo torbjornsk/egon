@@ -17,8 +17,9 @@ SYMBOL = 'XAUUSD.p'
 HOURS = 9
 
 
-def get_trades(magic, from_date, to_date):
-    """Fetch trades. from_date/to_date must be in MT5 broker time (naive datetimes)."""
+def get_trades(magic, from_date, to_date, local_start=None):
+    """Fetch trades. from_date/to_date must be in MT5 broker time (naive datetimes).
+    If local_start is provided, filters out trades whose exit is before that time."""
     deals = mt5.history_deals_get(from_date, to_date)
     if deals is None or len(deals) == 0:
         return []
@@ -55,6 +56,9 @@ def get_trades(magic, from_date, to_date):
             })
             del positions[deal.position_id]
     trades.sort(key=lambda t: t['exit_time'])
+    # Filter: only include trades whose exit is within the requested window
+    if local_start:
+        trades = [t for t in trades if t['exit_time'] >= local_start]
     return trades
 
 
@@ -149,10 +153,10 @@ def main():
         return
 
     try:
-        # Use MT5 broker time for API queries
+        # Use MT5 broker time for API queries (add 3h buffer to end to catch recent deals)
         mt5_now = get_mt5_now()
         mt5_start = mt5_now - timedelta(hours=HOURS)
-
+        mt5_end_buffered = mt5_now + timedelta(hours=3)
         # Use local time for display
         local_now = get_local_now()
         local_start = local_now - timedelta(hours=HOURS)
@@ -160,7 +164,7 @@ def main():
 
         # MT5 API needs naive datetimes in broker time
         from_naive = mt5_start.replace(tzinfo=None)
-        to_naive = mt5_now.replace(tzinfo=None)
+        to_naive = mt5_end_buffered.replace(tzinfo=None)
 
         # Market context
         rates = mt5.copy_rates_range(SYMBOL, mt5.TIMEFRAME_M5, from_naive, to_naive)
@@ -174,8 +178,8 @@ def main():
             atr = np.mean(tr[-14:])
             print(f"  Market: ${closes[0]:.2f} -> ${closes[-1]:.2f} (net ${net:+.2f}, range ${rng:.2f}, ATR ${atr:.2f})")
 
-        tick_trades = get_trades(MAGIC_TICK, from_naive, to_naive)
-        m5s_trades = get_trades(MAGIC_M5S, from_naive, to_naive)
+        tick_trades = get_trades(MAGIC_TICK, from_naive, to_naive, local_start=local_start)
+        m5s_trades = get_trades(MAGIC_M5S, from_naive, to_naive, local_start=local_start)
 
         tick_reasons = load_exit_reasons('tick')
         m5s_reasons = load_exit_reasons('m5s')

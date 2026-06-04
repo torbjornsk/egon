@@ -66,3 +66,20 @@
   - MT5 = Europe/Athens (EET, GMT+3 summer), Local = Europe/Berlin (CET, GMT+2 summer)
   - The 1-hour offset means `datetime.now()` queries are shifted and displayed times are wrong
   - Always import from `src.core.timezone`: `from src.core.timezone import get_mt5_now, mt5_to_local, get_local_now`
+- **CRITICAL: `history_deals_get` quirks:**
+  - Returns deals OUTSIDE the requested date range (undocumented behavior). Always post-filter results by comparing `mt5_to_local(deal.time)` against the desired local time window.
+  - Does NOT reliably return the very latest deals (last few minutes may be missing). Add +3 hours buffer to the `to_date` parameter to ensure recent deals are included: `mt5_end = get_mt5_now() + timedelta(hours=3)`
+  - Then filter results: keep only trades with `exit_time >= local_start`
+  - Pattern for analysis scripts:
+    ```python
+    mt5_now = get_mt5_now()
+    local_now = get_local_now()
+    local_start = local_now - timedelta(hours=N)
+    # Query with buffer on both sides
+    from_naive = (mt5_now - timedelta(hours=N)).replace(tzinfo=None)
+    to_naive = (mt5_now + timedelta(hours=3)).replace(tzinfo=None)
+    deals = mt5.history_deals_get(from_naive, to_naive)
+    # Post-filter: only keep trades exiting after local_start
+    trades = [t for t in trades if t['exit_time'] >= local_start]
+    ```
+  - Run scripts with `-X utf8` flag to avoid cp1252 encoding errors on Windows
