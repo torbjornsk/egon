@@ -178,9 +178,8 @@ class M5SniperStrategy:
         """
         Calculate the adaptive RSI exit threshold based on trend.
 
-        In a downtrend: longs exit earlier (RSI 50), shorts let run (RSI 50)
-        In an uptrend: longs let run (RSI 60), shorts exit earlier (RSI 40)
-        Sideways: standard mean-revert (RSI 55 for longs, 45 for shorts)
+        Minor adjustment: in counter-trend trades exit slightly earlier (0.45),
+        sideways uses standard mean (0.50), with-trend lets it run slightly (0.55).
         """
         latest = df.iloc[-1]
         uptrend = latest.get('uptrend', False)
@@ -188,22 +187,22 @@ class M5SniperStrategy:
 
         if direction == 'LONG':
             if downtrend:
-                # Counter-trend long in downtrend: exit earlier, don't expect full revert
-                return 50.0
+                # Counter-trend long: exit earlier
+                return 45.0
             elif uptrend:
-                # With-trend long in uptrend: let it run further
-                return 60.0
-            else:
+                # With-trend long: let it run
                 return 55.0
+            else:
+                return 50.0
         else:  # SHORT
             if uptrend:
-                # Counter-trend short in uptrend: exit earlier
-                return 50.0
+                # Counter-trend short: exit earlier
+                return 55.0
             elif downtrend:
-                # With-trend short in downtrend: let it run further
-                return 40.0
-            else:
+                # With-trend short: let it run
                 return 45.0
+            else:
+                return 50.0
 
     def check_exit(
         self,
