@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 SYMBOL = 'XAUUSD.p'
 M5_MAGIC = 234000
 M1_MAGIC = 234001
+M15_MAGIC = 234015
+LZ_MAGIC = 234100
+M5S_MAGIC = 234050
+TICK_MAGIC = 234200
+MOM_MAGIC = 234300
 
 
 class MarketDataService:
@@ -44,7 +49,8 @@ class MarketDataService:
 
     def get_chart_data(self, timeframe='M5', bars=50):
         """Get OHLCV data for chart rendering. Timestamps converted to local."""
-        tf = mt5.TIMEFRAME_M1 if timeframe == 'M1' else mt5.TIMEFRAME_M5
+        tf_map = {'M1': mt5.TIMEFRAME_M1, 'M5': mt5.TIMEFRAME_M5, 'M15': mt5.TIMEFRAME_M15}
+        tf = tf_map.get(timeframe, mt5.TIMEFRAME_M5)
         rates = mt5.copy_rates_from_pos(SYMBOL, tf, 0, bars)
         if rates is None or len(rates) == 0:
             return None
@@ -84,6 +90,16 @@ class MarketDataService:
                 bot = 'M1'
             elif entry_deal.magic == M5_MAGIC:
                 bot = 'M5'
+            elif entry_deal.magic == M15_MAGIC:
+                bot = 'M15'
+            elif entry_deal.magic == LZ_MAGIC:
+                bot = 'LZ'
+            elif entry_deal.magic == M5S_MAGIC:
+                bot = 'M5S'
+            elif entry_deal.magic == TICK_MAGIC:
+                bot = 'TICK'
+            elif entry_deal.magic == MOM_MAGIC:
+                bot = 'MOM'
             else:
                 continue
             direction = 'BUY' if entry_deal.type == mt5.DEAL_TYPE_BUY else 'SELL'
