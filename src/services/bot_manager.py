@@ -185,6 +185,22 @@ class BotManager:
             strategy = M5SniperStrategy(config)
             bot = SniperBot(strategy, config)
             interval = check_interval or 1
+        elif label == 'M1S':
+            path = config_path or 'config/m1_params.json'
+            from src.core.config import load_config
+            from src.strategy.m1_sniper import M1SniperStrategy
+            config = load_config(path)
+            strategy = M1SniperStrategy(config)
+            bot = SniperBot(strategy, config)
+            interval = check_interval or 1
+        elif label == 'M15S':
+            path = config_path or 'config/m15_params.json'
+            from src.core.config import load_config
+            from src.strategy.m15_sniper import M15SniperStrategy
+            config = load_config(path)
+            strategy = M15SniperStrategy(config)
+            bot = SniperBot(strategy, config)
+            interval = check_interval or 1
         elif label == 'TICK':
             path = config_path or 'config/tick_params.json'
             from src.core.config import load_config

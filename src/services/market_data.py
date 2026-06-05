@@ -11,6 +11,8 @@ M5_MAGIC = 234000
 M1_MAGIC = 234001
 M15_MAGIC = 234015
 LZ_MAGIC = 234100
+M1S_MAGIC = 234101
+M15S_MAGIC = 234115
 M5S_MAGIC = 234050
 TICK_MAGIC = 234200
 MOM_MAGIC = 234300
@@ -96,6 +98,10 @@ class MarketDataService:
                 bot = 'LZ'
             elif entry_deal.magic == M5S_MAGIC:
                 bot = 'M5S'
+            elif entry_deal.magic == M1S_MAGIC:
+                bot = 'M1S'
+            elif entry_deal.magic == M15S_MAGIC:
+                bot = 'M15S'
             elif entry_deal.magic == TICK_MAGIC:
                 bot = 'TICK'
             elif entry_deal.magic == MOM_MAGIC:

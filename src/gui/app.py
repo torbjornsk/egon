@@ -32,8 +32,10 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 # Available bot types
-BOT_TYPES = ['-- None --', 'M5 RSI', 'LZ Zones', 'M5 Sniper', 'Tick Scalper', 'Momentum', 'M15 RSI']
+BOT_TYPES = ['-- None --', 'M5 RSI', 'LZ Zones', 'M5 Sniper', 'M1 Sniper', 'M15 Sniper',
+             'Tick Scalper', 'Momentum', 'M15 RSI']
 BOT_LABELS = {'M5 RSI': 'M5', 'LZ Zones': 'LZ', 'M5 Sniper': 'M5S',
+              'M1 Sniper': 'M1S', 'M15 Sniper': 'M15S',
               'Tick Scalper': 'TICK', 'Momentum': 'MOM', 'M15 RSI': 'M15'}
 
 
@@ -45,6 +47,8 @@ class BotSlot:
         'M5': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'max_positions'],
         'LZ': ['zone_rr_ratio', 'zone_min_strength', 'leverage', 'position_size_pct', 'max_positions'],
         'M5S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
+        'M1S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
+        'M15S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
         'TICK': ['tick_entry_threshold', 'tick_exit_threshold', 'tick_cooldown_seconds', 'leverage', 'position_size_pct'],
         'MOM': ['entry_threshold', 'hold_threshold', 'signal_window', 'sl_atr_mult', 'leverage', 'position_size_pct'],
         'M15': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'max_positions'],
