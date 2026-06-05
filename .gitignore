@@ -68,3 +68,6 @@ config/mrktedge_credentials.json
 # Documentation builds
 docs/_build/
 site/
+
+# PyInstaller
+*.spec.bak

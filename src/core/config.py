@@ -184,8 +184,14 @@ def load_config(config_path: str | Path) -> TradingConfig:
     Load a trading config from JSON file and return a validated TradingConfig.
 
     Keys starting with '_' are treated as comments and ignored.
+    Supports both absolute paths and relative paths (resolved from app root).
     """
+    from src.core.paths import resolve_path
+
     path = Path(config_path)
+    if not path.is_absolute():
+        path = resolve_path(str(config_path))
+
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
 

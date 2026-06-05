@@ -143,9 +143,11 @@ class PositionManager:
         exit_reasons_file: str,
         drawdown_limit_fn=None,
     ):
+        from src.core.paths import resolve_path
+
         self.config = config
         self.bot_label = bot_label
-        self.exit_reasons_file = exit_reasons_file
+        self.exit_reasons_file = str(resolve_path(exit_reasons_file)) if exit_reasons_file else ''
         self._drawdown_limit_fn = drawdown_limit_fn
         self.logger = logging.getLogger(f"src.bot.{bot_label}")
 

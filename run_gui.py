@@ -6,11 +6,16 @@ Entry point for the GUI.
 import logging
 import tkinter as tk
 
+# Resolve log file path for packaged execution
+from src.core.paths import resolve_path
+
+log_path = str(resolve_path('trading_bot.log'))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('trading_bot.log'),
+        logging.FileHandler(log_path),
         logging.StreamHandler(),
     ],
 )
