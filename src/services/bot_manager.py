@@ -178,7 +178,7 @@ class BotManager:
             bot = ZoneBot(strategy, config)
             interval = check_interval or 1
         elif label == 'M5S':
-            path = config_path or 'config/m5_params.json'
+            path = config_path or 'config/m5s_params.json'
             from src.core.config import load_config
             from src.strategy.m5_sniper import M5SniperStrategy
             config = load_config(path)
