@@ -3,42 +3,18 @@ Check M5 bot signals over last 24 hours
 """
 import MetaTrader5 as mt5
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
-import json
 
-def compute_indicators(df, fast_ema, slow_ema, rsi_period):
-    """Compute technical indicators"""
-    # EMAs
-    df['ema_fast'] = df['close'].ewm(span=fast_ema, adjust=False).mean()
-    df['ema_slow'] = df['close'].ewm(span=slow_ema, adjust=False).mean()
-    
-    # Trend
-    df['uptrend'] = df['ema_fast'] > df['ema_slow']
-    df['downtrend'] = df['ema_fast'] < df['ema_slow']
-    
-    # RSI
-    delta = df['close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
-    rs = gain / loss
-    df['RSI'] = 100 - (100 / (1 + rs))
-    
-    # ATR
-    df['high_low'] = df['high'] - df['low']
-    df['high_close'] = abs(df['high'] - df['close'].shift())
-    df['low_close'] = abs(df['low'] - df['close'].shift())
-    df['tr'] = df[['high_low', 'high_close', 'low_close']].max(axis=1)
-    df['ATR'] = df['tr'].rolling(window=14).mean()
-    
-    return df
+from src.core.config import load_config
+from src.core.indicators import compute_indicators
+
 
 def check_entry_conditions(row, config):
     """Check if entry conditions are met"""
     signals = []
     
     # LONG conditions
-    if row['RSI'] < config['rsi_buy'] and row['uptrend']:
+    if row['RSI'] < config.rsi_buy and row['uptrend']:
         signals.append({
             'type': 'LONG',
             'time': row['time'],
@@ -50,8 +26,8 @@ def check_entry_conditions(row, config):
         })
     
     # SHORT conditions
-    if config.get('enable_shorts', True):
-        if row['RSI'] > config['rsi_sell'] and row['downtrend']:
+    if config.enable_shorts:
+        if row['RSI'] > config.rsi_sell and row['downtrend']:
             signals.append({
                 'type': 'SHORT',
                 'time': row['time'],
@@ -73,16 +49,15 @@ def main():
     print("Connected to MT5")
     
     # Load M5 config
-    with open('config/m5_params.json', 'r') as f:
-        config = json.load(f)
+    config = load_config('config/m5_params.json')
     
     print(f"\nM5 Bot Configuration:")
-    print(f"  Fast EMA: {config['fast_ema']}")
-    print(f"  Slow EMA: {config['slow_ema']}")
-    print(f"  RSI Period: {config['rsi_period']}")
-    print(f"  RSI Buy: {config['rsi_buy']}")
-    print(f"  RSI Sell: {config['rsi_sell']}")
-    print(f"  Enable Shorts: {config.get('enable_shorts', True)}")
+    print(f"  Fast EMA: {config.fast_ema}")
+    print(f"  Slow EMA: {config.slow_ema}")
+    print(f"  RSI Period: {config.rsi_period}")
+    print(f"  RSI Buy: {config.rsi_buy}")
+    print(f"  RSI Sell: {config.rsi_sell}")
+    print(f"  Enable Shorts: {config.enable_shorts}")
     
     # Get last 24 hours of M5 data
     symbol = 'XAUUSD.p'
@@ -107,8 +82,8 @@ def main():
     print(f"From: {df['time'].iloc[0]}")
     print(f"To: {df['time'].iloc[-1]}")
     
-    # Compute indicators
-    df = compute_indicators(df, config['fast_ema'], config['slow_ema'], config['rsi_period'])
+    # Compute indicators using shared module
+    df = compute_indicators(df, config)
     
     # Only analyze last 24 hours
     cutoff_time = datetime.now() - timedelta(hours=24)
@@ -129,7 +104,7 @@ def main():
     if len(all_signals) == 0:
         print("\nNo entry signals found in the last 24 hours!")
         print("\nPossible reasons:")
-        print("  1. RSI thresholds too strict (buy < 25, sell > 75)")
+        print(f"  1. RSI thresholds too strict (buy < {config.rsi_buy}, sell > {config.rsi_sell})")
         print("  2. Trend filter too restrictive (requires EMA alignment)")
         print("  3. Market conditions not meeting criteria")
         
@@ -139,8 +114,8 @@ def main():
         print(f"  Max: {df_24h['RSI'].max():.1f}")
         print(f"  Mean: {df_24h['RSI'].mean():.1f}")
         print(f"  Median: {df_24h['RSI'].median():.1f}")
-        print(f"  Times RSI < {config['rsi_buy']}: {(df_24h['RSI'] < config['rsi_buy']).sum()}")
-        print(f"  Times RSI > {config['rsi_sell']}: {(df_24h['RSI'] > config['rsi_sell']).sum()}")
+        print(f"  Times RSI < {config.rsi_buy}: {(df_24h['RSI'] < config.rsi_buy).sum()}")
+        print(f"  Times RSI > {config.rsi_sell}: {(df_24h['RSI'] > config.rsi_sell).sum()}")
         
         # Show trend distribution
         print(f"\nTrend Statistics (last 24h):")
@@ -172,7 +147,7 @@ def main():
     current = df.iloc[-1]
     print(f"Time: {current['time']}")
     print(f"Price: ${current['close']:.2f}")
-    print(f"RSI: {current['RSI']:.1f} (Buy < {config['rsi_buy']}, Sell > {config['rsi_sell']})")
+    print(f"RSI: {current['RSI']:.1f} (Buy < {config.rsi_buy}, Sell > {config.rsi_sell})")
     print(f"Trend: {'UP' if current['uptrend'] else 'DOWN' if current['downtrend'] else 'SIDEWAYS'}")
     print(f"EMA Fast: ${current['ema_fast']:.2f}")
     print(f"EMA Slow: ${current['ema_slow']:.2f}")
@@ -180,25 +155,25 @@ def main():
     
     # Check what's preventing entry
     print(f"\nEntry Check:")
-    if current['RSI'] < config['rsi_buy']:
-        print(f"  ✓ RSI oversold ({current['RSI']:.1f} < {config['rsi_buy']})")
+    if current['RSI'] < config.rsi_buy:
+        print(f"  + RSI oversold ({current['RSI']:.1f} < {config.rsi_buy})")
     else:
-        print(f"  ✗ RSI not oversold ({current['RSI']:.1f} >= {config['rsi_buy']})")
+        print(f"  - RSI not oversold ({current['RSI']:.1f} >= {config.rsi_buy})")
     
     if current['uptrend']:
-        print(f"  ✓ Uptrend (EMA {current['ema_fast']:.2f} > {current['ema_slow']:.2f})")
+        print(f"  + Uptrend (EMA {current['ema_fast']:.2f} > {current['ema_slow']:.2f})")
     else:
-        print(f"  ✗ Not uptrend (EMA {current['ema_fast']:.2f} <= {current['ema_slow']:.2f})")
+        print(f"  - Not uptrend (EMA {current['ema_fast']:.2f} <= {current['ema_slow']:.2f})")
     
-    if current['RSI'] > config['rsi_sell']:
-        print(f"  ✓ RSI overbought ({current['RSI']:.1f} > {config['rsi_sell']})")
+    if current['RSI'] > config.rsi_sell:
+        print(f"  + RSI overbought ({current['RSI']:.1f} > {config.rsi_sell})")
     else:
-        print(f"  ✗ RSI not overbought ({current['RSI']:.1f} <= {config['rsi_sell']})")
+        print(f"  - RSI not overbought ({current['RSI']:.1f} <= {config.rsi_sell})")
     
     if current['downtrend']:
-        print(f"  ✓ Downtrend (EMA {current['ema_fast']:.2f} < {current['ema_slow']:.2f})")
+        print(f"  + Downtrend (EMA {current['ema_fast']:.2f} < {current['ema_slow']:.2f})")
     else:
-        print(f"  ✗ Not downtrend (EMA {current['ema_fast']:.2f} >= {current['ema_slow']:.2f})")
+        print(f"  - Not downtrend (EMA {current['ema_fast']:.2f} >= {current['ema_slow']:.2f})")
     
     mt5.shutdown()
 

@@ -1,1 +1,74 @@
-{}
+{
+  "12824023": {
+    "reason": "Mean revert exit (RSI 51.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 51.1 >= 50)",
+    "exit_time": "2026-06-05T13:18:01.567614+02:00",
+    "bot": "M1S"
+  },
+  "12824101": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T13:22:24.106836+02:00",
+    "bot": "M1S"
+  },
+  "12824121": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T13:24:16.372259+02:00",
+    "bot": "M1S"
+  },
+  "12824192": {
+    "reason": "Mean revert exit (RSI 16.8 <= ...",
+    "full_reason": "Mean revert exit (RSI 16.8 <= 50)",
+    "exit_time": "2026-06-05T13:34:01.682888+02:00",
+    "bot": "M1S"
+  },
+  "12824266": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T13:37:56.232901+02:00",
+    "bot": "M1S"
+  },
+  "12824301": {
+    "reason": "Mean revert exit (RSI 40.7 <= ...",
+    "full_reason": "Mean revert exit (RSI 40.7 <= 50)",
+    "exit_time": "2026-06-05T13:40:00.837538+02:00",
+    "bot": "M1S"
+  },
+  "12824395": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T13:47:26.078301+02:00",
+    "bot": "M1S"
+  },
+  "12824446": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T13:51:28.747374+02:00",
+    "bot": "M1S"
+  },
+  "12824803": {
+    "reason": "Mean revert exit (RSI 80.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 80.9 >= 50)",
+    "exit_time": "2026-06-05T14:01:00.312697+02:00",
+    "bot": "M1S"
+  },
+  "12825030": {
+    "reason": "Mean revert exit (RSI 58.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 58.9 >= 50)",
+    "exit_time": "2026-06-05T14:08:00.517258+02:00",
+    "bot": "M1S"
+  },
+  "12825270": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:13:25.583832+02:00",
+    "bot": "M1S"
+  },
+  "12825451": {
+    "reason": "Mean revert exit (RSI 48.5 <= ...",
+    "full_reason": "Mean revert exit (RSI 48.5 <= 50)",
+    "exit_time": "2026-06-05T14:21:01.051523+02:00",
+    "bot": "M1S"
+  }
+}

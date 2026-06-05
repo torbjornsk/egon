@@ -13,7 +13,7 @@ import logging
 import pandas as pd
 
 from src.core.config import TradingConfig
-from src.core.mt5_client import ORDER_TYPE_BUY, ORDER_TYPE_SELL, TIMEFRAME_M1
+from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL, TIMEFRAME_M1
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +100,28 @@ class M1ScalpingStrategy:
 
     # -- Entry --
 
+    def _passes_trend_filter(self, df: pd.DataFrame, direction: str) -> bool:
+        """Check if the trade direction aligns with the trend filter."""
+        filt = self.config.trend_filter
+        if filt == "none":
+            return True
+
+        latest = df.iloc[-1]
+
+        if filt == "ema_cross":
+            if direction == "LONG":
+                return bool(latest["uptrend"])
+            else:
+                return bool(latest["downtrend"])
+
+        if filt == "ema_200":
+            if direction == "LONG":
+                return latest["close"] > latest["ema_200"]
+            else:
+                return latest["close"] < latest["ema_200"]
+
+        return True
+
     def check_entry(
         self,
         df: pd.DataFrame,
@@ -107,20 +129,28 @@ class M1ScalpingStrategy:
         context: dict,
     ) -> dict | None:
         latest = df.iloc[-1]
+        previous = df.iloc[-2] if len(df) >= 2 else latest
         has_long = context.get('has_long', False)
         has_short = context.get('has_short', False)
         num_positions = len(open_positions)
 
         # Signal confirmation: only when going 0->1, not 1->2
         required = self.config.entry_signal_confirmations if num_positions == 0 else 0
+        use_reversal = self.config.entry_on_rsi_reversal
 
         # LONG
-        if latest['RSI'] < self.config.rsi_buy:
+        if (latest['RSI'] < self.config.rsi_buy
+                and (not self.config.long_requires_uptrend or latest['uptrend'])):
             self.entry_signal_count['LONG'] += 1
             self.entry_signal_count['SHORT'] = 0
 
             if has_short:
                 self.logger.info("LONG signal detected but skipping -- already have SHORT position(s)")
+                return None
+
+            if not self._passes_trend_filter(df, "LONG"):
+                self.logger.info(f"LONG signal skipped -- trend filter ({self.config.trend_filter})")
+                self.entry_signal_count['LONG'] = 0
                 return None
 
             if self.entry_signal_count['LONG'] <= required:
@@ -130,7 +160,16 @@ class M1ScalpingStrategy:
                 )
                 return None
 
-            if required > 0:
+            # RSI reversal: wait for RSI to start rising (swing bottom)
+            if use_reversal and latest['RSI'] <= previous['RSI']:
+                self.logger.info(
+                    f"LONG signal -- RSI still falling ({previous['RSI']:.1f} -> {latest['RSI']:.1f}), waiting for reversal"
+                )
+                return None
+
+            if use_reversal:
+                self.logger.info(f"LONG SIGNAL (reversal): RSI turning up {previous['RSI']:.1f} -> {latest['RSI']:.1f}")
+            elif required > 0:
                 self.logger.info(f"LONG SIGNAL CONFIRMED: RSI={latest['RSI']:.2f} ({self.entry_signal_count['LONG']} candles)")
             else:
                 status = "skipped (adding to position)" if num_positions > 0 else f"required ({required + 1} candles)"
@@ -142,12 +181,17 @@ class M1ScalpingStrategy:
         # SHORT
         if (self.config.enable_shorts
                 and latest['RSI'] > self.config.rsi_sell
-                and latest['downtrend']):
+                and (not self.config.short_requires_downtrend or latest['downtrend'])):
             self.entry_signal_count['SHORT'] += 1
             self.entry_signal_count['LONG'] = 0
 
             if has_long:
                 self.logger.info("SHORT signal detected but skipping -- already have LONG position(s)")
+                return None
+
+            if not self._passes_trend_filter(df, "SHORT"):
+                self.logger.info(f"SHORT signal skipped -- trend filter ({self.config.trend_filter})")
+                self.entry_signal_count['SHORT'] = 0
                 return None
 
             if self.entry_signal_count['SHORT'] <= required:
@@ -157,7 +201,16 @@ class M1ScalpingStrategy:
                 )
                 return None
 
-            if required > 0:
+            # RSI reversal: wait for RSI to start falling (swing top)
+            if use_reversal and latest['RSI'] >= previous['RSI']:
+                self.logger.info(
+                    f"SHORT signal -- RSI still rising ({previous['RSI']:.1f} -> {latest['RSI']:.1f}), waiting for reversal"
+                )
+                return None
+
+            if use_reversal:
+                self.logger.info(f"SHORT SIGNAL (reversal): RSI turning down {previous['RSI']:.1f} -> {latest['RSI']:.1f}")
+            elif required > 0:
                 self.logger.info(f"SHORT SIGNAL CONFIRMED: RSI={latest['RSI']:.2f} ({self.entry_signal_count['SHORT']} candles)")
             else:
                 status = "skipped (adding to position)" if num_positions > 0 else f"required ({required + 1} candles)"

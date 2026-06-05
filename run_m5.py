@@ -22,8 +22,8 @@ def main():
     parser = argparse.ArgumentParser(description='Egon M5 Scalping Bot')
     parser.add_argument('--config', default='config/m5_params.json',
                         help='Path to configuration file')
-    parser.add_argument('--interval', type=int, default=15,
-                        help='Check interval in seconds (default: 15)')
+    parser.add_argument('--interval', type=int, default=1,
+                        help='Check interval in seconds (default: 1)')
     args = parser.parse_args()
 
     bot = create_m5_bot(args.config)

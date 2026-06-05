@@ -1,144 +1,1202 @@
 {
-  "10405769": {
-    "reason": "Profit protection",
-    "exit_time": "2026-03-03T20:35:44.347482+01:00",
-    "bot": "M1"
-  },
-  "10405843": {
-    "reason": "RSI exit",
-    "exit_time": "2026-03-03T20:40:01.619658+01:00",
-    "bot": "M1"
-  },
-  "10406171": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (96.06 > 75 for 2 candles)",
-    "exit_time": "2026-03-03T21:02:01.861610+01:00",
-    "bot": "M1"
-  },
-  "10406199": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (96.06 > 75 for 2 candles)",
-    "exit_time": "2026-03-03T21:02:01.892182+01:00",
-    "bot": "M1"
-  },
-  "10406384": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (80.75 > 75 for 2 candles)",
-    "exit_time": "2026-03-03T21:25:01.318225+01:00",
-    "bot": "M1"
-  },
-  "10406400": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (80.75 > 75 for 2 candles)",
-    "exit_time": "2026-03-03T21:25:01.348529+01:00",
-    "bot": "M1"
-  },
-  "10406752": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 52.0% from peak $18.18 to $8.73 (limit 50% after 1min)",
-    "exit_time": "2026-03-03T21:36:19.077569+01:00",
-    "bot": "M1"
-  },
-  "10406734": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 52.6% from peak $22.02 to $10.44 (limit 50% after 2min)",
-    "exit_time": "2026-03-03T21:36:28.114225+01:00",
-    "bot": "M1"
-  },
-  "10406826": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 54.1% from peak $17.97 to $8.25 (limit 50% after 3min)",
-    "exit_time": "2026-03-03T21:43:37.560239+01:00",
-    "bot": "M1"
-  },
-  "10407064": {
-    "reason": "MT5 close",
-    "full_reason": "MT5 close",
-    "exit_time": "2026-03-03T21:56:51.224516+01:00",
-    "bot": "M1"
-  },
-  "10407052": {
-    "reason": "MT5 close",
-    "full_reason": "MT5 close",
-    "exit_time": "2026-03-03T21:57:02.271505+01:00",
-    "bot": "M1"
-  },
-  "10407116": {
-    "reason": "MT5 close",
-    "full_reason": "MT5 close",
-    "exit_time": "2026-03-03T21:59:11.912446+01:00",
-    "bot": "M1"
-  },
-  "10407118": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (24.24 < 25 for 2 candles)",
-    "exit_time": "2026-03-03T22:11:02.216792+01:00",
-    "bot": "M1"
-  },
-  "10407199": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (24.24 < 25 for 2 candles)",
-    "exit_time": "2026-03-03T22:11:02.247833+01:00",
-    "bot": "M1"
-  },
-  "10407403": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 54.8% from peak $18.39 to $8.31 (limit 50% after 2min)",
-    "exit_time": "2026-03-03T22:20:46.820048+01:00",
-    "bot": "M1"
-  },
-  "10407379": {
-    "reason": "RSI exit",
-    "full_reason": "RSI exit confirmed (100.00 > 75 for 2 candles)",
-    "exit_time": "2026-03-03T22:24:01.013843+01:00",
-    "bot": "M1"
-  },
-  "10407501": {
+  "12463895": {
     "reason": "Stop loss",
     "full_reason": "Stop loss",
-    "exit_time": "2026-03-03T22:31:28.448237+01:00",
+    "exit_time": "2026-05-25T14:27:30.913003+02:00",
     "bot": "M1"
   },
-  "10407550": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 54.1% from peak $19.80 to $9.09 (limit 50% after 4min)",
-    "exit_time": "2026-03-03T22:36:01.757022+01:00",
+  "12463689": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (95.82 > 78 for 2 candles)",
+    "exit_time": "2026-05-25T14:25:00.589417+02:00",
     "bot": "M1"
   },
-  "10407525": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 62.2% from peak $18.87 to $7.14 (limit 50% after 14min)",
-    "exit_time": "2026-03-03T22:44:06.254768+01:00",
-    "bot": "M1"
-  },
-  "10407600": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 55.6% from peak $28.32 to $12.57 (limit 50% after 5min)",
-    "exit_time": "2026-03-03T22:44:15.293315+01:00",
-    "bot": "M1"
-  },
-  "10407645": {
+  "12463534": {
     "reason": "Stop loss",
     "full_reason": "Stop loss",
-    "exit_time": "2026-03-03T22:48:34.560268+01:00",
+    "exit_time": "2026-05-25T14:14:31.936238+02:00",
     "bot": "M1"
   },
-  "10407650": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 69.0% from peak $12.60 to $3.90 (limit 50% after 2min)",
-    "exit_time": "2026-03-03T22:51:01.742886+01:00",
+  "12463283": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T14:07:55.957464+02:00",
     "bot": "M1"
   },
-  "10407656": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 50.7% from peak $13.68 to $6.75 (limit 50% after 5min)",
-    "exit_time": "2026-03-03T22:56:04.078447+01:00",
+  "12463157": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T14:00:42.683954+02:00",
     "bot": "M1"
   },
-  "10407647": {
+  "12463012": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T13:53:28.645452+02:00",
+    "bot": "M1"
+  },
+  "12462876": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.18 > 78 for 2 candles)",
+    "exit_time": "2026-05-25T13:31:00.847608+02:00",
+    "bot": "M1"
+  },
+  "10701238": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (89.55 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T02:56:01.352257+01:00",
+    "bot": "M1"
+  },
+  "10697279": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (82.25 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T02:29:01.127831+01:00",
+    "bot": "M1"
+  },
+  "10696601": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (79.63 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T02:02:00.521826+01:00",
+    "bot": "M1"
+  },
+  "10696304": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.66 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T01:37:01.019159+01:00",
+    "bot": "M1"
+  },
+  "10695390": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.77 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T01:24:00.921779+01:00",
+    "bot": "M1"
+  },
+  "10694382": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.91 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T01:01:00.878876+01:00",
+    "bot": "M1"
+  },
+  "10694198": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.42 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T00:40:01.071588+01:00",
+    "bot": "M1"
+  },
+  "10693752": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.87 > 78 for 2 candles)",
+    "exit_time": "2026-03-19T00:23:00.898759+01:00",
+    "bot": "M1"
+  },
+  "10693267": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T23:37:01.037497+01:00",
+    "bot": "M1"
+  },
+  "10693011": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (93.92 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T23:27:00.988679+01:00",
+    "bot": "M1"
+  },
+  "10692827": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T23:14:17.737595+01:00",
+    "bot": "M1"
+  },
+  "10692690": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.95 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T23:03:01.129146+01:00",
+    "bot": "M1"
+  },
+  "10692301": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (92.80 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T21:39:00.850793+01:00",
+    "bot": "M1"
+  },
+  "10692239": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (21.06 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T21:27:00.969173+01:00",
+    "bot": "M1"
+  },
+  "10692171": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T21:22:00.940817+01:00",
+    "bot": "M1"
+  },
+  "10691867": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T21:14:16.317750+01:00",
+    "bot": "M1"
+  },
+  "10691300": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (88.43 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T21:01:00.954106+01:00",
+    "bot": "M1"
+  },
+  "10691084": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (6.42 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T20:42:00.807360+01:00",
+    "bot": "M1"
+  },
+  "10689911": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.71 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T20:33:01.175398+01:00",
+    "bot": "M1"
+  },
+  "10689401": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T20:00:05.740008+01:00",
+    "bot": "M1"
+  },
+  "10688631": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T19:49:12.429515+01:00",
+    "bot": "M1"
+  },
+  "10688445": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (87.92 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T19:30:00.331615+01:00",
+    "bot": "M1"
+  },
+  "10688337": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (19.18 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T19:26:00.635467+01:00",
+    "bot": "M1"
+  },
+  "10687843": {
     "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 59.1% from peak $15.84 to $6.48 (limit 50% after 8min)",
-    "exit_time": "2026-03-03T22:56:11.115018+01:00",
+    "full_reason": "Profit protection (continuous): profit dropped 54.2% from peak $34.36 to $15.72 (limit 50% after 9min)",
+    "exit_time": "2026-03-18T19:15:27.537607+01:00",
+    "bot": "M1"
+  },
+  "10687306": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T19:03:41.716724+01:00",
+    "bot": "M1"
+  },
+  "10687067": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T18:36:00.193777+01:00",
+    "bot": "M1"
+  },
+  "10686425": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T18:25:01.050265+01:00",
+    "bot": "M1"
+  },
+  "10686203": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.32 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T17:53:00.753253+01:00",
+    "bot": "M1"
+  },
+  "10685941": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (91.44 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T17:46:00.535030+01:00",
+    "bot": "M1"
+  },
+  "10685671": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (79.61 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T17:26:00.476356+01:00",
+    "bot": "M1"
+  },
+  "10685267": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (88.25 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T17:04:00.877901+01:00",
+    "bot": "M1"
+  },
+  "10684569": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.25 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T16:52:01.034841+01:00",
+    "bot": "M1"
+  },
+  "10684415": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (78.83 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T16:16:00.534587+01:00",
+    "bot": "M1"
+  },
+  "10684276": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T16:07:00.751806+01:00",
+    "bot": "M1"
+  },
+  "10684012": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (98.09 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T15:59:00.432737+01:00",
+    "bot": "M1"
+  },
+  "10683172": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.99 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T15:48:00.540850+01:00",
+    "bot": "M1"
+  },
+  "10682746": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T15:21:02.841123+01:00",
+    "bot": "M1"
+  },
+  "10681765": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.44 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T15:06:00.164206+01:00",
+    "bot": "M1"
+  },
+  "10680878": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T14:41:00.458908+01:00",
+    "bot": "M1"
+  },
+  "10680370": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.93 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T14:22:01.232413+01:00",
+    "bot": "M1"
+  },
+  "10679560": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T14:15:19.814128+01:00",
+    "bot": "M1"
+  },
+  "10679139": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T14:00:55.470234+01:00",
+    "bot": "M1"
+  },
+  "10678902": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (16.17 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T13:59:01.075384+01:00",
+    "bot": "M1"
+  },
+  "10678659": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (78.15 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T13:52:00.879809+01:00",
+    "bot": "M1"
+  },
+  "10678414": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (21.38 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T13:46:00.859088+01:00",
+    "bot": "M1"
+  },
+  "10677948": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:38:01.588496+01:00",
+    "bot": "M1"
+  },
+  "10677329": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 53.5% from peak $31.04 to $14.44 (limit 50% after 1min)",
+    "exit_time": "2026-03-18T13:20:14.762850+01:00",
+    "bot": "M1"
+  },
+  "10676828": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:16:13.859160+01:00",
+    "bot": "M1"
+  },
+  "10675768": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:07:13.277653+01:00",
+    "bot": "M1"
+  },
+  "10675458": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:44:19.561910+01:00",
+    "bot": "M1"
+  },
+  "10675350": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T12:38:00.534843+01:00",
+    "bot": "M1"
+  },
+  "10675227": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T12:33:00.715675+01:00",
+    "bot": "M1"
+  },
+  "10675042": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:26:57.579387+01:00",
+    "bot": "M1"
+  },
+  "10674774": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:14:41.765875+01:00",
+    "bot": "M1"
+  },
+  "10674625": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 50.2% from peak $31.32 to $15.60 (limit 50% after 5min)",
+    "exit_time": "2026-03-18T12:12:00.179966+01:00",
+    "bot": "M1"
+  },
+  "10674320": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:04:33.657960+01:00",
+    "bot": "M1"
+  },
+  "10673931": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (6.91 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T11:57:01.066186+01:00",
+    "bot": "M1"
+  },
+  "10673853": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.89 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T11:41:00.947882+01:00",
+    "bot": "M1"
+  },
+  "10673562": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T11:35:10.809780+01:00",
+    "bot": "M1"
+  },
+  "10673397": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T11:29:42.572106+01:00",
+    "bot": "M1"
+  },
+  "10671783": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (83.65 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T11:21:00.662238+01:00",
+    "bot": "M1"
+  },
+  "10671673": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T10:20:38.018595+01:00",
+    "bot": "M1"
+  },
+  "10671556": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T10:16:58.470179+01:00",
+    "bot": "M1"
+  },
+  "10671372": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (87.27 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T10:05:00.662293+01:00",
+    "bot": "M1"
+  },
+  "10671133": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T09:45:35.337718+01:00",
+    "bot": "M1"
+  },
+  "10670932": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (12.76 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T09:40:00.449178+01:00",
+    "bot": "M1"
+  },
+  "10670785": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T09:22:27.450940+01:00",
+    "bot": "M1"
+  },
+  "10670580": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (90.87 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T09:13:01.146824+01:00",
+    "bot": "M1"
+  },
+  "10670384": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T09:09:00.410100+01:00",
+    "bot": "M1"
+  },
+  "10670126": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (86.24 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T09:00:00.765350+01:00",
+    "bot": "M1"
+  },
+  "10669949": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T08:51:05.193964+01:00",
+    "bot": "M1"
+  },
+  "10669705": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T08:44:08.058795+01:00",
+    "bot": "M1"
+  },
+  "10669317": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.75 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T08:32:00.203849+01:00",
+    "bot": "M1"
+  },
+  "10669106": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (83.51 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T08:02:00.171845+01:00",
+    "bot": "M1"
+  },
+  "10668927": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.50 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T07:49:01.034850+01:00",
+    "bot": "M1"
+  },
+  "10668663": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.21 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T07:33:00.246318+01:00",
+    "bot": "M1"
+  },
+  "10668435": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.41 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T07:11:00.796281+01:00",
+    "bot": "M1"
+  },
+  "10668400": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (78.68 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T06:55:01.205295+01:00",
+    "bot": "M1"
+  },
+  "10668095": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (97.03 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T06:37:01.097100+01:00",
+    "bot": "M1"
+  },
+  "10668047": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.82 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T06:24:01.060329+01:00",
+    "bot": "M1"
+  },
+  "10667977": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (93.06 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T06:08:00.398091+01:00",
+    "bot": "M1"
+  },
+  "10667942": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.40 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T06:00:00.213024+01:00",
+    "bot": "M1"
+  },
+  "10667796": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (17.11 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T05:52:00.907717+01:00",
+    "bot": "M1"
+  },
+  "10667515": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T05:40:22.156525+01:00",
+    "bot": "M1"
+  },
+  "10667411": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T05:33:16.113758+01:00",
+    "bot": "M1"
+  },
+  "10667304": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (98.63 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T05:19:00.936612+01:00",
+    "bot": "M1"
+  },
+  "10667039": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (5.03 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T04:51:00.477637+01:00",
+    "bot": "M1"
+  },
+  "10666855": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T04:04:28.890952+01:00",
+    "bot": "M1"
+  },
+  "10666576": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T03:54:23.136593+01:00",
+    "bot": "M1"
+  },
+  "10666441": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (78.40 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T03:13:00.540922+01:00",
+    "bot": "M1"
+  },
+  "10666305": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T02:52:16.083535+01:00",
+    "bot": "M1"
+  },
+  "10666227": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T02:46:26.204083+01:00",
+    "bot": "M1"
+  },
+  "10666173": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (9.58 < 22 for 2 candles)",
+    "exit_time": "2026-03-18T02:38:00.840212+01:00",
+    "bot": "M1"
+  },
+  "10666012": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T02:30:07.632676+01:00",
+    "bot": "M1"
+  },
+  "10665669": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T02:00:59.277466+01:00",
+    "bot": "M1"
+  },
+  "10665540": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.08 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T01:51:00.918186+01:00",
+    "bot": "M1"
+  },
+  "10665288": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (83.01 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T01:42:00.481764+01:00",
+    "bot": "M1"
+  },
+  "10665214": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T01:19:30.808908+01:00",
+    "bot": "M1"
+  },
+  "10665068": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.67 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T01:05:01.694966+01:00",
+    "bot": "M1"
+  },
+  "10665021": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (98.44 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T00:53:00.805394+01:00",
+    "bot": "M1"
+  },
+  "10665007": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (92.47 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T00:44:02.472240+01:00",
+    "bot": "M1"
+  },
+  "10664884": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (81.75 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T00:35:01.155831+01:00",
+    "bot": "M1"
+  },
+  "10664820": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.80 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T00:22:01.932909+01:00",
+    "bot": "M1"
+  },
+  "10664717": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (89.94 > 78 for 2 candles)",
+    "exit_time": "2026-03-18T00:01:00.701948+01:00",
+    "bot": "M1"
+  },
+  "10664552": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T23:44:24.955765+01:00",
+    "bot": "M1"
+  },
+  "10664499": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (93.09 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T23:39:02.031319+01:00",
+    "bot": "M1"
+  },
+  "10664440": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (9.85 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T23:32:00.839841+01:00",
+    "bot": "M1"
+  },
+  "10664399": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T23:07:46.964847+01:00",
+    "bot": "M1"
+  },
+  "10664320": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T23:03:38.301250+01:00",
+    "bot": "M1"
+  },
+  "10664288": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T21:46:00.562294+01:00",
+    "bot": "M1"
+  },
+  "10664169": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (93.71 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T21:29:00.907457+01:00",
+    "bot": "M1"
+  },
+  "10664095": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (84.37 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T21:04:00.352190+01:00",
+    "bot": "M1"
+  },
+  "10664056": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T20:42:00.544876+01:00",
+    "bot": "M1"
+  },
+  "10663956": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (89.29 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T20:31:00.843954+01:00",
+    "bot": "M1"
+  },
+  "10663940": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T20:14:01.048179+01:00",
+    "bot": "M1"
+  },
+  "10663879": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (79.47 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T20:06:01.590183+01:00",
+    "bot": "M1"
+  },
+  "10663772": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.98 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T19:45:00.959020+01:00",
+    "bot": "M1"
+  },
+  "10663135": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T19:30:32.527774+01:00",
+    "bot": "M1"
+  },
+  "10662639": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T18:51:00.366874+01:00",
+    "bot": "M1"
+  },
+  "10662380": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (90.72 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T18:22:00.373379+01:00",
+    "bot": "M1"
+  },
+  "10662164": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (84.99 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T17:57:00.787794+01:00",
+    "bot": "M1"
+  },
+  "10661798": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (90.68 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T17:46:00.503391+01:00",
+    "bot": "M1"
+  },
+  "10661327": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.81 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T17:20:00.646104+01:00",
+    "bot": "M1"
+  },
+  "10661043": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T16:56:28.122644+01:00",
+    "bot": "M1"
+  },
+  "10660941": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T16:46:01.001284+01:00",
+    "bot": "M1"
+  },
+  "10660505": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T16:40:02.765448+01:00",
+    "bot": "M1"
+  },
+  "10659395": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T16:28:19.483013+01:00",
+    "bot": "M1"
+  },
+  "10658810": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T16:00:10.184171+01:00",
+    "bot": "M1"
+  },
+  "10657859": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (95.62 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T15:44:00.260228+01:00",
+    "bot": "M1"
+  },
+  "10657534": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T15:18:00.552565+01:00",
+    "bot": "M1"
+  },
+  "10657368": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (91.65 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T15:08:00.494366+01:00",
+    "bot": "M1"
+  },
+  "10657267": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (18.61 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T15:03:00.505666+01:00",
+    "bot": "M1"
+  },
+  "10657142": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.21 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T14:59:00.639476+01:00",
+    "bot": "M1"
+  },
+  "10656840": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T14:51:49.064659+01:00",
+    "bot": "M1"
+  },
+  "10656387": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (88.54 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T14:41:00.689272+01:00",
+    "bot": "M1"
+  },
+  "10655743": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T14:33:01.018530+01:00",
+    "bot": "M1"
+  },
+  "10655459": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (88.33 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T14:03:00.124934+01:00",
+    "bot": "M1"
+  },
+  "10655233": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T13:47:03.173313+01:00",
+    "bot": "M1"
+  },
+  "10654448": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T13:11:00.820984+01:00",
+    "bot": "M1"
+  },
+  "10654142": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T12:59:27.646623+01:00",
+    "bot": "M1"
+  },
+  "10654000": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T12:40:00.964782+01:00",
+    "bot": "M1"
+  },
+  "10653970": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (82.61 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T12:26:00.395079+01:00",
+    "bot": "M1"
+  },
+  "10653592": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (86.02 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T12:11:00.815219+01:00",
+    "bot": "M1"
+  },
+  "10653457": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T11:58:00.482357+01:00",
+    "bot": "M1"
+  },
+  "10653292": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (88.21 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T11:48:00.427830+01:00",
+    "bot": "M1"
+  },
+  "10653054": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:40:00.940176+01:00",
+    "bot": "M1"
+  },
+  "10652829": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (16.44 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T11:30:00.694495+01:00",
+    "bot": "M1"
+  },
+  "10652595": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.41 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T11:14:00.421113+01:00",
+    "bot": "M1"
+  },
+  "10652319": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:04:18.676837+01:00",
+    "bot": "M1"
+  },
+  "10652288": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T10:52:00.449661+01:00",
+    "bot": "M1"
+  },
+  "10652090": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (85.47 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T10:46:00.601862+01:00",
+    "bot": "M1"
+  },
+  "10651838": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (86.63 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T10:23:00.381851+01:00",
+    "bot": "M1"
+  },
+  "10651448": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T10:12:29.835160+01:00",
+    "bot": "M1"
+  },
+  "10651393": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.54 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T09:51:01.494096+01:00",
+    "bot": "M1"
+  },
+  "10651122": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (79.47 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T09:41:00.681798+01:00",
+    "bot": "M1"
+  },
+  "10650891": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T09:18:00.243843+01:00",
+    "bot": "M1"
+  },
+  "10650672": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T08:59:00.302626+01:00",
+    "bot": "M1"
+  },
+  "10650351": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (96.62 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T08:26:00.644950+01:00",
+    "bot": "M1"
+  },
+  "10650333": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (95.58 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T08:14:00.762288+01:00",
+    "bot": "M1"
+  },
+  "10650077": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T08:03:00.968803+01:00",
+    "bot": "M1"
+  },
+  "10649677": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.75 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T07:34:00.601855+01:00",
+    "bot": "M1"
+  },
+  "10649278": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T07:01:25.425357+01:00",
+    "bot": "M1"
+  },
+  "10649164": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T06:54:05.320538+01:00",
+    "bot": "M1"
+  },
+  "10648987": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T06:45:45.848875+01:00",
+    "bot": "M1"
+  },
+  "10648886": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (98.63 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T06:32:00.497919+01:00",
+    "bot": "M1"
+  },
+  "10648783": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T06:15:00.650745+01:00",
+    "bot": "M1"
+  },
+  "10648682": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T06:04:26.036510+01:00",
+    "bot": "M1"
+  },
+  "10648480": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.85 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T05:31:00.872748+01:00",
+    "bot": "M1"
+  },
+  "10648430": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (87.21 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T05:23:00.495709+01:00",
+    "bot": "M1"
+  },
+  "10648347": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (17.21 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T05:16:01.446536+01:00",
+    "bot": "M1"
+  },
+  "10648320": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T05:02:00.435045+01:00",
+    "bot": "M1"
+  },
+  "10648159": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (87.42 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T04:53:01.053308+01:00",
+    "bot": "M1"
+  },
+  "10647909": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T04:16:01.477856+01:00",
+    "bot": "M1"
+  },
+  "10647881": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (91.77 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T03:56:01.440174+01:00",
+    "bot": "M1"
+  },
+  "10647763": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.56 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T03:41:00.955582+01:00",
+    "bot": "M1"
+  },
+  "10647596": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (81.43 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T03:24:00.440820+01:00",
+    "bot": "M1"
+  },
+  "10647369": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (95.08 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T02:49:00.844013+01:00",
+    "bot": "M1"
+  },
+  "10647270": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T02:38:00.798257+01:00",
+    "bot": "M1"
+  },
+  "10647147": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (82.18 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T02:28:01.252015+01:00",
+    "bot": "M1"
+  },
+  "10646867": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (99.77 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T02:09:00.315279+01:00",
+    "bot": "M1"
+  },
+  "10646716": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (100.00 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T01:56:00.356073+01:00",
+    "bot": "M1"
+  },
+  "10646658": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-17T01:41:01.022388+01:00",
+    "bot": "M1"
+  },
+  "10646484": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T01:28:17.119898+01:00",
+    "bot": "M1"
+  },
+  "10646395": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T01:09:13.050204+01:00",
+    "bot": "M1"
+  },
+  "10646320": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T01:03:11.968269+01:00",
+    "bot": "M1"
+  },
+  "10646148": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (98.22 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T00:53:01.344890+01:00",
+    "bot": "M1"
+  },
+  "10645928": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (80.08 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T00:26:00.910757+01:00",
+    "bot": "M1"
+  },
+  "10645808": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (83.77 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T00:12:00.674109+01:00",
+    "bot": "M1"
+  },
+  "10645631": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (82.62 > 78 for 2 candles)",
+    "exit_time": "2026-03-17T00:04:00.343311+01:00",
+    "bot": "M1"
+  },
+  "10645285": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (94.51 > 78 for 2 candles)",
+    "exit_time": "2026-03-16T23:49:00.923131+01:00",
+    "bot": "M1"
+  },
+  "10645241": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit confirmed (0.00 < 22 for 2 candles)",
+    "exit_time": "2026-03-16T23:22:00.414284+01:00",
+    "bot": "M1"
+  },
+  "10645128": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T23:12:30.902339+01:00",
+    "bot": "M1"
+  },
+  "10644907": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T21:53:23.390061+01:00",
     "bot": "M1"
   }
 }

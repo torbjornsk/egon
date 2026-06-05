@@ -32,6 +32,7 @@ uv.lock
 data/sentiment_cache.json
 results/*.png
 results/*.csv
+tests/cache/
 *.csv
 *.log
 

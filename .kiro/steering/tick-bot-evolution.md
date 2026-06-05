@@ -136,3 +136,17 @@ The core philosophy should be: **exit fast on both winners and losers**. V4 prov
 - Is the entry state machine (V5+) worth keeping given it reduces trade count?
 - Session filter: 10:00-22:00 vs 08:00-20:00?
 - Could exit score use different thresholds per-direction based on trend?
+
+## V7: Back to V4 basics + V5 signal quality (2026-06-02)
+- SL: 6x M5 ATR (back to V4 — let trades breathe, accept bigger individual losses)
+- Trail: simple fixed 3x M5 ATR (no progressive, no velocity adjustment)
+- Exit threshold: 0.55 (back to V4 — closes at decent profit levels)
+- Exit confirmation: 5 ticks + profit reluctance (from V5)
+- Exit factor windows: 60s/120s multi-period (from V5 — less noise-prone)
+- Trend bias: kept (from V5)
+- Entry confirmation: 5-tick turn (from V5)
+- **Rationale**: V4 was the only profitable version (+$98/day). V5/V6 tried to fix
+  premature exits but over-tightened everything, producing tiny wins ($2.50) while
+  losses stayed large. V7 keeps V5's improved signal quality (longer windows, trend)
+  but returns to V4's wide stops and moderate exit threshold.
+- **Expected behavior**: ~$6 avg win, ~$6 avg loss, ~53% WR, net positive

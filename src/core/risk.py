@@ -8,6 +8,7 @@ emergency equity threshold, weekend close, market gap detection.
 import logging
 from datetime import datetime, timedelta
 
+import numpy as np
 import pytz
 
 from src.core.timezone import get_local_now
@@ -177,12 +178,13 @@ class RiskManager:
         if len(df) < 2:
             return False, 0.0, 0.0
 
-        latest = df.iloc[-1]
-        previous = df.iloc[-2]
-        time_gap = (latest['time'] - previous['time']).total_seconds() / 60
+        times = df['time'].values
+        time_gap = (times[-1] - times[-2]) / np.timedelta64(1, 'm')
 
         if time_gap > max_normal_gap_minutes:
-            gap_pct = abs(latest['open'] - previous['close']) / previous['close'] * 100
+            closes = df['close'].values
+            opens = df['open'].values
+            gap_pct = abs(float(opens[-1]) - float(closes[-2])) / float(closes[-2]) * 100
             logger.warning(f"Market gap: {time_gap:.0f}min, {gap_pct:.2f}% price change")
             return True, gap_pct, time_gap
 

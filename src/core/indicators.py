@@ -31,6 +31,16 @@ def compute_indicators(df: pd.DataFrame, config: TradingConfig) -> pd.DataFrame:
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
 
+    # Slow RSI (for dual-RSI filter, always computed at period 14)
+    slow_period = 14
+    if config.rsi_period != slow_period:
+        gain_slow = delta.clip(lower=0).rolling(slow_period).mean()
+        loss_slow = -delta.clip(upper=0).rolling(slow_period).mean()
+        rs_slow = gain_slow / loss_slow
+        df['RSI_slow'] = 100 - (100 / (1 + rs_slow))
+    else:
+        df['RSI_slow'] = df['RSI']
+
     # ATR (14-period)
     high_low = df['high'] - df['low']
     high_close = np.abs(df['high'] - df['close'].shift())

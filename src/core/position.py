@@ -163,15 +163,17 @@ class PositionManager:
 
     def register_open(self, ticket: int, open_time: datetime | None = None):
         """Register a newly opened position."""
-        self.position_open_times[ticket] = open_time or datetime.now(LOCAL_TZ)
+        self.position_open_times[ticket] = open_time or get_local_now()
         self.peak_position_profits[ticket] = 0
+        self.tracked_positions.add(ticket)
 
     def register_existing(self, ticket: int, open_time: datetime, current_profit: float):
         """Register an existing position found on startup."""
         if ticket not in self.position_open_times:
             self.position_open_times[ticket] = open_time
             self.peak_position_profits[ticket] = max(0, current_profit)
-            minutes = (datetime.now(LOCAL_TZ) - open_time).total_seconds() / 60
+            self.tracked_positions.add(ticket)
+            minutes = (get_local_now() - open_time).total_seconds() / 60
             self.logger.info(
                 f"Detected existing position {ticket}: "
                 f"peak ${self.peak_position_profits[ticket]:.2f}, held {minutes:.1f}min"
@@ -186,14 +188,16 @@ class PositionManager:
         self.bot_closed_positions.add(ticket)
 
     def save_exit(self, ticket: int, reason: str):
-        """Save exit reason to file."""
+        """Save exit reason to file (skipped if exit_reasons_file is empty)."""
+        if not self.exit_reasons_file:
+            return
         save_exit_reason(ticket, reason, get_local_now(), self.bot_label, self.exit_reasons_file)
 
     def get_minutes_held(self, ticket: int) -> float:
         """Get how many minutes a position has been held."""
         if ticket not in self.position_open_times:
             return 0
-        delta = datetime.now(LOCAL_TZ) - self.position_open_times[ticket]
+        delta = get_local_now() - self.position_open_times[ticket]
         return delta.total_seconds() / 60
 
     # -- Profit protection --
@@ -221,7 +225,9 @@ class PositionManager:
             if ticket in self.protection_activated:
                 # Show exit trigger level
                 minutes = self.get_minutes_held(ticket)
-                drawdown_limit = self._get_drawdown_limit(ticket, minutes)
+                invested = balance * self.config.per_position_size_pct
+                new_peak_pct = new_peak / invested if invested > 0 else 0
+                drawdown_limit = self._get_profit_scaled_drawdown_limit(ticket, minutes, new_peak_pct)
                 trigger_at = new_peak * (1 - drawdown_limit)
                 self.logger.info(
                     f"[PROFIT PROTECTION] Ticket {ticket}: "
@@ -268,7 +274,7 @@ class PositionManager:
 
         # Calculate drawdown
         minutes = self.get_minutes_held(ticket)
-        drawdown_limit = self._get_drawdown_limit(ticket, minutes)
+        drawdown_limit = self._get_profit_scaled_drawdown_limit(ticket, minutes, peak_pct)
         profit_drawdown = (peak - current_profit) / peak
 
         if profit_drawdown > drawdown_limit:
@@ -294,6 +300,54 @@ class PositionManager:
         # Default: config-driven tightening
         return get_m1_drawdown_limit(minutes_held, self.config)
 
+    def _get_profit_scaled_drawdown_limit(
+        self, ticket: int, minutes_held: float, peak_pct: float
+    ) -> float:
+        """
+        Get drawdown limit factoring in profit-based scaling.
+
+        When scaling is enabled, the drawdown limit is determined by how far
+        above the threshold the peak profit is. Time-based tightening still
+        applies as a further reduction.
+        """
+        scaling = self.config.profit_protection_scaling
+        threshold = self.config.profit_protection_threshold_pct
+
+        if scaling == "none" or threshold <= 0:
+            return self._get_drawdown_limit(ticket, minutes_held)
+
+        ratio = peak_pct / threshold  # How many multiples of threshold
+
+        if scaling == "tiered":
+            tiers = self.config.profit_protection_tiers
+            # Tiers are sorted by multiplier ascending: [[1.0, 0.25], [1.5, 0.50], ...]
+            # Find the highest tier we've reached
+            base_limit = tiers[0][1] if tiers else self.config.profit_protection_drawdown_limit_pct
+            for mult, limit in tiers:
+                if ratio >= mult:
+                    base_limit = limit
+                else:
+                    break
+
+        elif scaling == "continuous":
+            base_limit = min(
+                self.config.profit_protection_continuous_max,
+                self.config.profit_protection_continuous_base
+                + self.config.profit_protection_continuous_rate * (ratio - 1),
+            )
+            base_limit = max(base_limit, self.config.profit_protection_continuous_base)
+
+        else:
+            return self._get_drawdown_limit(ticket, minutes_held)
+
+        # Apply time-based tightening on top (reduces the limit over time)
+        if self.config.profit_protection_time_based_tightening:
+            time_limit = self._get_drawdown_limit(ticket, minutes_held)
+            # Use the more restrictive of profit-scaled and time-based
+            return min(base_limit, time_limit)
+
+        return base_limit
+
     def get_position_state(self, ticket: int, current_profit: float, balance: float) -> dict:
         """
         Get a complete state snapshot for a position, including profit protection details.
@@ -318,7 +372,8 @@ class PositionManager:
 
         # Profit protection state
         if self.config.use_profit_protection:
-            drawdown_limit = self._get_drawdown_limit(ticket, minutes_held)
+            peak_pct = peak / invested if invested > 0 else 0
+            drawdown_limit = self._get_profit_scaled_drawdown_limit(ticket, minutes_held, peak_pct)
             profit_drawdown = (peak - current_profit) / peak if peak > 0 else 0
             trigger_at = peak * (1 - drawdown_limit) if peak > 0 else 0
 

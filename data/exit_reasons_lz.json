@@ -1,0 +1,614 @@
+{
+  "1022": {
+    "reason": "Trailing stop (moved 3.50, 3 b...",
+    "full_reason": "Trailing stop (moved 3.50, 3 bars reversing)",
+    "exit_time": "2025-09-30T01:45:00",
+    "bot": "LZ"
+  },
+  "1024": {
+    "reason": "Trailing stop (moved 3.50, 3 b...",
+    "full_reason": "Trailing stop (moved 3.50, 3 bars reversing)",
+    "exit_time": "2025-09-30T01:45:00",
+    "bot": "LZ"
+  },
+  "1023": {
+    "reason": "Time exit (180min, no profit)",
+    "full_reason": "Time exit (180min, no profit)",
+    "exit_time": "2025-09-30T02:50:00",
+    "bot": "LZ"
+  },
+  "12465148": {
+    "reason": "Reached supply zone [4563.97-4...",
+    "full_reason": "Reached supply zone [4563.97-4565.52]",
+    "exit_time": "2026-05-25T15:35:00.834837+02:00",
+    "bot": "LZ"
+  },
+  "12465149": {
+    "reason": "Reached supply zone [4563.97-4...",
+    "full_reason": "Reached supply zone [4563.97-4565.52]",
+    "exit_time": "2026-05-25T15:35:00.875593+02:00",
+    "bot": "LZ"
+  },
+  "12465457": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-25T16:05:14.112834+02:00",
+    "bot": "LZ"
+  },
+  "12465455": {
+    "reason": "Reached supply zone [4569.52-4...",
+    "full_reason": "Reached supply zone [4569.52-4570.60]",
+    "exit_time": "2026-05-25T16:10:00.581226+02:00",
+    "bot": "LZ"
+  },
+  "12465456": {
+    "reason": "Reached supply zone [4569.52-4...",
+    "full_reason": "Reached supply zone [4569.52-4570.60]",
+    "exit_time": "2026-05-25T16:10:00.620390+02:00",
+    "bot": "LZ"
+  },
+  "12465925": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T16:30:19.751460+02:00",
+    "bot": "LZ"
+  },
+  "12465972": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T16:54:41.470023+02:00",
+    "bot": "LZ"
+  },
+  "12466713": {
+    "reason": "Reached supply zone [4569.68-4...",
+    "full_reason": "Reached supply zone [4569.68-4570.87]",
+    "exit_time": "2026-05-25T17:50:00.631536+02:00",
+    "bot": "LZ"
+  },
+  "12466714": {
+    "reason": "Reached supply zone [4569.68-4...",
+    "full_reason": "Reached supply zone [4569.68-4570.87]",
+    "exit_time": "2026-05-25T17:50:00.669936+02:00",
+    "bot": "LZ"
+  },
+  "12466715": {
+    "reason": "Reached supply zone [4569.68-4...",
+    "full_reason": "Reached supply zone [4569.68-4570.87]",
+    "exit_time": "2026-05-25T17:50:00.703532+02:00",
+    "bot": "LZ"
+  },
+  "12466716": {
+    "reason": "Reached supply zone [4569.68-4...",
+    "full_reason": "Reached supply zone [4569.68-4570.87]",
+    "exit_time": "2026-05-25T17:50:00.736527+02:00",
+    "bot": "LZ"
+  },
+  "12466930": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.337930+02:00",
+    "bot": "LZ"
+  },
+  "12466931": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.374548+02:00",
+    "bot": "LZ"
+  },
+  "12466932": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.407322+02:00",
+    "bot": "LZ"
+  },
+  "12466933": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.440519+02:00",
+    "bot": "LZ"
+  },
+  "12466934": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.474242+02:00",
+    "bot": "LZ"
+  },
+  "12466935": {
+    "reason": "Reached supply zone [4569.83-4...",
+    "full_reason": "Reached supply zone [4569.83-4570.80]",
+    "exit_time": "2026-05-25T18:35:01.507410+02:00",
+    "bot": "LZ"
+  },
+  "12467592": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-25T19:45:01.889412+02:00",
+    "bot": "LZ"
+  },
+  "12468010": {
+    "reason": "Reached supply zone [4571.00-4...",
+    "full_reason": "Reached supply zone [4571.00-4571.89]",
+    "exit_time": "2026-05-26T00:05:00.742863+02:00",
+    "bot": "LZ"
+  },
+  "12468903": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T01:31:24.021218+02:00",
+    "bot": "LZ"
+  },
+  "12470924": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-26T03:03:31.049707+02:00",
+    "bot": "LZ"
+  },
+  "12471587": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T03:35:13.792207+02:00",
+    "bot": "LZ"
+  },
+  "12472870": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:05:51.986465+02:00",
+    "bot": "LZ"
+  },
+  "12473051": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:11:53.485260+02:00",
+    "bot": "LZ"
+  },
+  "12473177": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:25:15.698570+02:00",
+    "bot": "LZ"
+  },
+  "12473253": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:30:06.195004+02:00",
+    "bot": "LZ"
+  },
+  "12473453": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:42:15.357465+02:00",
+    "bot": "LZ"
+  },
+  "12474365": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T07:47:00.052169+02:00",
+    "bot": "LZ"
+  },
+  "12474427": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T07:51:31.501512+02:00",
+    "bot": "LZ"
+  },
+  "12474507": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T07:55:26.883308+02:00",
+    "bot": "LZ"
+  },
+  "12474550": {
+    "reason": "Reached supply zone [4530.91-4...",
+    "full_reason": "Reached supply zone [4530.91-4531.92]",
+    "exit_time": "2026-05-26T08:05:00.752876+02:00",
+    "bot": "LZ"
+  },
+  "12474984": {
+    "reason": "Reached supply zone [4530.84-4...",
+    "full_reason": "Reached supply zone [4530.84-4531.95]",
+    "exit_time": "2026-05-26T08:40:00.810534+02:00",
+    "bot": "LZ"
+  },
+  "12475203": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T09:09:41.350607+02:00",
+    "bot": "LZ"
+  },
+  "12476307": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-26T09:49:01.612975+02:00",
+    "bot": "LZ"
+  },
+  "12477569": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:14:43.102736+02:00",
+    "bot": "LZ"
+  },
+  "12478417": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:15:42.278341+02:00",
+    "bot": "LZ"
+  },
+  "12478758": {
+    "reason": "Reached supply zone [4524.82-4...",
+    "full_reason": "Reached supply zone [4524.82-4526.03]",
+    "exit_time": "2026-05-26T11:30:00.623514+02:00",
+    "bot": "LZ"
+  },
+  "12479100": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:35:12.163552+02:00",
+    "bot": "LZ"
+  },
+  "12479235": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:40:42.650203+02:00",
+    "bot": "LZ"
+  },
+  "12482108": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T13:30:41.568629+02:00",
+    "bot": "LZ"
+  },
+  "12482497": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T13:35:02.977101+02:00",
+    "bot": "LZ"
+  },
+  "12483453": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T13:45:38.977895+02:00",
+    "bot": "LZ"
+  },
+  "12485733": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-26T14:46:07.573994+02:00",
+    "bot": "LZ"
+  },
+  "12487363": {
+    "reason": "Reached supply zone [4524.98-4...",
+    "full_reason": "Reached supply zone [4524.98-4527.00]",
+    "exit_time": "2026-05-26T15:25:01.058676+02:00",
+    "bot": "LZ"
+  },
+  "12489314": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T15:58:08.192092+02:00",
+    "bot": "LZ"
+  },
+  "12490416": {
+    "reason": "Reached supply zone [4514.63-4...",
+    "full_reason": "Reached supply zone [4514.63-4516.47]",
+    "exit_time": "2026-05-26T16:25:00.716164+02:00",
+    "bot": "LZ"
+  },
+  "12492241": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T17:31:47.804170+02:00",
+    "bot": "LZ"
+  },
+  "12492582": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T17:36:53.250993+02:00",
+    "bot": "LZ"
+  },
+  "12492729": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T18:06:13.008125+02:00",
+    "bot": "LZ"
+  },
+  "12493175": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T18:14:45.710553+02:00",
+    "bot": "LZ"
+  },
+  "12493285": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-26T18:30:45.172980+02:00",
+    "bot": "LZ"
+  },
+  "12493732": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T18:47:57.685084+02:00",
+    "bot": "LZ"
+  },
+  "12493998": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:30:09.374685+02:00",
+    "bot": "LZ"
+  },
+  "12494378": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:36:37.064763+02:00",
+    "bot": "LZ"
+  },
+  "12494497": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:41:20.552063+02:00",
+    "bot": "LZ"
+  },
+  "12494546": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:54:13.724666+02:00",
+    "bot": "LZ"
+  },
+  "12497340": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T00:08:25.925184+02:00",
+    "bot": "LZ"
+  },
+  "12497961": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T00:25:16.866936+02:00",
+    "bot": "LZ"
+  },
+  "12498082": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T00:35:36.009185+02:00",
+    "bot": "LZ"
+  },
+  "12498168": {
+    "reason": "Reached supply zone [4503.35-4...",
+    "full_reason": "Reached supply zone [4503.35-4508.12]",
+    "exit_time": "2026-05-27T00:55:01.023698+02:00",
+    "bot": "LZ"
+  },
+  "12498653": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T01:41:01.372254+02:00",
+    "bot": "LZ"
+  },
+  "12500112": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T03:19:45.163012+02:00",
+    "bot": "LZ"
+  },
+  "12500584": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T03:39:35.163384+02:00",
+    "bot": "LZ"
+  },
+  "12500644": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T03:41:16.366863+02:00",
+    "bot": "LZ"
+  },
+  "12500863": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:07:29.858412+02:00",
+    "bot": "LZ"
+  },
+  "12501066": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:11:38.208900+02:00",
+    "bot": "LZ"
+  },
+  "12501157": {
+    "reason": "Reached supply zone [4503.75-4...",
+    "full_reason": "Reached supply zone [4503.75-4506.64]",
+    "exit_time": "2026-05-27T04:15:00.623971+02:00",
+    "bot": "LZ"
+  },
+  "12501291": {
+    "reason": "Reached supply zone [4503.77-4...",
+    "full_reason": "Reached supply zone [4503.77-4506.64]",
+    "exit_time": "2026-05-27T04:25:00.765524+02:00",
+    "bot": "LZ"
+  },
+  "12501415": {
+    "reason": "Reached supply zone [4503.77-4...",
+    "full_reason": "Reached supply zone [4503.77-4506.64]",
+    "exit_time": "2026-05-27T04:30:00.291984+02:00",
+    "bot": "LZ"
+  },
+  "12501496": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:42:29.514907+02:00",
+    "bot": "LZ"
+  },
+  "12501547": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:45:58.852642+02:00",
+    "bot": "LZ"
+  },
+  "12501912": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T05:37:27.204703+02:00",
+    "bot": "LZ"
+  },
+  "12502084": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T05:56:16.028796+02:00",
+    "bot": "LZ"
+  },
+  "12502151": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T06:00:10.428798+02:00",
+    "bot": "LZ"
+  },
+  "12502241": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T06:29:06.260220+02:00",
+    "bot": "LZ"
+  },
+  "12502409": {
+    "reason": "Reached supply zone [4502.82-4...",
+    "full_reason": "Reached supply zone [4502.82-4503.69]",
+    "exit_time": "2026-05-27T06:40:00.601942+02:00",
+    "bot": "LZ"
+  },
+  "12502941": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T07:10:21.057482+02:00",
+    "bot": "LZ"
+  },
+  "12502985": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T07:32:12.438477+02:00",
+    "bot": "LZ"
+  },
+  "12504340": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:16:59.185706+02:00",
+    "bot": "LZ"
+  },
+  "12504743": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:21:12.677510+02:00",
+    "bot": "LZ"
+  },
+  "12506043": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T09:49:05.481923+02:00",
+    "bot": "LZ"
+  },
+  "12506756": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T09:50:54.654160+02:00",
+    "bot": "LZ"
+  },
+  "12506926": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T10:02:20.816183+02:00",
+    "bot": "LZ"
+  },
+  "12508720": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T11:06:44.867290+02:00",
+    "bot": "LZ"
+  },
+  "12508836": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T11:25:16.788897+02:00",
+    "bot": "LZ"
+  },
+  "12509088": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T11:30:31.315041+02:00",
+    "bot": "LZ"
+  },
+  "12509231": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T11:43:21.570106+02:00",
+    "bot": "LZ"
+  },
+  "12509733": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:14:11.601371+02:00",
+    "bot": "LZ"
+  },
+  "12509860": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:16:13.820480+02:00",
+    "bot": "LZ"
+  },
+  "12510143": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:25:31.689701+02:00",
+    "bot": "LZ"
+  },
+  "12513803": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:30:22.048279+02:00",
+    "bot": "LZ"
+  },
+  "12514785": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:58:34.865152+02:00",
+    "bot": "LZ"
+  },
+  "12515166": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T14:16:39.751935+02:00",
+    "bot": "LZ"
+  },
+  "12518826": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T15:00:03.312013+02:00",
+    "bot": "LZ"
+  },
+  "12519229": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T15:06:55.077114+02:00",
+    "bot": "LZ"
+  },
+  "12522681": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 59.1% from peak $31.26 to $12.80 (limit 50% after 14min)",
+    "exit_time": "2026-05-27T15:54:25.823357+02:00",
+    "bot": "LZ"
+  },
+  "12525585": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T16:33:19.643667+02:00",
+    "bot": "LZ"
+  },
+  "12526203": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T16:55:50.825179+02:00",
+    "bot": "LZ"
+  },
+  "12527034": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-05-27T17:44:28.683476+02:00",
+    "bot": "LZ"
+  }
+}

@@ -1,32 +1,1202 @@
 {
-  "10407054": {
+  "12731151": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T16:00:03.524189+02:00",
+    "bot": "M5"
+  },
+  "12731076": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T15:55:22.810823+02:00",
+    "bot": "M5"
+  },
+  "12729851": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.4% from peak $24.66 to $13.96 (limit 40% after 15min)",
+    "exit_time": "2026-06-01T15:39:58.460738+02:00",
+    "bot": "M5"
+  },
+  "12730027": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.7% from peak $22.02 to $12.84 (limit 40% after 10min)",
+    "exit_time": "2026-06-01T15:39:56.427090+02:00",
+    "bot": "M5"
+  },
+  "12727949": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T15:11:21.516171+02:00",
+    "bot": "M5"
+  },
+  "12727694": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T15:11:03.473261+02:00",
+    "bot": "M5"
+  },
+  "12723212": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (67.53 > 65)",
+    "exit_time": "2026-06-01T11:20:00.932770+02:00",
+    "bot": "M5"
+  },
+  "12723036": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (67.53 > 65)",
+    "exit_time": "2026-06-01T11:20:00.901761+02:00",
+    "bot": "M5"
+  },
+  "12721079": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T09:53:15.986815+02:00",
+    "bot": "M5"
+  },
+  "12720749": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T09:47:49.013750+02:00",
+    "bot": "M5"
+  },
+  "12719267": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (65.22 > 65)",
+    "exit_time": "2026-06-01T07:20:00.573242+02:00",
+    "bot": "M5"
+  },
+  "12719137": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (65.22 > 65)",
+    "exit_time": "2026-06-01T07:20:00.542342+02:00",
+    "bot": "M5"
+  },
+  "12718843": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T05:42:01.960843+02:00",
+    "bot": "M5"
+  },
+  "12718890": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T05:42:01.959150+02:00",
+    "bot": "M5"
+  },
+  "12718404": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T05:18:23.829404+02:00",
+    "bot": "M5"
+  },
+  "12717970": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T05:10:12.697157+02:00",
+    "bot": "M5"
+  },
+  "12716376": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (29.87 < 35)",
+    "exit_time": "2026-06-01T03:10:01.010898+02:00",
+    "bot": "M5"
+  },
+  "12714449": {
+    "reason": "Weekend close",
+    "full_reason": "Weekend protection -- Weekend close in 30 minutes",
+    "exit_time": "2026-05-29T22:30:00.397691+02:00",
+    "bot": "M5"
+  },
+  "12714416": {
+    "reason": "Weekend close",
+    "full_reason": "Weekend protection -- Weekend close in 30 minutes",
+    "exit_time": "2026-05-29T22:30:00.365619+02:00",
+    "bot": "M5"
+  },
+  "12713985": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T21:57:01.617160+02:00",
+    "bot": "M5"
+  },
+  "12713965": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T21:52:33.833448+02:00",
+    "bot": "M5"
+  },
+  "12713606": {
     "reason": "MT5 close",
     "full_reason": "MT5 close",
-    "exit_time": "2026-03-03T21:59:00.156680+01:00",
+    "exit_time": "2026-05-29T20:27:41.392631+02:00",
     "bot": "M5"
   },
-  "10407196": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 56.0% from peak $49.60 to $21.80 (limit 40% after 9min)",
-    "exit_time": "2026-03-03T22:11:01.047913+01:00",
-    "bot": "M5"
-  },
-  "10407080": {
+  "12713082": {
     "reason": "MT5 close",
     "full_reason": "MT5 close",
-    "exit_time": "2026-03-03T22:11:01.048916+01:00",
+    "exit_time": "2026-05-29T20:08:34.316087+02:00",
     "bot": "M5"
   },
-  "10407415": {
-    "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 31.5% from peak $58.96 to $40.40 (limit 25% after 101min)",
-    "exit_time": "2026-03-04T00:01:32.112220+01:00",
+  "12713454": {
+    "reason": "MT5 close",
+    "full_reason": "MT5 close",
+    "exit_time": "2026-05-29T20:02:39.209999+02:00",
     "bot": "M5"
   },
-  "10407530": {
+  "12713245": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T19:47:24.015636+02:00",
+    "bot": "M5"
+  },
+  "12712053": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T18:46:37.003020+02:00",
+    "bot": "M5"
+  },
+  "12712123": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T18:46:37.000015+02:00",
+    "bot": "M5"
+  },
+  "12691196": {
     "reason": "Profit protection",
-    "full_reason": "Profit protection (continuous): profit dropped 87.5% from peak $85.00 to $10.64 (limit 25% after 92min)",
-    "exit_time": "2026-03-04T00:01:47.143424+01:00",
+    "full_reason": "Profit protection (continuous): profit dropped 40.3% from peak $20.02 to $11.96 (limit 40% after 16min)",
+    "exit_time": "2026-05-29T15:00:34.567244+02:00",
+    "bot": "M5"
+  },
+  "12692080": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.6% from peak $18.20 to $10.26 (limit 40% after 10min)",
+    "exit_time": "2026-05-29T15:00:30.533362+02:00",
+    "bot": "M5"
+  },
+  "12681842": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T14:21:43.405447+02:00",
+    "bot": "M5"
+  },
+  "12682384": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T14:20:38.269555+02:00",
+    "bot": "M5"
+  },
+  "12659744": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (71.74 > 65)",
+    "exit_time": "2026-05-29T11:15:00.678778+02:00",
+    "bot": "M5"
+  },
+  "12659089": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (71.74 > 65)",
+    "exit_time": "2026-05-29T11:15:00.648157+02:00",
+    "bot": "M5"
+  },
+  "12628283": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (75.63 > 65)",
+    "exit_time": "2026-05-29T06:20:03.900414+02:00",
+    "bot": "M5"
+  },
+  "12623969": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (75.63 > 65)",
+    "exit_time": "2026-05-29T06:20:03.847883+02:00",
+    "bot": "M5"
+  },
+  "12602973": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (68.69 > 65)",
+    "exit_time": "2026-05-29T03:10:00.819782+02:00",
+    "bot": "M5"
+  },
+  "12593545": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T00:59:32.739983+02:00",
+    "bot": "M5"
+  },
+  "12594015": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T00:09:33.718621+02:00",
+    "bot": "M5"
+  },
+  "12550365": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (73.07 > 65)",
+    "exit_time": "2026-05-28T14:50:00.476249+02:00",
+    "bot": "M5"
+  },
+  "12549966": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (73.07 > 65)",
+    "exit_time": "2026-05-28T14:50:00.445728+02:00",
+    "bot": "M5"
+  },
+  "12538795": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (76.39 > 65)",
+    "exit_time": "2026-05-28T07:35:00.259228+02:00",
+    "bot": "M5"
+  },
+  "12538678": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (76.39 > 65)",
+    "exit_time": "2026-05-28T07:35:00.226873+02:00",
+    "bot": "M5"
+  },
+  "12537015": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T05:31:13.181942+02:00",
+    "bot": "M5"
+  },
+  "12537203": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T05:31:09.174465+02:00",
+    "bot": "M5"
+  },
+  "12536206": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T04:46:06.247853+02:00",
+    "bot": "M5"
+  },
+  "12536288": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T04:45:59.235717+02:00",
+    "bot": "M5"
+  },
+  "12535681": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T04:13:39.201679+02:00",
+    "bot": "M5"
+  },
+  "12534919": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T03:55:50.105781+02:00",
+    "bot": "M5"
+  },
+  "12534795": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T03:52:17.705423+02:00",
+    "bot": "M5"
+  },
+  "12534250": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T03:26:35.592990+02:00",
+    "bot": "M5"
+  },
+  "12532756": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 27.8% from peak $17.32 to $12.50 (limit 25% after 55min)",
+    "exit_time": "2026-05-28T03:00:06.628362+02:00",
+    "bot": "M5"
+  },
+  "12532339": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T02:31:11.983271+02:00",
+    "bot": "M5"
+  },
+  "12532299": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T01:52:00.810084+02:00",
+    "bot": "M5"
+  },
+  "12495448": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (70.93 > 65)",
+    "exit_time": "2026-05-26T21:05:00.731839+02:00",
+    "bot": "M5"
+  },
+  "12495261": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (70.93 > 65)",
+    "exit_time": "2026-05-26T21:05:00.699786+02:00",
+    "bot": "M5"
+  },
+  "12492345": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:54:41.756798+02:00",
+    "bot": "M5"
+  },
+  "12492456": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:54:15.729276+02:00",
+    "bot": "M5"
+  },
+  "12483647": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T14:31:15.015698+02:00",
+    "bot": "M5"
+  },
+  "12484423": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T14:31:12.009839+02:00",
+    "bot": "M5"
+  },
+  "12483796": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T13:58:58.132175+02:00",
+    "bot": "M5"
+  },
+  "12482498": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T13:35:46.053162+02:00",
+    "bot": "M5"
+  },
+  "12478234": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:39:53.540627+02:00",
+    "bot": "M5"
+  },
+  "12473704": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T11:15:42.281850+02:00",
+    "bot": "M5"
+  },
+  "12473834": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T10:29:38.167945+02:00",
+    "bot": "M5"
+  },
+  "12473337": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:45:30.678765+02:00",
+    "bot": "M5"
+  },
+  "12473252": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T06:37:00.918083+02:00",
+    "bot": "M5"
+  },
+  "12472285": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (66.88 > 65)",
+    "exit_time": "2026-05-26T05:35:00.364030+02:00",
+    "bot": "M5"
+  },
+  "12472199": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (66.88 > 65)",
+    "exit_time": "2026-05-26T05:35:00.331996+02:00",
+    "bot": "M5"
+  },
+  "12471131": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T03:38:22.073465+02:00",
+    "bot": "M5"
+  },
+  "12470486": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T02:52:42.181529+02:00",
+    "bot": "M5"
+  },
+  "12470597": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T02:51:59.104139+02:00",
+    "bot": "M5"
+  },
+  "12470064": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T02:18:57.244419+02:00",
+    "bot": "M5"
+  },
+  "12469448": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T02:01:52.634768+02:00",
+    "bot": "M5"
+  },
+  "12469133": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T02:01:50.630050+02:00",
+    "bot": "M5"
+  },
+  "12467827": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (66.36 > 65)",
+    "exit_time": "2026-05-26T00:15:00.349442+02:00",
+    "bot": "M5"
+  },
+  "12467755": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (66.36 > 65)",
+    "exit_time": "2026-05-26T00:15:00.316706+02:00",
+    "bot": "M5"
+  },
+  "12466959": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (69.23 > 65)",
+    "exit_time": "2026-05-25T19:10:03.301970+02:00",
+    "bot": "M5"
+  },
+  "12463784": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 25.0% from peak $31.66 to $23.74 (limit 25% after 40min)",
+    "exit_time": "2026-05-25T15:00:10.210693+02:00",
+    "bot": "M5"
+  },
+  "12463641": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.8% from peak $27.26 to $15.58 (limit 30% after 30min)",
+    "exit_time": "2026-05-25T14:45:11.470315+02:00",
+    "bot": "M5"
+  },
+  "10692393": {
+    "reason": "RSI overbought (68.71 > 65)",
+    "full_reason": "RSI overbought (68.71 > 65)",
+    "exit_time": "2026-03-19T00:00:01.037008+01:00",
+    "bot": "M5"
+  },
+  "10692273": {
+    "reason": "RSI overbought (68.71 > 65)",
+    "full_reason": "RSI overbought (68.71 > 65)",
+    "exit_time": "2026-03-19T00:00:01.005067+01:00",
+    "bot": "M5"
+  },
+  "10690420": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T21:11:59.904574+01:00",
+    "bot": "M5"
+  },
+  "10690187": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T21:11:50.846451+01:00",
+    "bot": "M5"
+  },
+  "10688968": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T19:58:19.190214+01:00",
+    "bot": "M5"
+  },
+  "10688773": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T19:57:53.057713+01:00",
+    "bot": "M5"
+  },
+  "10684963": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T17:56:33.107709+01:00",
+    "bot": "M5"
+  },
+  "10685009": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T17:54:40.834527+01:00",
+    "bot": "M5"
+  },
+  "10682706": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 47.3% from peak $23.14 to $12.20 (limit 40% after 2min)",
+    "exit_time": "2026-03-18T15:12:09.228721+01:00",
+    "bot": "M5"
+  },
+  "10681137": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.7% from peak $55.00 to $30.96 (limit 40% after 9min)",
+    "exit_time": "2026-03-18T14:43:51.063136+01:00",
+    "bot": "M5"
+  },
+  "10680880": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.3% from peak $50.68 to $30.24 (limit 40% after 14min)",
+    "exit_time": "2026-03-18T14:43:40.005176+01:00",
+    "bot": "M5"
+  },
+  "10680152": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T14:18:08.579894+01:00",
+    "bot": "M5"
+  },
+  "10678999": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T14:00:16.401511+01:00",
+    "bot": "M5"
+  },
+  "10678810": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.5% from peak $34.00 to $20.22 (limit 40% after 5min)",
+    "exit_time": "2026-03-18T13:55:16.628143+01:00",
+    "bot": "M5"
+  },
+  "10677658": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:38:03.947061+01:00",
+    "bot": "M5"
+  },
+  "10677387": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:32:33.883291+01:00",
+    "bot": "M5"
+  },
+  "10676309": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:09:07.744411+01:00",
+    "bot": "M5"
+  },
+  "10675673": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T13:01:16.383889+01:00",
+    "bot": "M5"
+  },
+  "10675492": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:48:36.047526+01:00",
+    "bot": "M5"
+  },
+  "10674825": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T12:26:46.586795+01:00",
+    "bot": "M5"
+  },
+  "10674718": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.5% from peak $32.28 to $19.20 (limit 40% after 14min)",
+    "exit_time": "2026-03-18T12:23:38.029131+01:00",
+    "bot": "M5"
+  },
+  "10674150": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T11:57:32.153294+01:00",
+    "bot": "M5"
+  },
+  "10673896": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T11:56:49.001297+01:00",
+    "bot": "M5"
+  },
+  "10672343": {
+    "reason": "RSI oversold (25.52 < 35)",
+    "full_reason": "RSI oversold (25.52 < 35)",
+    "exit_time": "2026-03-18T11:30:00.277941+01:00",
+    "bot": "M5"
+  },
+  "10670598": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T09:45:31.325880+01:00",
+    "bot": "M5"
+  },
+  "10671049": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T09:42:17.856199+01:00",
+    "bot": "M5"
+  },
+  "10670454": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T09:21:56.394416+01:00",
+    "bot": "M5"
+  },
+  "10669867": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T08:50:23.409726+01:00",
+    "bot": "M5"
+  },
+  "10669766": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T08:46:31.882570+01:00",
+    "bot": "M5"
+  },
+  "10667928": {
+    "reason": "RSI overbought (73.51 > 65)",
+    "full_reason": "RSI overbought (73.51 > 65)",
+    "exit_time": "2026-03-18T06:45:01.014076+01:00",
+    "bot": "M5"
+  },
+  "10667798": {
+    "reason": "RSI overbought (73.51 > 65)",
+    "full_reason": "RSI overbought (73.51 > 65)",
+    "exit_time": "2026-03-18T06:45:00.979347+01:00",
+    "bot": "M5"
+  },
+  "10667253": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T05:33:46.213026+01:00",
+    "bot": "M5"
+  },
+  "10667183": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T05:33:46.213026+01:00",
+    "bot": "M5"
+  },
+  "10666494": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T03:56:24.517967+01:00",
+    "bot": "M5"
+  },
+  "10666476": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-18T03:56:20.494308+01:00",
+    "bot": "M5"
+  },
+  "10664138": {
+    "reason": "RSI overbought (66.29 > 65)",
+    "full_reason": "RSI overbought (66.29 > 65)",
+    "exit_time": "2026-03-18T00:50:01.073518+01:00",
+    "bot": "M5"
+  },
+  "10664127": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T23:45:43.924556+01:00",
+    "bot": "M5"
+  },
+  "10662181": {
+    "reason": "RSI oversold (32.70 < 35)",
+    "full_reason": "RSI oversold (32.70 < 35)",
+    "exit_time": "2026-03-17T20:25:00.915877+01:00",
+    "bot": "M5"
+  },
+  "10662124": {
+    "reason": "RSI oversold (32.70 < 35)",
+    "full_reason": "RSI oversold (32.70 < 35)",
+    "exit_time": "2026-03-17T20:25:00.880903+01:00",
+    "bot": "M5"
+  },
+  "10660726": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.2% from peak $51.06 to $29.49 (limit 40% after 28min)",
+    "exit_time": "2026-03-17T17:07:30.889153+01:00",
+    "bot": "M5"
+  },
+  "10661007": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.0% from peak $29.04 to $17.14 (limit 40% after 18min)",
+    "exit_time": "2026-03-17T17:02:48.933811+01:00",
+    "bot": "M5"
+  },
+  "10658498": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.9% from peak $28.89 to $16.20 (limit 40% after 13min)",
+    "exit_time": "2026-03-17T15:52:35.643423+01:00",
+    "bot": "M5"
+  },
+  "10653605": {
+    "reason": "RSI overbought (67.87 > 65)",
+    "full_reason": "RSI overbought (67.87 > 65)",
+    "exit_time": "2026-03-17T12:45:00.581016+01:00",
+    "bot": "M5"
+  },
+  "10653052": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:43:01.977554+01:00",
+    "bot": "M5"
+  },
+  "10652930": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:43:01.974545+01:00",
+    "bot": "M5"
+  },
+  "10651839": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:07:14.866006+01:00",
+    "bot": "M5"
+  },
+  "10651973": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T11:06:49.756443+01:00",
+    "bot": "M5"
+  },
+  "10649808": {
+    "reason": "RSI overbought (66.42 > 65)",
+    "full_reason": "RSI overbought (66.42 > 65)",
+    "exit_time": "2026-03-17T08:30:00.350923+01:00",
+    "bot": "M5"
+  },
+  "10649760": {
+    "reason": "RSI overbought (66.42 > 65)",
+    "full_reason": "RSI overbought (66.42 > 65)",
+    "exit_time": "2026-03-17T08:30:00.315678+01:00",
+    "bot": "M5"
+  },
+  "10649232": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T07:01:26.427433+01:00",
+    "bot": "M5"
+  },
+  "10649179": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-17T06:58:39.027785+01:00",
+    "bot": "M5"
+  },
+  "10646752": {
+    "reason": "RSI overbought (68.06 > 65)",
+    "full_reason": "RSI overbought (68.06 > 65)",
+    "exit_time": "2026-03-17T02:30:00.586183+01:00",
+    "bot": "M5"
+  },
+  "10646709": {
+    "reason": "RSI overbought (68.06 > 65)",
+    "full_reason": "RSI overbought (68.06 > 65)",
+    "exit_time": "2026-03-17T02:30:00.543741+01:00",
+    "bot": "M5"
+  },
+  "10645264": {
+    "reason": "RSI overbought (72.69 > 65)",
+    "full_reason": "RSI overbought (72.69 > 65)",
+    "exit_time": "2026-03-17T00:30:01.158439+01:00",
+    "bot": "M5"
+  },
+  "10645217": {
+    "reason": "RSI overbought (72.69 > 65)",
+    "full_reason": "RSI overbought (72.69 > 65)",
+    "exit_time": "2026-03-17T00:30:01.122227+01:00",
+    "bot": "M5"
+  },
+  "10640877": {
+    "reason": "RSI overbought (67.96 > 65)",
+    "full_reason": "RSI overbought (67.96 > 65)",
+    "exit_time": "2026-03-16T19:35:00.675498+01:00",
+    "bot": "M5"
+  },
+  "10638276": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T17:26:40.417922+01:00",
+    "bot": "M5"
+  },
+  "10638916": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 139.8% from peak $18.20 to $-7.24 (limit 40% after 28min)",
+    "exit_time": "2026-03-16T16:28:24.554177+01:00",
+    "bot": "M5"
+  },
+  "10638090": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T15:48:06.633391+01:00",
+    "bot": "M5"
+  },
+  "10631817": {
+    "reason": "RSI overbought (67.73 > 65)",
+    "full_reason": "RSI overbought (67.73 > 65)",
+    "exit_time": "2026-03-16T11:55:01.136477+01:00",
+    "bot": "M5"
+  },
+  "10631696": {
+    "reason": "RSI overbought (67.73 > 65)",
+    "full_reason": "RSI overbought (67.73 > 65)",
+    "exit_time": "2026-03-16T11:55:01.102395+01:00",
+    "bot": "M5"
+  },
+  "10631200": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T10:46:13.041554+01:00",
+    "bot": "M5"
+  },
+  "10629359": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T10:05:46.096679+01:00",
+    "bot": "M5"
+  },
+  "10628964": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T09:13:35.075394+01:00",
+    "bot": "M5"
+  },
+  "10628935": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T08:37:46.612467+01:00",
+    "bot": "M5"
+  },
+  "10627251": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T06:31:50.790536+01:00",
+    "bot": "M5"
+  },
+  "10627176": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T06:31:50.787346+01:00",
+    "bot": "M5"
+  },
+  "10626383": {
+    "reason": "RSI overbought (72.50 > 65)",
+    "full_reason": "RSI overbought (72.50 > 65)",
+    "exit_time": "2026-03-16T04:45:00.335379+01:00",
+    "bot": "M5"
+  },
+  "10626279": {
+    "reason": "RSI overbought (72.50 > 65)",
+    "full_reason": "RSI overbought (72.50 > 65)",
+    "exit_time": "2026-03-16T04:45:00.259183+01:00",
+    "bot": "M5"
+  },
+  "10625401": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.0% from peak $37.38 to $22.05 (limit 40% after 10min)",
+    "exit_time": "2026-03-16T02:49:45.177983+01:00",
+    "bot": "M5"
+  },
+  "10624861": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.0% from peak $25.62 to $14.61 (limit 40% after 10min)",
+    "exit_time": "2026-03-16T02:25:13.838181+01:00",
+    "bot": "M5"
+  },
+  "10622810": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 30.3% from peak $123.99 to $86.37 (limit 30% after 39min)",
+    "exit_time": "2026-03-16T01:19:05.006691+01:00",
+    "bot": "M5"
+  },
+  "10622729": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 25.4% from peak $137.94 to $102.87 (limit 25% after 43min)",
+    "exit_time": "2026-03-16T01:18:05.822429+01:00",
+    "bot": "M5"
+  },
+  "10622105": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-16T00:20:25.701936+01:00",
+    "bot": "M5"
+  },
+  "10617615": {
+    "reason": "Weekend close",
+    "full_reason": "Weekend protection -- Weekend close in 30 minutes",
+    "exit_time": "2026-03-13T21:30:00.729794+01:00",
+    "bot": "M5"
+  },
+  "10617446": {
+    "reason": "Weekend close",
+    "full_reason": "Weekend protection -- Weekend close in 30 minutes",
+    "exit_time": "2026-03-13T21:30:00.672293+01:00",
+    "bot": "M5"
+  },
+  "10615993": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T20:40:29.259755+01:00",
+    "bot": "M5"
+  },
+  "10616095": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T20:32:08.998279+01:00",
+    "bot": "M5"
+  },
+  "10614942": {
+    "reason": "RSI oversold (33.95 < 35)",
+    "full_reason": "RSI oversold (33.95 < 35)",
+    "exit_time": "2026-03-13T19:20:00.506692+01:00",
+    "bot": "M5"
+  },
+  "10614845": {
+    "reason": "RSI oversold (33.95 < 35)",
+    "full_reason": "RSI oversold (33.95 < 35)",
+    "exit_time": "2026-03-13T19:20:00.476743+01:00",
+    "bot": "M5"
+  },
+  "10614232": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.9% from peak $32.04 to $18.93 (limit 40% after 7min)",
+    "exit_time": "2026-03-13T17:26:46.933368+01:00",
+    "bot": "M5"
+  },
+  "10614127": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.3% from peak $27.99 to $16.44 (limit 40% after 12min)",
+    "exit_time": "2026-03-13T17:26:32.872306+01:00",
+    "bot": "M5"
+  },
+  "10613319": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.2% from peak $22.23 to $12.84 (limit 40% after 3min)",
+    "exit_time": "2026-03-13T16:57:40.603087+01:00",
+    "bot": "M5"
+  },
+  "10612124": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T16:40:56.746411+01:00",
+    "bot": "M5"
+  },
+  "10611910": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 287.9% from peak $19.62 to $-36.87 (limit 30% after 31min)",
+    "exit_time": "2026-03-13T16:40:56.742905+01:00",
+    "bot": "M5"
+  },
+  "10610934": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T15:55:25.522077+01:00",
+    "bot": "M5"
+  },
+  "10609641": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T15:40:41.206118+01:00",
+    "bot": "M5"
+  },
+  "10609817": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T15:40:40.202224+01:00",
+    "bot": "M5"
+  },
+  "10607227": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T15:16:54.170780+01:00",
+    "bot": "M5"
+  },
+  "10607848": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T15:13:11.543612+01:00",
+    "bot": "M5"
+  },
+  "10601577": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.6% from peak $31.83 to $18.60 (limit 40% after 13min)",
+    "exit_time": "2026-03-13T09:18:12.253982+01:00",
+    "bot": "M5"
+  },
+  "10601040": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.4% from peak $24.12 to $13.89 (limit 40% after 10min)",
+    "exit_time": "2026-03-13T08:39:51.063308+01:00",
+    "bot": "M5"
+  },
+  "10600581": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T08:19:23.114333+01:00",
+    "bot": "M5"
+  },
+  "10599869": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T08:17:24.791793+01:00",
+    "bot": "M5"
+  },
+  "10599755": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T08:00:36.537383+01:00",
+    "bot": "M5"
+  },
+  "10598921": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T06:56:00.634316+01:00",
+    "bot": "M5"
+  },
+  "10598240": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T06:43:34.079152+01:00",
+    "bot": "M5"
+  },
+  "10598283": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-13T05:36:13.242020+01:00",
+    "bot": "M5"
+  },
+  "10594619": {
+    "reason": "RSI overbought (74.49 > 65)",
+    "full_reason": "RSI overbought (74.49 > 65)",
+    "exit_time": "2026-03-12T23:35:00.669787+01:00",
+    "bot": "M5"
+  },
+  "10594421": {
+    "reason": "RSI overbought (74.49 > 65)",
+    "full_reason": "RSI overbought (74.49 > 65)",
+    "exit_time": "2026-03-12T23:35:00.638241+01:00",
+    "bot": "M5"
+  },
+  "10592572": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T20:03:27.766834+01:00",
+    "bot": "M5"
+  },
+  "10591581": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T19:49:16.562254+01:00",
+    "bot": "M5"
+  },
+  "10591206": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T19:45:01.940348+01:00",
+    "bot": "M5"
+  },
+  "10591086": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T18:41:56.249380+01:00",
+    "bot": "M5"
+  },
+  "10588631": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T18:16:36.196534+01:00",
+    "bot": "M5"
+  },
+  "10588705": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T18:16:36.194530+01:00",
+    "bot": "M5"
+  },
+  "10587679": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T16:11:04.141484+01:00",
+    "bot": "M5"
+  },
+  "10586930": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T16:09:22.855664+01:00",
+    "bot": "M5"
+  },
+  "10585343": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T15:33:45.651536+01:00",
+    "bot": "M5"
+  },
+  "10585175": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T15:24:22.372908+01:00",
+    "bot": "M5"
+  },
+  "10584196": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.0% from peak $23.46 to $13.38 (limit 40% after 1min)",
+    "exit_time": "2026-03-12T14:50:56.527264+01:00",
+    "bot": "M5"
+  },
+  "10580658": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 25.6% from peak $49.74 to $37.02 (limit 25% after 43min)",
+    "exit_time": "2026-03-12T13:57:49.242529+01:00",
+    "bot": "M5"
+  },
+  "10580588": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 26.0% from peak $48.87 to $36.15 (limit 25% after 48min)",
+    "exit_time": "2026-03-12T13:57:49.211932+01:00",
+    "bot": "M5"
+  },
+  "10579690": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T12:20:06.753374+01:00",
+    "bot": "M5"
+  },
+  "10579733": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T12:20:01.744588+01:00",
+    "bot": "M5"
+  },
+  "10578121": {
+    "reason": "RSI overbought (70.11 > 65)",
+    "full_reason": "RSI overbought (70.11 > 65)",
+    "exit_time": "2026-03-12T11:00:00.228824+01:00",
+    "bot": "M5"
+  },
+  "10573708": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T06:25:11.442296+01:00",
+    "bot": "M5"
+  },
+  "10573606": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T06:25:10.439005+01:00",
+    "bot": "M5"
+  },
+  "10570692": {
+    "reason": "RSI overbought (77.29 > 65)",
+    "full_reason": "RSI overbought (77.29 > 65)",
+    "exit_time": "2026-03-12T02:05:00.632188+01:00",
+    "bot": "M5"
+  },
+  "10570076": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-03-12T01:00:30.452268+01:00",
+    "bot": "M5"
+  },
+  "10570014": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.4% from peak $26.73 to $15.39 (limit 40% after 20min)",
+    "exit_time": "2026-03-12T00:30:20.110054+01:00",
     "bot": "M5"
   }
 }

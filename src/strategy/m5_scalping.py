@@ -13,7 +13,7 @@ import logging
 import pandas as pd
 
 from src.core.config import TradingConfig
-from src.core.mt5_client import ORDER_TYPE_BUY, ORDER_TYPE_SELL, TIMEFRAME_M5
+from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL, TIMEFRAME_M5
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +52,18 @@ class M5ScalpingStrategy:
         context: dict,
     ) -> dict | None:
         latest = df.iloc[-1]
+        previous = df.iloc[-2] if len(df) >= 2 else latest
         has_long = context.get('has_long', False)
         has_short = context.get('has_short', False)
+        use_reversal = self.config.entry_on_rsi_reversal
 
         # LONG
         if latest['RSI'] < self.config.rsi_buy:
             if has_short:
                 self.logger.info("LONG signal detected but skipping -- already have SHORT position(s)")
+                return None
+            if use_reversal and latest['RSI'] <= previous['RSI']:
+                self.logger.info(f"LONG signal -- RSI still falling ({previous['RSI']:.1f} -> {latest['RSI']:.1f}), waiting for reversal")
                 return None
             self.logger.info(f"LONG SIGNAL: RSI={latest['RSI']:.2f}")
             return {'direction': 'LONG'}
@@ -69,6 +74,9 @@ class M5ScalpingStrategy:
                 and latest['downtrend']):
             if has_long:
                 self.logger.info("SHORT signal detected but skipping -- already have LONG position(s)")
+                return None
+            if use_reversal and latest['RSI'] >= previous['RSI']:
+                self.logger.info(f"SHORT signal -- RSI still rising ({previous['RSI']:.1f} -> {latest['RSI']:.1f}), waiting for reversal")
                 return None
             self.logger.info(f"SHORT SIGNAL: RSI={latest['RSI']:.2f}")
             return {'direction': 'SHORT'}
@@ -85,10 +93,12 @@ class M5ScalpingStrategy:
 
         # Simple RSI exits (no confirmation for M5)
         if position.type == ORDER_TYPE_BUY:
-            if latest['RSI'] > self.config.rsi_sell:
-                return True, f"RSI overbought ({latest['RSI']:.2f} > {self.config.rsi_sell})"
+            threshold = self.config.rsi_exit_long
+            if latest['RSI'] > threshold:
+                return True, f"RSI exit ({latest['RSI']:.2f} > {threshold})"
         else:
-            if latest['RSI'] < self.config.rsi_buy:
-                return True, f"RSI oversold ({latest['RSI']:.2f} < {self.config.rsi_buy})"
+            threshold = self.config.rsi_exit_short
+            if latest['RSI'] < threshold:
+                return True, f"RSI exit ({latest['RSI']:.2f} < {threshold})"
 
         return False, ""

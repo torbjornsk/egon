@@ -10,12 +10,13 @@ import logging
 import time
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 
 from src.core.config import TradingConfig
 from src.core.indicators import compute_indicators, get_adaptive_atr_multiplier
-from src.core.mt5_client import (
-    MT5Client, ORDER_TYPE_BUY, ORDER_TYPE_SELL,
+from src.core.broker import (
+    ORDER_TYPE_BUY, ORDER_TYPE_SELL,
     DEAL_ENTRY_OUT, DEAL_REASON_SL, DEAL_REASON_TP,
 )
 from src.core.position import PositionManager
@@ -34,10 +35,16 @@ class BaseTradingBot:
     position opening/closing, profit protection, MT5 close detection, reporting.
     """
 
-    def __init__(self, strategy: TradingStrategy, config: TradingConfig):
+    def __init__(self, strategy: TradingStrategy, config: TradingConfig, broker=None):
         self.strategy = strategy
         self.config = config
-        self.mt5 = MT5Client()
+
+        # Broker backend: injected for testing, defaults to MT5 for live
+        if broker is not None:
+            self.mt5 = broker
+        else:
+            from src.core.mt5_broker import MT5Broker
+            self.mt5 = MT5Broker()
 
         # Bot-specific logger so GUI can capture logs per-bot
         self.logger = logging.getLogger(f"src.bot.{strategy.bot_label}")
@@ -73,7 +80,54 @@ class BaseTradingBot:
         # Stop flag for clean shutdown from BotManager
         self._stop_requested: bool = False
 
+        # Profit protection runtime override (None=config/auto, True=force on, False=force off)
+        self.pp_override: bool | None = None
+
+        # Trading mode runtime override (None=use config, else "both"/"long_only"/"short_only")
+        self.trading_mode_override: str | None = None
+
+        # Volatility state for auto-PP
+        self._high_volatility: bool = False
+
+        # Consecutive stop-loss exits (for SL tightening)
+        self.consecutive_sl_exits: int = 0
+
     # ── Connection ──────────────────────────────────────────────────────
+
+    def is_profit_protection_active(self) -> bool:
+        """Check if profit protection is currently active.
+
+        Priority: GUI override > auto-volatility > config.
+        """
+        if self.pp_override is not None:
+            return self.pp_override
+        if self.config.profit_protection_auto_volatility:
+            return self._high_volatility
+        return self.config.use_profit_protection
+
+    @property
+    def effective_trading_mode(self) -> str:
+        """Get the active trading mode. GUI override > config."""
+        if self.trading_mode_override is not None:
+            return self.trading_mode_override
+        return self.config.trading_mode
+
+    def _update_volatility_state(self, df):
+        """Update high-volatility flag from recent ATR data."""
+        if df is None or 'ATR' not in df.columns or len(df) < 100:
+            return
+        atr_vals = df['ATR'].values
+        current_atr = atr_vals[-1]
+        atr_80th = float(np.percentile(atr_vals[-100:], 80))
+        was_high = self._high_volatility
+        self._high_volatility = current_atr > atr_80th
+        if self._high_volatility != was_high:
+            state = "HIGH" if self._high_volatility else "NORMAL"
+            self.logger.info(
+                f"[VOLATILITY] {state} -- ATR ${current_atr:.2f} "
+                f"(80th pctl: ${atr_80th:.2f}) -- "
+                f"PP {'ACTIVE' if self.is_profit_protection_active() else 'INACTIVE'}"
+            )
 
     @staticmethod
     def _make_drawdown_limit_fn(strategy: TradingStrategy, config: TradingConfig):
@@ -131,6 +185,15 @@ class BaseTradingBot:
             df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
         )
         stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
+
+        # Tighten stop loss after consecutive SL exits
+        if self.consecutive_sl_exits > 0 and self.config.sl_tightening_factor < 1.0:
+            factor = self.config.sl_tightening_factor ** self.consecutive_sl_exits
+            stop_distance *= factor
+            self.logger.info(
+                f"[SL TIGHTENING] {self.consecutive_sl_exits} consecutive SL exits, "
+                f"stop distance x{factor:.2f}"
+            )
 
         if direction == 'LONG':
             sl = current_price - stop_distance
@@ -206,6 +269,9 @@ class BaseTradingBot:
         else:
             self.last_trade_profitable = True
 
+        # Bot-initiated close resets consecutive SL counter
+        self.consecutive_sl_exits = 0
+
         # Log
         self.trade_log.append({
             'action': 'CLOSE', 'time': get_local_now(), 'exit_time': get_local_now(),
@@ -237,21 +303,45 @@ class BaseTradingBot:
         time_since_close = (get_local_now() - self.last_close_time).total_seconds()
         tf_seconds = self.strategy.timeframe_minutes * 60
 
-        # Loss backoff
-        if self.config.use_loss_backoff and self.risk.consecutive_losses > 0:
-            multipliers = self.config.loss_backoff_multipliers
-            idx = min(self.risk.consecutive_losses - 1, len(multipliers) - 1)
-            backoff = multipliers[idx]
-            cooldown = self.warmup_candles * tf_seconds * backoff
+        # Log backoff state for live debugging
+        if self.config.use_loss_backoff:
+            sl_mode = self.config.loss_backoff_sl_only
+            loss_count = self.consecutive_sl_exits if sl_mode else self.risk.consecutive_losses
+            self.logger.info(
+                f"[BACKOFF STATE] {'sl_exits' if sl_mode else 'consecutive_losses'}={loss_count}, "
+                f"time_since_close={time_since_close:.0f}s, "
+                f"last_close={self.last_close_time.strftime('%H:%M:%S')}"
+            )
 
-            if time_since_close < cooldown:
-                remaining = (cooldown - time_since_close) / 60
-                self.logger.info(
-                    f"Loss backoff: {remaining:.1f}min remaining "
-                    f"(after {self.risk.consecutive_losses} losses, {backoff}x multiplier)"
-                )
-                return False
-            return True
+        # Loss backoff
+        if self.config.use_loss_backoff:
+            if self.config.loss_backoff_sl_only:
+                # SL-only flat backoff
+                if self.consecutive_sl_exits >= self.config.loss_backoff_sl_threshold:
+                    cooldown = self.config.loss_backoff_sl_candles * tf_seconds
+                    if time_since_close < cooldown:
+                        remaining = (cooldown - time_since_close) / 60
+                        self.logger.info(
+                            f"SL backoff: {remaining:.1f}min remaining "
+                            f"(after {self.consecutive_sl_exits} SL exits, "
+                            f"{self.config.loss_backoff_sl_candles} candle cooldown)"
+                        )
+                        return False
+            elif self.risk.consecutive_losses > 0:
+                # Original exponential backoff on any loss
+                multipliers = self.config.loss_backoff_multipliers
+                idx = min(self.risk.consecutive_losses - 1, len(multipliers) - 1)
+                backoff = multipliers[idx]
+                cooldown = self.warmup_candles * tf_seconds * backoff
+
+                if time_since_close < cooldown:
+                    remaining = (cooldown - time_since_close) / 60
+                    self.logger.info(
+                        f"Loss backoff: {remaining:.1f}min remaining "
+                        f"(after {self.risk.consecutive_losses} losses, {backoff}x multiplier)"
+                    )
+                    return False
+                return True
 
         # Standard cooldown
         cooldown = self.warmup_candles * tf_seconds
@@ -319,8 +409,13 @@ class BaseTradingBot:
             gap_warmup = True
             self.logger.warning(f"Market gap -- {self.warmup_candles} candle warmup")
 
-        df = compute_indicators(df, self.config)
+        # Skip indicator computation if already present (pre-computed in backtest)
+        if 'RSI' not in df.columns:
+            df = compute_indicators(df, self.config)
         latest = df.iloc[-1]
+
+        # Update volatility state for auto-PP
+        self._update_volatility_state(df)
 
         tick = self.mt5.get_tick()
         if tick is None:
@@ -335,34 +430,19 @@ class BaseTradingBot:
                 pos.profit,
             )
 
-        # ── Entry logic ─────────────────────────────────────────────────
-        if len(open_positions) < self.config.max_positions:
-            if gap_warmup:
-                self.logger.info("Gap warmup -- skipping new entries")
-            elif self.can_enter_new_position(df):
-                has_long = any(p.type == ORDER_TYPE_BUY for p in open_positions)
-                has_short = any(p.type == ORDER_TYPE_SELL for p in open_positions)
-
-                signal = self.strategy.check_entry(df, open_positions, {
-                    'has_long': has_long,
-                    'has_short': has_short,
-                })
-
-                if signal:
-                    self.open_position(signal['direction'], df)
-
-        # ── Exit logic ──────────────────────────────────────────────────
+        # ── Exit logic (run FIRST so a candle can exit + re-enter) ────
         for pos in open_positions:
             ticket = pos.ticket
 
             # Profit protection (candle-based, in addition to continuous)
-            should_exit, reason = self.positions.check_profit_protection(
-                ticket, pos.profit, info['balance']
-            )
-            if should_exit:
-                self.logger.info(f"EXIT SIGNAL (ticket {ticket}): {reason}")
-                self.close_position(pos, reason)
-                continue
+            if self.is_profit_protection_active():
+                should_exit, reason = self.positions.check_profit_protection(
+                    ticket, pos.profit, info['balance']
+                )
+                if should_exit:
+                    self.logger.info(f"EXIT SIGNAL (ticket {ticket}): {reason}")
+                    self.close_position(pos, reason)
+                    continue
 
             # Strategy-specific exit
             should_exit, reason = self.strategy.check_exit(df, pos, {
@@ -374,11 +454,53 @@ class BaseTradingBot:
                 self.logger.info(f"EXIT SIGNAL (ticket {ticket}): {reason}, P/L: ${pos.profit:.2f}")
                 self.close_position(pos, reason)
 
+        # ── Entry logic (after exits, so freed slots can be used) ───
+        # Re-fetch positions after exits
+        open_positions = self.mt5.get_open_positions(self.strategy.magic_number)
+        if len(open_positions) < self.config.max_positions:
+            if gap_warmup:
+                self.logger.info("Gap warmup -- skipping new entries")
+            elif self.can_enter_new_position(df):
+                has_long = any(p.type == ORDER_TYPE_BUY for p in open_positions)
+                has_short = any(p.type == ORDER_TYPE_SELL for p in open_positions)
+
+                # Don't add a 2nd position if existing one(s) are underwater
+                if open_positions and self.config.block_second_when_underwater:
+                    any_underwater = any(p.profit < 0 for p in open_positions)
+                    if any_underwater:
+                        self.logger.info("Skipping 2nd entry -- existing position underwater")
+                    else:
+                        signal = self.strategy.check_entry(df, open_positions, {
+                            'has_long': has_long,
+                            'has_short': has_short,
+                        })
+                        if signal:
+                            mode = self.effective_trading_mode
+                            if mode == "long_only" and signal['direction'] == "SHORT":
+                                self.logger.info("SHORT signal blocked -- trading mode: long_only")
+                            elif mode == "short_only" and signal['direction'] == "LONG":
+                                self.logger.info("LONG signal blocked -- trading mode: short_only")
+                            else:
+                                self.open_position(signal['direction'], df)
+                else:
+                    signal = self.strategy.check_entry(df, open_positions, {
+                        'has_long': has_long,
+                        'has_short': has_short,
+                    })
+                    if signal:
+                        mode = self.effective_trading_mode
+                        if mode == "long_only" and signal['direction'] == "SHORT":
+                            self.logger.info("SHORT signal blocked -- trading mode: long_only")
+                        elif mode == "short_only" and signal['direction'] == "LONG":
+                            self.logger.info("LONG signal blocked -- trading mode: short_only")
+                        else:
+                            self.open_position(signal['direction'], df)
+
     # ── Continuous checks (every second) ────────────────────────────────
 
     def check_profit_protection_continuous(self):
         """Check profit protection on all positions (runs every second)."""
-        if not self.config.use_profit_protection:
+        if not self.is_profit_protection_active():
             return
 
         info = self.mt5.get_account_info()
@@ -409,32 +531,65 @@ class BaseTradingBot:
                 continue
 
             deals = self.mt5.get_deal_history(ticket)
-            if deals:
-                exit_deal = next(
-                    (d for d in deals if d.entry == DEAL_ENTRY_OUT), None
+            if not deals:
+                # MT5 deal history not available yet -- assume loss to be safe.
+                # This prevents the bot from ignoring SL exits when MT5 is slow
+                # to flush deal history.
+                self.logger.warning(
+                    f"[MT5 EXIT] Ticket {ticket}: No deal history found -- "
+                    f"recording as unknown loss for backoff safety"
                 )
-                if exit_deal:
-                    if exit_deal.reason == DEAL_REASON_SL:
-                        exit_reason = "Stop loss"
-                    elif exit_deal.reason == DEAL_REASON_TP:
-                        exit_reason = "Take profit"
-                    else:
-                        exit_reason = "MT5 close"
+                self.risk.record_trade_result(-1)  # Assume loss
+                self.last_trade_profitable = False
+                self.last_close_time = get_local_now()
+                self.last_close_position_type = None
+                self.positions.tracked_positions.discard(ticket)
+                continue
 
-                    profit = exit_deal.profit
-                    self.risk.record_trade_result(profit)
-                    self.last_trade_profitable = profit >= 0
+            exit_deal = next(
+                (d for d in deals if d.entry == DEAL_ENTRY_OUT), None
+            )
+            if not exit_deal:
+                # Deals found but no exit deal -- same safety treatment
+                self.logger.warning(
+                    f"[MT5 EXIT] Ticket {ticket}: No exit deal in history -- "
+                    f"recording as unknown loss for backoff safety"
+                )
+                self.risk.record_trade_result(-1)
+                self.last_trade_profitable = False
+                self.last_close_time = get_local_now()
+                self.last_close_position_type = None
+                self.positions.tracked_positions.discard(ticket)
+                continue
 
-                    if profit < 0:
-                        self.logger.info(
-                            f"[MT5 EXIT] Ticket {ticket}: {exit_reason} "
-                            f"(${profit:.2f}) -- Consecutive losses: {self.risk.consecutive_losses}"
-                        )
-                    else:
-                        self.logger.info(f"[MT5 EXIT] Ticket {ticket}: {exit_reason} (${profit:.2f})")
+            if exit_deal.reason == DEAL_REASON_SL:
+                exit_reason = "Stop loss"
+            elif exit_deal.reason == DEAL_REASON_TP:
+                exit_reason = "Take profit"
+            else:
+                exit_reason = "MT5 close"
 
-                    self.positions.save_exit(ticket, exit_reason)
+            profit = exit_deal.profit
+            self.risk.record_trade_result(profit)
+            self.last_trade_profitable = profit >= 0
+            self.last_close_time = get_local_now()
+            self.last_close_position_type = None
 
+            # Track consecutive SL exits for stop tightening
+            if exit_deal.reason == DEAL_REASON_SL:
+                self.consecutive_sl_exits += 1
+            else:
+                self.consecutive_sl_exits = 0
+
+            if profit < 0:
+                self.logger.info(
+                    f"[MT5 EXIT] Ticket {ticket}: {exit_reason} "
+                    f"(${profit:.2f}) -- Consecutive losses: {self.risk.consecutive_losses}"
+                )
+            else:
+                self.logger.info(f"[MT5 EXIT] Ticket {ticket}: {exit_reason} (${profit:.2f})")
+
+            self.positions.save_exit(ticket, exit_reason)
             self.positions.tracked_positions.discard(ticket)
 
     # ── State snapshot for GUI ──────────────────────────────────────────
@@ -478,7 +633,8 @@ class BaseTradingBot:
             )
             if df is not None and len(df) > 50:
                 from src.core.indicators import compute_indicators
-                df = compute_indicators(df, self.config)
+                if 'RSI' not in df.columns:
+                    df = compute_indicators(df, self.config)
                 latest = df.iloc[-1]
                 indicators = {
                     'rsi': float(latest['RSI']),
@@ -513,6 +669,14 @@ class BaseTradingBot:
                 (self.risk.peak_balance - balance) / self.risk.peak_balance * 100
                 if self.risk.peak_balance and self.risk.peak_balance > 0 else 0
             ),
+            'pp_active': self.is_profit_protection_active(),
+            'pp_override': self.pp_override,
+            'high_volatility': self._high_volatility,
+            'trading_mode': self.effective_trading_mode,
+            'rsi_buy': self.config.rsi_buy,
+            'rsi_sell': self.config.rsi_sell,
+            'rsi_exit_long': self.config.rsi_exit_long,
+            'rsi_exit_short': self.config.rsi_exit_short,
         }
 
     def _get_cooldown_state(self) -> dict:
@@ -580,7 +744,12 @@ class BaseTradingBot:
     # ── Main loop ───────────────────────────────────────────────────────
 
     def run(self, check_interval: int = 1):
-        """Main bot loop."""
+        """Main bot loop.
+
+        The loop always ticks every 1 second so that profit protection and
+        MT5-closed-position detection stay responsive.  Candle checks and
+        the heavier trading_logic only run every *check_interval* seconds.
+        """
         self.logger.info("=" * 80)
         self.logger.info(f"EGON {self.strategy.bot_label} BOT STARTED")
         self.logger.info("=" * 80)
@@ -594,51 +763,57 @@ class BaseTradingBot:
             return
 
         last_status_time = time.time()
+        last_candle_check = 0.0
 
         try:
             while not self._stop_requested:
                 try:
+                    # Always run every second regardless of check_interval
                     self.check_profit_protection_continuous()
                     self.check_mt5_closed_positions()
 
-                    has_new, candle_time = self.has_new_candle()
-                    if has_new:
-                        self.logger.info(f"\n{'='*60}")
-                        self.logger.info(f"NEW M{self.strategy.timeframe_minutes} CANDLE: {candle_time}")
-                        self.logger.info(f"{'='*60}")
+                    now = time.time()
+                    if now - last_candle_check >= check_interval:
+                        last_candle_check = now
 
-                        self.trading_logic()
+                        has_new, candle_time = self.has_new_candle()
+                        if has_new:
+                            self.logger.info(f"\n{'='*60}")
+                            self.logger.info(f"NEW M{self.strategy.timeframe_minutes} CANDLE: {candle_time}")
+                            self.logger.info(f"{'='*60}")
 
-                        info = self.mt5.get_account_info()
-                        if info and self.risk.peak_balance:
-                            dd = (self.risk.peak_balance - info['balance']) / self.risk.peak_balance * 100
-                            self.logger.info(
-                                f"Status: Balance=${info['balance']:.2f}, "
-                                f"Equity=${info['equity']:.2f}, "
-                                f"DD={dd:.2f}%, Trades={self.trades_today}"
-                            )
-                        last_status_time = time.time()
-                    else:
-                        if time.time() - last_status_time >= 60:
-                            df = self.mt5.get_historical_data(
-                                timeframe=self.strategy.mt5_timeframe, bars=10
-                            )
-                            if df is not None and len(df) > 0:
-                                latest = df.iloc[-1]
-                                age = (pd.Timestamp.now(tz=str(MT5_TZ)) - latest['time'].tz_localize(str(MT5_TZ))).total_seconds() / 60
-                                if age > 10:
-                                    self.logger.info(f"[WAITING] Market closed -- last data {age:.0f}min ago")
-                                else:
-                                    self.logger.info(f"[MONITORING] Price: {latest['close']:.2f}")
-                            last_status_time = time.time()
+                            self.trading_logic()
 
-                    time.sleep(check_interval)
+                            info = self.mt5.get_account_info()
+                            if info and self.risk.peak_balance:
+                                dd = (self.risk.peak_balance - info['balance']) / self.risk.peak_balance * 100
+                                self.logger.info(
+                                    f"Status: Balance=${info['balance']:.2f}, "
+                                    f"Equity=${info['equity']:.2f}, "
+                                    f"DD={dd:.2f}%, Trades={self.trades_today}"
+                                )
+                            last_status_time = now
+                        else:
+                            if now - last_status_time >= 60:
+                                df = self.mt5.get_historical_data(
+                                    timeframe=self.strategy.mt5_timeframe, bars=10
+                                )
+                                if df is not None and len(df) > 0:
+                                    latest = df.iloc[-1]
+                                    age = (pd.Timestamp.now(tz=str(MT5_TZ)) - latest['time'].tz_localize(str(MT5_TZ))).total_seconds() / 60
+                                    if age > 10:
+                                        self.logger.info(f"[WAITING] Market closed -- last data {age:.0f}min ago")
+                                    else:
+                                        self.logger.info(f"[MONITORING] Price: {latest['close']:.2f}")
+                                last_status_time = now
+
+                    time.sleep(1)
 
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
                     self.logger.error(f"Error in trading loop: {e}", exc_info=True)
-                    time.sleep(check_interval)
+                    time.sleep(1)
 
         except KeyboardInterrupt:
             self.logger.info("Bot stopped by user")
@@ -646,3 +821,4 @@ class BaseTradingBot:
         finally:
             self.disconnect()
             self.logger.info("Bot shutdown complete")
+
