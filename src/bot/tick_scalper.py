@@ -558,21 +558,22 @@ class TickScalper:
         if self._peak_profit_price < 100:
             return
 
-        # Minimum distance from current price (broker requirement, typically ~$0.50)
-        min_stop_distance = max(0.50, tick_atr)
+        # Minimum SL distance from current price (broker requires SL outside spread)
+        spread = self.analyzer.get_current_spread() if hasattr(self.analyzer, 'get_current_spread') else 0.30
+        min_stop_distance = max(1.0, spread * 3)  # At least $1 or 3x spread
 
         if direction == "LONG":
             new_sl = self._peak_profit_price - trail_distance
-            # Validate: SL must be below current price by at least min distance
+            # SL must be below current price by at least min_stop_distance
             if new_sl >= current_price - min_stop_distance:
-                pass  # Too close, skip
+                pass  # Too close or above price, skip
             elif new_sl > position.sl + 0.10 and hasattr(self.mt5, 'modify_sl'):
                 self.mt5.modify_sl(ticket, new_sl)
         else:
             new_sl = self._peak_profit_price + trail_distance
-            # Validate: SL must be above current price by at least min distance
+            # SL must be above current price by at least min_stop_distance
             if new_sl <= current_price + min_stop_distance:
-                pass  # Too close, skip
+                pass  # Too close or below price, skip
             elif new_sl < position.sl - 0.10 and hasattr(self.mt5, 'modify_sl'):
                 self.mt5.modify_sl(ticket, new_sl)
 
