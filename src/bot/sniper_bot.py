@@ -48,6 +48,7 @@ class SniperBot:
             from src.core.mt5_broker import MT5Broker
             self.mt5 = MT5Broker()
 
+        self._shared_connection = False
         self.logger = logging.getLogger(f"src.bot.{strategy.bot_label}")
 
         self.risk = RiskManager(
@@ -120,6 +121,9 @@ class SniperBot:
         return True
 
     def disconnect(self):
+        if self._shared_connection:
+            self.logger.info("Skipping disconnect (shared MT5 connection)")
+            return
         self.mt5.disconnect()
 
     # ── Position management ─────────────────────────────────────────

@@ -449,6 +449,7 @@ class EgonGUI:
 
         self.chart_timeframe = 'M5'
         self.slots: list[BotSlot] = []
+        self._market_update_counter = 0
 
         self._build_ui()
         self._update_loop()
@@ -565,6 +566,11 @@ class EgonGUI:
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Market dashboard tab
+        market_frame = tk.Frame(bottom_notebook, bg=BG_DARK)
+        bottom_notebook.add(market_frame, text=" Market ")
+        self._build_market_tab(market_frame)
+
         return frame
 
     # ── Update loop ─────────────────────────────────────────────────
@@ -578,6 +584,11 @@ class EgonGUI:
                 self._update_chart()
             self._update_trade_history()
             self._update_log()
+            # Market dashboard: update every 5 seconds (expensive computation)
+            self._market_update_counter += 1
+            if self._market_update_counter >= 5:
+                self._market_update_counter = 0
+                self._update_market()
         except Exception as e:
             logger.error(f"GUI update error: {e}")
         self.root.after(1000, self._update_loop)
@@ -650,6 +661,136 @@ class EgonGUI:
             if line_count > 2000:
                 self.log_text.delete('1.0', f'{line_count - 1500}.0')
             self.log_text.see(tk.END)
+
+    # ── Market dashboard ────────────────────────────────────────────
+
+    def _build_market_tab(self, parent):
+        """Build the market overview dashboard tab."""
+        # Top section: multi-timeframe RSI + ATR grid
+        grid_frame = tk.Frame(parent, bg=BG_DARK)
+        grid_frame.pack(fill=tk.X, padx=6, pady=(6, 4))
+
+        # Header row
+        headers = ['', 'RSI', 'ATR', 'Trend', 'EMA9', 'EMA21', 'Close']
+        for col, h in enumerate(headers):
+            tk.Label(grid_frame, text=h, bg=BG_DARK, fg=ACCENT,
+                     font=('Consolas', 9, 'bold'), width=10, anchor=tk.CENTER
+                     ).grid(row=0, column=col, padx=2, pady=(0, 4))
+
+        # One row per timeframe
+        self.market_labels: dict[str, dict[str, tk.Label]] = {}
+        for row, tf in enumerate(['M1', 'M5', 'M15'], start=1):
+            tk.Label(grid_frame, text=tf, bg=BG_DARK, fg=FG,
+                     font=('Consolas', 9, 'bold'), width=4, anchor=tk.W
+                     ).grid(row=row, column=0, padx=2)
+
+            labels = {}
+            for col, key in enumerate(['rsi', 'atr', 'trend', 'ema_fast', 'ema_slow', 'close'], start=1):
+                lbl = tk.Label(grid_frame, text="--", bg=BG_MEDIUM, fg=FG,
+                               font=('Consolas', 9), width=10, anchor=tk.CENTER,
+                               relief=tk.FLAT, padx=3, pady=2)
+                lbl.grid(row=row, column=col, padx=2, pady=1)
+                labels[key] = lbl
+            self.market_labels[tf] = labels
+
+        # Separator
+        tk.Frame(parent, bg=BG_LIGHT, height=1).pack(fill=tk.X, padx=6, pady=4)
+
+        # Bottom section: spread, bid/ask, session stats
+        info_frame = tk.Frame(parent, bg=BG_DARK)
+        info_frame.pack(fill=tk.X, padx=6, pady=(0, 4))
+
+        # Spread info
+        spread_row = tk.Frame(info_frame, bg=BG_DARK)
+        spread_row.pack(fill=tk.X, pady=2)
+
+        tk.Label(spread_row, text="Spread:", bg=BG_DARK, fg=NEUTRAL,
+                 font=('Consolas', 9)).pack(side=tk.LEFT)
+        self.spread_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=WARNING,
+                                   font=('Consolas', 9, 'bold'))
+        self.spread_lbl.pack(side=tk.LEFT, padx=(4, 16))
+
+        tk.Label(spread_row, text="Bid:", bg=BG_DARK, fg=NEUTRAL,
+                 font=('Consolas', 9)).pack(side=tk.LEFT)
+        self.bid_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
+                                font=('Consolas', 9))
+        self.bid_lbl.pack(side=tk.LEFT, padx=(4, 16))
+
+        tk.Label(spread_row, text="Ask:", bg=BG_DARK, fg=NEUTRAL,
+                 font=('Consolas', 9)).pack(side=tk.LEFT)
+        self.ask_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
+                                font=('Consolas', 9))
+        self.ask_lbl.pack(side=tk.LEFT, padx=(4, 0))
+
+        # RSI zones legend
+        legend_row = tk.Frame(info_frame, bg=BG_DARK)
+        legend_row.pack(fill=tk.X, pady=(4, 2))
+
+        tk.Label(legend_row, text="RSI Zones:", bg=BG_DARK, fg=NEUTRAL,
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+        tk.Label(legend_row, text=" <30 Oversold ", bg=BG_DARK, fg=SUCCESS,
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+        tk.Label(legend_row, text=" 30-40 Buy Zone ", bg=BG_DARK, fg='#66cc66',
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+        tk.Label(legend_row, text=" 40-60 Neutral ", bg=BG_DARK, fg=NEUTRAL,
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+        tk.Label(legend_row, text=" 60-70 Sell Zone ", bg=BG_DARK, fg='#cc6666',
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+        tk.Label(legend_row, text=" >70 Overbought ", bg=BG_DARK, fg=ERROR,
+                 font=('Consolas', 8)).pack(side=tk.LEFT)
+
+    def _update_market(self):
+        """Update the market dashboard with live indicators."""
+        try:
+            overview = self.market.get_market_overview()
+        except Exception as e:
+            logger.error(f"Market dashboard error: {e}")
+            return
+
+        for tf in ['M1', 'M5', 'M15']:
+            data = overview.get(tf)
+            labels = self.market_labels.get(tf, {})
+            if not data:
+                for lbl in labels.values():
+                    lbl.config(text="--", fg=NEUTRAL)
+                continue
+
+            # RSI with color coding
+            rsi = data['rsi']
+            if rsi < 30:
+                rsi_color = SUCCESS
+            elif rsi < 40:
+                rsi_color = '#66cc66'
+            elif rsi > 70:
+                rsi_color = ERROR
+            elif rsi > 60:
+                rsi_color = '#cc6666'
+            else:
+                rsi_color = FG
+            labels['rsi'].config(text=f"{rsi:.1f}", fg=rsi_color)
+
+            # ATR
+            labels['atr'].config(text=f"${data['atr']:.2f}", fg=FG)
+
+            # Trend
+            if data['uptrend']:
+                labels['trend'].config(text="UP", fg=SUCCESS)
+            else:
+                labels['trend'].config(text="DOWN", fg=ERROR)
+
+            # EMAs
+            labels['ema_fast'].config(text=f"${data['ema_fast']:.2f}", fg=FG)
+            labels['ema_slow'].config(text=f"${data['ema_slow']:.2f}", fg=FG)
+
+            # Close
+            labels['close'].config(text=f"${data['close']:.2f}", fg=FG)
+
+        # Spread
+        spread = overview.get('spread', 0)
+        spread_color = SUCCESS if spread < 0.30 else WARNING if spread < 0.50 else ERROR
+        self.spread_lbl.config(text=f"${spread:.3f}", fg=spread_color)
+        self.bid_lbl.config(text=f"${overview.get('bid', 0):.2f}")
+        self.ask_lbl.config(text=f"${overview.get('ask', 0):.2f}")
 
     def on_closing(self):
         self.bot_manager.stop_all()

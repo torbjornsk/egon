@@ -46,6 +46,7 @@ class TickScalper:
             from src.core.mt5_broker import MT5Broker
             self.mt5 = MT5Broker()
 
+        self._shared_connection = False
         self.logger = logging.getLogger(f"src.bot.{self.BOT_LABEL}")
 
         self.risk = RiskManager(
@@ -152,6 +153,9 @@ class TickScalper:
         return True
 
     def disconnect(self):
+        if self._shared_connection:
+            self.logger.info("Skipping disconnect (shared MT5 connection)")
+            return
         self.mt5.disconnect()
 
     # ── Core loop (runs every second) ───────────────────────────────

@@ -46,6 +46,9 @@ class BaseTradingBot:
             from src.core.mt5_broker import MT5Broker
             self.mt5 = MT5Broker()
 
+        # When True, skip disconnect() on shutdown (GUI owns the MT5 connection)
+        self._shared_connection = False
+
         # Bot-specific logger so GUI can capture logs per-bot
         self.logger = logging.getLogger(f"src.bot.{strategy.bot_label}")
 
@@ -149,6 +152,9 @@ class BaseTradingBot:
         return True
 
     def disconnect(self):
+        if self._shared_connection:
+            self.logger.info("Skipping disconnect (shared MT5 connection)")
+            return
         self.mt5.disconnect()
 
     # ── Candle detection ────────────────────────────────────────────────

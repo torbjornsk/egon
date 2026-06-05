@@ -60,6 +60,57 @@ class MarketDataService:
         df['time'] = mt5_series_to_local(df['time'])
         return df
 
+    def get_market_overview(self) -> dict:
+        """Get multi-timeframe indicators for the market dashboard.
+
+        Returns a dict with keys 'M1', 'M5', 'M15' each containing:
+        rsi, atr, ema_fast, ema_slow, trend, spread, bid, ask
+        """
+        from src.core.indicators import compute_indicators
+        from src.core.config import TradingConfig
+
+        config = TradingConfig()  # Default RSI period 14 for dashboard
+        result = {}
+        tf_map = {
+            'M1': (mt5.TIMEFRAME_M1, 200),
+            'M5': (mt5.TIMEFRAME_M5, 200),
+            'M15': (mt5.TIMEFRAME_M15, 200),
+        }
+
+        for label, (tf, bars) in tf_map.items():
+            try:
+                rates = mt5.copy_rates_from_pos(SYMBOL, tf, 0, bars)
+                if rates is None or len(rates) < 100:
+                    result[label] = None
+                    continue
+                df = pd.DataFrame(rates)
+                df = compute_indicators(df, config)
+                latest = df.iloc[-1]
+                result[label] = {
+                    'rsi': float(latest['RSI']),
+                    'atr': float(latest['ATR']),
+                    'ema_fast': float(latest['ema_fast']),
+                    'ema_slow': float(latest['ema_slow']),
+                    'uptrend': bool(latest['uptrend']),
+                    'close': float(latest['close']),
+                }
+            except Exception as e:
+                logger.error(f"Market overview {label} error: {e}")
+                result[label] = None
+
+        # Spread and tick info
+        tick = mt5.symbol_info_tick(SYMBOL)
+        if tick:
+            result['spread'] = tick.ask - tick.bid
+            result['bid'] = tick.bid
+            result['ask'] = tick.ask
+        else:
+            result['spread'] = 0
+            result['bid'] = 0
+            result['ask'] = 0
+
+        return result
+
     def get_trade_history(self, days=7):
         """Get closed trades for both M1 and M5 bots."""
         # Add 3h buffer to now() so we never miss recent deals due to

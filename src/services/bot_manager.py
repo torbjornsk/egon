@@ -37,6 +37,10 @@ class BotRunner:
 
         self.running = True
 
+        # Mark bot as using a shared MT5 connection (GUI owns it)
+        if hasattr(self.bot, '_shared_connection'):
+            self.bot._shared_connection = True
+
         # Capture log output for THIS bot only (bot-specific logger)
         bot_logger = logging.getLogger(f"src.bot.{self.bot.strategy.bot_label}")
         self._log_handler = logging.StreamHandler(self.log_buffer)
