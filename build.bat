@@ -3,6 +3,9 @@ echo ============================================
 echo   Egon Trading Bot - Build Executable
 echo ============================================
 echo.
+echo NOTE: Close the Egon GUI and any running bots
+echo       before building (they lock venv files).
+echo.
 
 :: Check uv is available
 uv --version >nul 2>&1
@@ -37,6 +40,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Copy config and data next to exe for user editing
+echo Copying config files for easy editing...
+xcopy /E /I /Y config dist\Egon\config >nul
+xcopy /E /I /Y data dist\Egon\data >nul
+
 echo.
 echo ============================================
 echo   Build complete!
@@ -49,5 +57,7 @@ echo   1. Zip the entire dist\Egon\ folder
 echo   2. Send the zip to your friend
 echo   3. They extract it and run Egon.exe
 echo   4. MetaTrader5 must be installed and logged in
+echo.
+echo Config files in dist\Egon\config\ are editable.
 echo.
 pause

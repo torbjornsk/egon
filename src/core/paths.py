@@ -27,5 +27,24 @@ def get_app_root() -> Path:
 
 
 def resolve_path(relative_path: str) -> Path:
-    """Resolve a relative path (e.g. 'config/m5_params.json') to an absolute path."""
-    return get_app_root() / relative_path
+    """Resolve a relative path (e.g. 'config/m5_params.json') to an absolute path.
+
+    In packaged mode, checks both:
+    1. Next to the exe (user-editable copies)
+    2. Inside _internal/ (bundled defaults)
+    Falls back to the first path if neither exists (for file creation).
+    """
+    root = get_app_root()
+    # Primary: next to the exe (or project root in source mode)
+    primary = root / relative_path
+    if primary.exists():
+        return primary
+
+    # Secondary: inside PyInstaller's _internal bundle
+    if getattr(sys, 'frozen', False):
+        internal = Path(sys._MEIPASS) / relative_path
+        if internal.exists():
+            return internal
+
+    # Default to primary (for new file creation)
+    return primary
