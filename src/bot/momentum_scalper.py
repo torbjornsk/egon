@@ -89,6 +89,7 @@ class MomentumScalper:
         self._position_direction: str = ""
         self._entry_price: float = 0
         self._entry_signal_score: float = 0
+        self._neutral_ticks: int = 0  # Patience counter for neutral zone
 
         # Tracking
         self._stop_requested = False
@@ -319,42 +320,60 @@ class MomentumScalper:
 
         score = self.stream.weighted_score
 
-        # Exit conditions:
-        # 1. Signal flipped to opposite direction
-        # 2. Signal dropped below hold threshold (directional conviction gone)
+        # ── Signal zone classification (relative to our position direction) ──
+        # For a LONG: positive score = favorable, negative = unfavorable
+        # For a SHORT: negative score = favorable, positive = unfavorable
+        if direction == "LONG":
+            directional_score = score   # Positive = good for us
+        else:
+            directional_score = -score  # Flip: negative score = good for short
+
+        # Zones:
+        #   Strong favorable:  directional_score >= entry_threshold (move is strong)
+        #   Weak favorable:    hold_threshold <= directional_score < entry_threshold
+        #   Neutral:           -hold_threshold < directional_score < hold_threshold
+        #   Strong unfavorable: directional_score <= -hold_threshold (flipped against us)
+
+        strong_favorable = directional_score >= self.entry_threshold
+        weak_favorable = self.hold_threshold <= directional_score < self.entry_threshold
+        neutral = -self.hold_threshold < directional_score < self.hold_threshold
+        strong_unfavorable = directional_score <= -self.hold_threshold
+
+        # ── Exit decision with patience ──────────────────────────────
         should_exit = False
         reason = ""
 
-        if direction == "LONG":
-            if score < -self.hold_threshold:
-                # Signal flipped short
+        if strong_unfavorable:
+            # Signal flipped hard against us — close immediately
+            should_exit = True
+            reason = f"Signal flipped ({score:.3f}, dir_score={directional_score:.3f})"
+            self._neutral_ticks = 0
+
+        elif strong_favorable:
+            # Move is strong in our favor — reset patience, hold
+            self._neutral_ticks = 0
+
+        elif weak_favorable:
+            # Still on our side but weakening — partial patience reset
+            # Reduce neutral tick count but don't fully reset
+            self._neutral_ticks = max(0, self._neutral_ticks - 2)
+
+        elif neutral:
+            # Signal in no-man's land — tick the patience counter
+            self._neutral_ticks += 1
+            # Grace period: allow up to 15 seconds in neutral before exiting
+            max_neutral_patience = 15
+            if self._neutral_ticks >= max_neutral_patience:
                 should_exit = True
-                reason = f"Signal flipped short ({score:.3f})"
-            elif score < self.hold_threshold:
-                # Signal faded to neutral
-                should_exit = True
-                reason = f"Signal faded ({score:.3f})"
-        else:  # SHORT
-            if score > self.hold_threshold:
-                # Signal flipped long
-                should_exit = True
-                reason = f"Signal flipped long ({score:.3f})"
-            elif score > -self.hold_threshold:
-                # Signal faded to neutral
-                should_exit = True
-                reason = f"Signal faded ({score:.3f})"
+                reason = f"Neutral timeout ({self._neutral_ticks}s, score={score:.3f})"
+                self._neutral_ticks = 0
 
         if not should_exit:
             return
 
-        # Commission protection: don't exit for tiny loss if signal just wobbled
-        # If we're losing money AND signal hasn't fully flipped, let SL handle it
-        if profit < -self.min_profit_for_signal_exit:
-            # Only exit on signal flip (not fade) when losing
-            if direction == "LONG" and score >= -self.hold_threshold:
-                return
-            if direction == "SHORT" and score <= self.hold_threshold:
-                return
+        # Commission protection: don't exit for tiny loss if signal is just in neutral
+        if profit < -self.min_profit_for_signal_exit and not strong_unfavorable:
+            return
 
         # Close position
         result = self.mt5.close_position(position, self.MAGIC_NUMBER, "momentum_close")
@@ -373,6 +392,7 @@ class MomentumScalper:
         self._position_direction = ""
         self._entry_price = 0
         self._entry_signal_score = 0
+        self._neutral_ticks = 0
 
         self.trade_log.append({
             'action': 'CLOSE', 'time': get_local_now(),
