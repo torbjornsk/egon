@@ -178,7 +178,7 @@ class BotManager:
             bot = ZoneBot(strategy, config)
             interval = check_interval or 1
         elif label == 'M5S':
-            path = config_path or 'config/m5_params.json'
+            path = config_path or 'config/m5s_params.json'
             from src.core.config import load_config
             from src.strategy.m5_sniper import M5SniperStrategy
             config = load_config(path)
@@ -186,7 +186,7 @@ class BotManager:
             bot = SniperBot(strategy, config)
             interval = check_interval or 1
         elif label == 'M1S':
-            path = config_path or 'config/m1_params.json'
+            path = config_path or 'config/m1s_params.json'
             from src.core.config import load_config
             from src.strategy.m1_sniper import M1SniperStrategy
             config = load_config(path)
@@ -194,7 +194,7 @@ class BotManager:
             bot = SniperBot(strategy, config)
             interval = check_interval or 1
         elif label == 'M15S':
-            path = config_path or 'config/m15_params.json'
+            path = config_path or 'config/m15s_params.json'
             from src.core.config import load_config
             from src.strategy.m15_sniper import M15SniperStrategy
             config = load_config(path)
