@@ -782,9 +782,13 @@ class TickScalper:
     def run(self, check_interval: int = 1):
         self.logger.info("=" * 80)
         self.logger.info("EGON TICK SCALPER STARTED")
-        self.logger.info(f"Entry threshold: {self.analyzer.entry_threshold}")
-        self.logger.info(f"Exit threshold: {self.analyzer.exit_threshold}")
-        self.logger.info(f"Max trades/day: {getattr(self.config, 'tick_max_trades_per_day', 30)}")
+        self.logger.info(f"Active parameters:")
+        self.logger.info(f"  tick_entry_threshold={self.analyzer.entry_threshold}, "
+                         f"tick_exit_threshold={self.analyzer.exit_threshold}")
+        self.logger.info(f"  tick_cooldown_seconds={getattr(self.config, 'tick_cooldown_seconds', 30)}, "
+                         f"tick_max_trades_per_day={getattr(self.config, 'tick_max_trades_per_day', 30)}")
+        self.logger.info(f"  leverage={self.config.leverage}, "
+                         f"position_size_pct={self.config.position_size_pct}")
         self.logger.info("=" * 80)
 
         if not self.connect():

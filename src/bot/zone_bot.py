@@ -559,7 +559,13 @@ class ZoneBot:
         """Main bot loop."""
         self.logger.info("=" * 80)
         self.logger.info("EGON LIQUIDITY ZONE BOT STARTED")
-        self.logger.info("=" * 80)
+        self.logger.info(f"Active parameters:")
+        self.logger.info(f"  zone_rr_ratio={self.config.zone_rr_ratio}, "
+                         f"zone_min_strength={self.config.zone_min_strength}, "
+                         f"zone_max_distance_atr={self.config.zone_max_distance_atr}")
+        self.logger.info(f"  leverage={self.config.leverage}, "
+                         f"position_size_pct={self.config.position_size_pct}, "
+                         f"max_positions={self.config.max_positions}")
         self.logger.info(f"Timeframe: M{self.strategy.timeframe_minutes}")
         self.logger.info(f"Check interval: {check_interval}s")
         self.logger.info("=" * 80)

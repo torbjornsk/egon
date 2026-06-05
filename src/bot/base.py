@@ -756,6 +756,18 @@ class BaseTradingBot:
         self.logger.info(f"Strategy: {self.config.strategy}")
         self.logger.info(f"Timeframe: M{self.strategy.timeframe_minutes}")
         self.logger.info(f"Check interval: {check_interval}s")
+        self.logger.info(f"Active parameters:")
+        self.logger.info(f"  position_size_pct={self.config.position_size_pct}, "
+                         f"leverage={self.config.leverage}, "
+                         f"max_positions={self.config.max_positions}")
+        self.logger.info(f"  rsi_buy={self.config.rsi_buy}, "
+                         f"rsi_sell={self.config.rsi_sell}, "
+                         f"rsi_exit_long={self.config.rsi_exit_long}, "
+                         f"rsi_exit_short={self.config.rsi_exit_short}")
+        self.logger.info(f"  atr_multiplier={self.config.atr_multiplier}, "
+                         f"profit_target_pct={self.config.profit_target_pct}")
+        self.logger.info(f"  breakeven_atr_trigger={self.config.breakeven_atr_trigger}, "
+                         f"trading_mode={self.config.trading_mode}")
         self.logger.info("=" * 80)
 
         if not self.connect():

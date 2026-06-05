@@ -522,11 +522,16 @@ class MomentumScalper:
     def run(self, check_interval: int = 1):
         self.logger.info("=" * 80)
         self.logger.info("MOMENTUM SCALPER STARTED")
-        self.logger.info(f"Entry threshold: {self.entry_threshold}")
-        self.logger.info(f"Hold threshold: {self.hold_threshold}")
-        self.logger.info(f"Signal window: {self.stream.window}s, heavy: {self.stream.heavy_count}")
-        self.logger.info(f"SL: {self.sl_atr_mult}x M5 ATR")
-        self.logger.info(f"Max trades/day: {self.max_trades_per_day}")
+        self.logger.info(f"Active parameters:")
+        self.logger.info(f"  entry_threshold={self.entry_threshold}, "
+                         f"hold_threshold={self.hold_threshold}")
+        self.logger.info(f"  signal_window={self.stream.window}s, "
+                         f"heavy_weight_count={self.stream.heavy_count}")
+        self.logger.info(f"  sl_atr_mult={self.sl_atr_mult}, "
+                         f"cooldown_seconds={self.cooldown_seconds}")
+        self.logger.info(f"  max_trades_per_day={self.max_trades_per_day}, "
+                         f"leverage={self.config.leverage}, "
+                         f"position_size_pct={self.config.position_size_pct}")
         self.logger.info("=" * 80)
 
         if not self.connect():

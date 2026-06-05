@@ -44,14 +44,22 @@ class BotSlot:
 
     # Key config fields to show per bot type
     CONFIG_FIELDS = {
-        'M5': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'max_positions'],
-        'LZ': ['zone_rr_ratio', 'zone_min_strength', 'leverage', 'position_size_pct', 'max_positions'],
-        'M5S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
-        'M1S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
-        'M15S': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
-        'TICK': ['tick_entry_threshold', 'tick_exit_threshold', 'tick_cooldown_seconds', 'leverage', 'position_size_pct'],
-        'MOM': ['entry_threshold', 'hold_threshold', 'signal_window', 'sl_atr_mult', 'leverage', 'position_size_pct'],
-        'M15': ['rsi_buy', 'rsi_sell', 'atr_multiplier', 'leverage', 'position_size_pct', 'max_positions'],
+        'M5': ['rsi_buy', 'rsi_sell', 'rsi_exit_long', 'rsi_exit_short', 'atr_multiplier',
+               'leverage', 'position_size_pct', 'max_positions', 'breakeven_atr_trigger'],
+        'LZ': ['zone_rr_ratio', 'zone_min_strength', 'zone_max_distance_atr',
+               'leverage', 'position_size_pct', 'max_positions'],
+        'M5S': ['rsi_buy', 'rsi_sell', 'rsi_exit_long', 'rsi_exit_short', 'atr_multiplier',
+                'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
+        'M1S': ['rsi_buy', 'rsi_sell', 'rsi_exit_long', 'rsi_exit_short', 'atr_multiplier',
+                'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
+        'M15S': ['rsi_buy', 'rsi_sell', 'rsi_exit_long', 'rsi_exit_short', 'atr_multiplier',
+                 'leverage', 'position_size_pct', 'breakeven_atr_trigger'],
+        'TICK': ['tick_entry_threshold', 'tick_exit_threshold', 'tick_cooldown_seconds',
+                 'tick_max_trades_per_day', 'leverage', 'position_size_pct'],
+        'MOM': ['entry_threshold', 'hold_threshold', 'signal_window', 'sl_atr_mult',
+                'cooldown_seconds', 'max_trades_per_day', 'leverage', 'position_size_pct'],
+        'M15': ['rsi_buy', 'rsi_sell', 'rsi_exit_long', 'rsi_exit_short', 'atr_multiplier',
+                'leverage', 'position_size_pct', 'max_positions'],
     }
 
     def __init__(self, parent, slot_id: int, bot_manager: BotManager):
@@ -137,28 +145,87 @@ class BotSlot:
         self.stop_btn.config(state=tk.DISABLED)
 
     def _show_config_fields(self):
-        """Show editable config fields for the selected bot type."""
+        """Show editable config fields for the selected bot type, loaded from config file."""
         self._clear_config_fields()
         if not self.active_label:
             return
 
         fields = self.CONFIG_FIELDS.get(self.active_label, [])
-        from src.core.config import TradingConfig
-        defaults = TradingConfig()
+        self._load_defaults_from_file(fields)
+
+    def _load_defaults_from_file(self, fields: list[str]):
+        """Load field defaults from the bot's config JSON file."""
+        from src.core.config import load_config
+
+        config_path = self.bot_manager.get_config_path(self.active_label)
+        if not config_path:
+            return
+
+        try:
+            config = load_config(config_path)
+        except Exception as e:
+            logger.error(f"Failed to load config {config_path}: {e}")
+            from src.core.config import TradingConfig
+            config = TradingConfig()
+
+        # Header row with reload button
+        header = tk.Frame(self.config_frame, bg=BG_DARK)
+        header.pack(fill=tk.X, pady=(0, 2))
+        tk.Label(header, text="Parameters:", bg=BG_DARK, fg=ACCENT,
+                 font=('Consolas', 7, 'bold')).pack(side=tk.LEFT)
+        ttk.Button(header, text="Reload", command=self._reload_defaults,
+                   width=6).pack(side=tk.RIGHT)
 
         for field_name in fields:
-            default_val = getattr(defaults, field_name, '')
+            value = getattr(config, field_name, '')
             row = tk.Frame(self.config_frame, bg=BG_DARK)
             row.pack(fill=tk.X, pady=1)
 
             tk.Label(row, text=f"{field_name}:", bg=BG_DARK, fg=NEUTRAL,
-                     font=('Consolas', 7), width=20, anchor=tk.W).pack(side=tk.LEFT)
+                     font=('Consolas', 7), width=24, anchor=tk.W).pack(side=tk.LEFT)
 
-            var = tk.StringVar(value=str(default_val))
+            var = tk.StringVar(value=str(value))
             entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=FG,
-                             font=('Consolas', 8), width=8, insertbackground=FG)
+                             font=('Consolas', 8), width=10, insertbackground=FG)
             entry.pack(side=tk.LEFT)
             self.config_vars[field_name] = var
+
+    def _reload_defaults(self):
+        """Reload config field values from the JSON file (discard edits)."""
+        if not self.active_label:
+            return
+        self._clear_config_fields()
+        fields = self.CONFIG_FIELDS.get(self.active_label, [])
+        self._load_defaults_from_file(fields)
+
+    def _get_config_overrides(self) -> dict:
+        """Collect edited config values from the GUI fields.
+
+        Returns a dict of field_name -> edited_value (as strings).
+        Only includes fields that differ from the file defaults.
+        """
+        from src.core.config import load_config
+
+        overrides = {}
+        if not self.active_label or not self.config_vars:
+            return overrides
+
+        config_path = self.bot_manager.get_config_path(self.active_label)
+        try:
+            config = load_config(config_path)
+        except Exception:
+            config = None
+
+        for field_name, var in self.config_vars.items():
+            gui_value = var.get().strip()
+            if config:
+                file_value = str(getattr(config, field_name, ''))
+                if gui_value != file_value:
+                    overrides[field_name] = gui_value
+            else:
+                overrides[field_name] = gui_value
+
+        return overrides
 
     def _clear_config_fields(self):
         """Remove config field widgets."""
@@ -168,8 +235,21 @@ class BotSlot:
 
     def _start(self):
         if self.active_label and self.instance_id:
-            self.bot_manager.start_bot(self.active_label, check_interval=1,
-                                       instance_id=self.instance_id)
+            # Collect ALL config values from GUI (not just overrides) for logging
+            all_params = {name: var.get().strip() for name, var in self.config_vars.items()}
+            overrides = self._get_config_overrides()
+
+            # Log all active parameter values for verification
+            logger.info(f"[{self.instance_id}] Starting with parameters:")
+            for name, value in all_params.items():
+                marker = " (override)" if name in overrides else ""
+                logger.info(f"  {name} = {value}{marker}")
+
+            self.bot_manager.start_bot(
+                self.active_label, check_interval=1,
+                instance_id=self.instance_id,
+                config_overrides=all_params,  # Pass ALL GUI values as overrides
+            )
             self.start_btn.config(state=tk.DISABLED)
             self.stop_btn.config(state=tk.NORMAL)
 

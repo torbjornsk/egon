@@ -621,6 +621,15 @@ class SniperBot:
     def run(self, check_interval: int = 1):
         self.logger.info("=" * 80)
         self.logger.info("EGON M5 SNIPER BOT STARTED")
+        self.logger.info(f"Active parameters:")
+        self.logger.info(f"  rsi_buy={self.config.rsi_buy}, "
+                         f"rsi_sell={self.config.rsi_sell}, "
+                         f"rsi_exit_long={self.config.rsi_exit_long}, "
+                         f"rsi_exit_short={self.config.rsi_exit_short}")
+        self.logger.info(f"  atr_multiplier={self.config.atr_multiplier}, "
+                         f"breakeven_atr_trigger={self.config.breakeven_atr_trigger}")
+        self.logger.info(f"  leverage={self.config.leverage}, "
+                         f"position_size_pct={self.config.position_size_pct}")
         self.logger.info("=" * 80)
 
         if not self.connect():
