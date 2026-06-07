@@ -67,6 +67,10 @@ class MT5Broker:
                            leverage: int, current_price: float) -> float | None:
         return self._client.calculate_lot_size(balance, position_size_pct, leverage, current_price)
 
+    def calculate_lot_size_from_risk(self, risk_amount: float, stop_distance: float) -> float | None:
+        """Calculate lot size from dollar risk and stop distance in price units."""
+        return self._client.calculate_lot_size_from_risk(risk_amount, stop_distance)
+
     def get_deal_history(self, ticket: int) -> list | None:
         return self._client.get_deal_history(ticket)
 

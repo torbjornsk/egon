@@ -4,11 +4,17 @@ Bot manager  --  starts/stops bots in background threads.
 The GUI creates a BotManager, starts bots, and reads their state via get_state().
 Bots run in-process (not as subprocesses), so the GUI has direct access to
 the bot's state dict  --  single source of truth, no log parsing needed.
+
+Bot types are registered in BOT_REGISTRY. Adding a new type requires only:
+1. A strategy class + bot class
+2. One entry in BOT_REGISTRY
+3. A config JSON file with bot_type set
 """
 
 import logging
 import threading
 import io
+from pathlib import Path
 
 from src.bot.base import BaseTradingBot
 from src.bot.zone_bot import ZoneBot
@@ -20,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class BotRunner:
-    """Wraps a trading bot (BaseTradingBot or ZoneBot) with thread management and log capture."""
+    """Wraps a trading bot with thread management and log capture."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -42,27 +48,34 @@ class BotRunner:
             self.bot._shared_connection = True
 
         # Capture log output for THIS bot only (bot-specific logger)
-        bot_logger = logging.getLogger(f"src.bot.{self.bot.strategy.bot_label}")
+        bot_label = self._get_bot_label()
+        bot_logger = logging.getLogger(f"src.bot.{bot_label}")
         self._log_handler = logging.StreamHandler(self.log_buffer)
         self._log_handler.setFormatter(
             logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         )
         bot_logger.addHandler(self._log_handler)
-        # Keep file logging via root, but stop console spam when GUI is running
         bot_logger.propagate = True
 
         self.thread = threading.Thread(
             target=self._run, args=(check_interval,),
             daemon=True,
-            name=f"egon-{self.bot.strategy.bot_label}",
+            name=f"egon-{bot_label}",
         )
         self.thread.start()
+
+    def _get_bot_label(self) -> str:
+        if hasattr(self.bot, 'strategy'):
+            return self.bot.strategy.bot_label
+        if hasattr(self.bot, 'config'):
+            return self.bot.config.bot_label
+        return "unknown"
 
     def _run(self, check_interval: int):
         try:
             self.bot.run(check_interval=check_interval)
         except Exception as e:
-            logger.error(f"Bot {self.bot.strategy.bot_label} crashed: {e}", exc_info=True)
+            logger.error(f"Bot {self._get_bot_label()} crashed: {e}", exc_info=True)
         finally:
             self.running = False
 
@@ -71,14 +84,15 @@ class BotRunner:
         self.running = False
         self.bot._stop_requested = True
         if self._log_handler:
-            bot_logger = logging.getLogger(f"src.bot.{self.bot.strategy.bot_label}")
+            bot_label = self._get_bot_label()
+            bot_logger = logging.getLogger(f"src.bot.{bot_label}")
             bot_logger.removeHandler(self._log_handler)
 
     def get_state(self) -> dict:
         """Get the bot's current state snapshot."""
         if not self.running:
             return {
-                'bot_label': self.bot.strategy.bot_label,
+                'bot_label': self._get_bot_label(),
                 'status': 'Stopped',
                 'positions': [],
                 'indicators': {},
@@ -100,7 +114,7 @@ class BotRunner:
         except Exception as e:
             logger.error(f"Error getting bot state: {e}")
             return {
-                'bot_label': self.bot.strategy.bot_label,
+                'bot_label': self._get_bot_label(),
                 'status': 'Error',
                 'positions': [],
                 'indicators': {},
@@ -138,132 +152,150 @@ class BotRunner:
         return new_content
 
 
+def _create_sniper_bot(config):
+    """Factory: create a SniperBot from config."""
+    from src.strategy.sniper import SniperStrategy
+    strategy = SniperStrategy(config)
+    return SniperBot(strategy, config)
+
+
+def _create_rsi_scalper_bot(config):
+    """Factory: create a BaseTradingBot with the appropriate RSI scalping strategy."""
+    from src.core.broker import TIMEFRAME_MINUTES
+    tf = config.timeframe
+    if tf == 'M1':
+        from src.strategy.m1_scalping import M1ScalpingStrategy
+        strategy = M1ScalpingStrategy(config)
+    elif tf == 'M15':
+        from src.strategy.m15_scalping import M15ScalpingStrategy
+        strategy = M15ScalpingStrategy(config)
+    else:
+        from src.strategy.m5_scalping import M5ScalpingStrategy
+        strategy = M5ScalpingStrategy(config)
+    return BaseTradingBot(strategy, config)
+
+
+def _create_zone_bot(config):
+    """Factory: create a ZoneBot."""
+    from src.strategy.liquidity_zones import LiquidityZoneStrategy
+    strategy = LiquidityZoneStrategy(config)
+    return ZoneBot(strategy, config)
+
+
+def _create_tick_bot(config):
+    """Factory: create a TickScalper."""
+    return TickScalper(config)
+
+
+def _create_momentum_bot(config):
+    """Factory: create a MomentumScalper."""
+    return MomentumScalper(config)
+
+
+# Registry: bot_type -> factory function
+BOT_REGISTRY: dict[str, callable] = {
+    'sniper': _create_sniper_bot,
+    'rsi_scalper': _create_rsi_scalper_bot,
+    'liquidity_zones': _create_zone_bot,
+    'tick_scalper': _create_tick_bot,
+    'momentum': _create_momentum_bot,
+}
+
+# Legacy label -> (bot_type, default config path) mapping for backward compat
+LEGACY_LABEL_MAP: dict[str, tuple[str, str]] = {
+    'M5S': ('sniper', 'config/m5s_params.json'),
+    'M1S': ('sniper', 'config/m1s_params.json'),
+    'M15S': ('sniper', 'config/m15s_params.json'),
+    'M5': ('rsi_scalper', 'config/m5_params.json'),
+    'M1': ('rsi_scalper', 'config/m1_params.json'),
+    'M15': ('rsi_scalper', 'config/m15_params.json'),
+    'LZ': ('liquidity_zones', 'config/lz_params.json'),
+    'TICK': ('tick_scalper', 'config/tick_params.json'),
+    'MOM': ('momentum', 'config/momentum_params.json'),
+}
+
+
 class BotManager:
-    """Manages M1 and M5 bot instances for the GUI."""
+    """Manages bot instances for the GUI."""
 
     def __init__(self):
         self.runners: dict[str, BotRunner] = {}
 
-    # Default config paths per bot label
-    CONFIG_PATHS: dict[str, str] = {
-        'M1': 'config/m1_params.json',
-        'M5': 'config/m5_params.json',
-        'M15': 'config/m15_params.json',
-        'LZ': 'config/lz_params.json',
-        'M5S': 'config/m5s_params.json',
-        'M1S': 'config/m1s_params.json',
-        'M15S': 'config/m15s_params.json',
-        'TICK': 'config/tick_params.json',
-        'MOM': 'config/momentum_params.json',
-    }
-
     def get_config_path(self, label: str) -> str:
         """Get the default config file path for a bot label."""
-        return self.CONFIG_PATHS.get(label, '')
+        if label in LEGACY_LABEL_MAP:
+            return LEGACY_LABEL_MAP[label][1]
+        return ''
 
-    def start_bot(
-        self, label: str, config_path: str | None = None, check_interval: int = 1,
-        instance_id: str | None = None, config_overrides: dict | None = None,
+    def start_from_config(
+        self, config_path: str, instance_id: str | None = None,
+        check_interval: int = 1, config_overrides: dict | None = None,
     ):
-        """Start a bot by label ('M1', 'M5', 'M15', 'LZ', 'M5S', 'TICK').
-
-        If instance_id is provided, uses it as the key (allows multiple instances).
-        Otherwise uses the label as key (single instance per type).
-
-        config_overrides: dict of field_name -> value to override after loading
-        the JSON config file. These are NOT persisted to disk.
         """
-        key = instance_id or label
+        Start a bot from a config file. The config's bot_type field determines
+        which bot/strategy classes to instantiate.
+
+        This is the preferred way to start bots -- fully config-driven.
+        """
+        from src.core.config import load_config
+
+        config = load_config(config_path)
+        self._apply_overrides(config, config_overrides)
+
+        bot_type = config.bot_type
+        if bot_type not in BOT_REGISTRY:
+            raise ValueError(
+                f"Unknown bot_type '{bot_type}' in {config_path}. "
+                f"Valid types: {list(BOT_REGISTRY.keys())}"
+            )
+
+        key = instance_id or config.bot_label
         if key in self.runners and self.runners[key].running:
             logger.warning(f"{key} bot is already running")
             return
 
-        from src.core.config import load_config, TradingConfig
+        factory = BOT_REGISTRY[bot_type]
+        bot = factory(config)
 
-        if label == 'M1':
-            path = config_path or 'config/m1_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m1_scalping import M1ScalpingStrategy
-            strategy = M1ScalpingStrategy(config)
-            bot = BaseTradingBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'M5':
-            path = config_path or 'config/m5_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m5_scalping import M5ScalpingStrategy
-            strategy = M5ScalpingStrategy(config)
-            bot = BaseTradingBot(strategy, config)
-            interval = check_interval or 15
-        elif label == 'M15':
-            path = config_path or 'config/m15_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m15_scalping import M15ScalpingStrategy
-            strategy = M15ScalpingStrategy(config)
-            bot = BaseTradingBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'LZ':
-            path = config_path or 'config/lz_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.liquidity_zones import LiquidityZoneStrategy
-            strategy = LiquidityZoneStrategy(config)
-            bot = ZoneBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'M5S':
-            path = config_path or 'config/m5s_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m5_sniper import M5SniperStrategy
-            strategy = M5SniperStrategy(config)
-            bot = SniperBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'M1S':
-            path = config_path or 'config/m1s_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m1_sniper import M1SniperStrategy
-            strategy = M1SniperStrategy(config)
-            bot = SniperBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'M15S':
-            path = config_path or 'config/m15s_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            from src.strategy.m15_sniper import M15SniperStrategy
-            strategy = M15SniperStrategy(config)
-            bot = SniperBot(strategy, config)
-            interval = check_interval or 1
-        elif label == 'TICK':
-            path = config_path or 'config/tick_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            bot = TickScalper(config)
-            interval = check_interval or 1
-        elif label == 'MOM':
-            path = config_path or 'config/momentum_params.json'
-            config = load_config(path)
-            self._apply_overrides(config, config_overrides)
-            bot = MomentumScalper(config)
-            interval = check_interval or 1
-        else:
-            raise ValueError(f"Unknown bot label: {label}")
-
-        # Log all overridden values for verification
         if config_overrides:
             logger.info(f"[{key}] Config overrides from GUI:")
             for field, value in config_overrides.items():
                 logger.info(f"  {field} = {value}")
 
         runner = BotRunner(bot)
-        runner.start(interval)
+        runner.start(check_interval)
         self.runners[key] = runner
-        logger.info(f"Started {key} bot")
+        logger.info(f"Started {key} bot (type={bot_type}, config={config_path})")
+
+    def start_bot(
+        self, label: str, config_path: str | None = None, check_interval: int = 1,
+        instance_id: str | None = None, config_overrides: dict | None = None,
+    ):
+        """
+        Start a bot by legacy label (backward compatible).
+
+        Internally maps labels to bot_type + config path, then delegates
+        to start_from_config.
+        """
+        if label not in LEGACY_LABEL_MAP:
+            raise ValueError(
+                f"Unknown bot label: {label}. "
+                f"Valid labels: {list(LEGACY_LABEL_MAP.keys())}"
+            )
+
+        bot_type, default_path = LEGACY_LABEL_MAP[label]
+        path = config_path or default_path
+        instance = instance_id or label
+
+        self.start_from_config(
+            config_path=path,
+            instance_id=instance,
+            check_interval=check_interval,
+            config_overrides=config_overrides,
+        )
 
     @staticmethod
-    def _apply_overrides(config: 'TradingConfig', overrides: dict | None):
+    def _apply_overrides(config, overrides: dict | None):
         """Apply GUI overrides to a loaded TradingConfig (mutates in place)."""
         if not overrides:
             return
@@ -272,7 +304,6 @@ class BotManager:
             if field_name not in TradingConfig.__dataclass_fields__:
                 logger.warning(f"Unknown config field: {field_name}")
                 continue
-            # Cast to the correct type based on the dataclass field
             field_type = TradingConfig.__dataclass_fields__[field_name].type
             try:
                 if field_type == 'float' or field_type is float:
@@ -354,3 +385,34 @@ class BotManager:
     def stop_all(self):
         for key in list(self.runners.keys()):
             self.stop_bot(key)
+
+    @staticmethod
+    def list_available_configs() -> list[dict]:
+        """
+        Scan config/ directory for all JSON configs and return their metadata.
+
+        Returns list of dicts with: path, config_name, bot_type, bot_label, timeframe
+        """
+        from src.core.paths import resolve_path
+        import json
+
+        config_dir = resolve_path('config')
+        configs = []
+
+        for f in sorted(config_dir.glob('*.json')):
+            try:
+                with open(f, 'r') as fp:
+                    raw = json.load(fp)
+                configs.append({
+                    'path': str(f),
+                    'filename': f.name,
+                    'config_name': raw.get('config_name', f.stem),
+                    'bot_type': raw.get('bot_type', 'unknown'),
+                    'bot_label': raw.get('bot_label', ''),
+                    'timeframe': raw.get('timeframe', ''),
+                    'strategy': raw.get('strategy', ''),
+                })
+            except Exception:
+                continue
+
+        return configs

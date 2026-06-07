@@ -1,5 +1,5 @@
 """
-SniperBot -- M5 RSI scalping with limit order pre-placement.
+SniperBot -- configurable RSI scalping with limit order pre-placement.
 
 Each candle cycle:
 1. Cancel previous sniper orders
@@ -8,8 +8,8 @@ Each candle cycle:
 4. Monitor for fills between candles
 5. On candle close: if no fill, check RSI normally (market order fallback)
 
-Uses the same risk management, profit protection, and position management
-as BaseTradingBot.
+Fully configurable via TradingConfig: timeframe, RSI levels, sniper offsets,
+trailing distances, TP calculation, position sizing -- all from JSON config.
 """
 
 import logging
@@ -25,20 +25,20 @@ from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL
 from src.core.position import PositionManager
 from src.core.risk import RiskManager
 from src.core.timezone import get_local_now, LOCAL_TZ, MT5_TZ
-from src.strategy.m5_sniper import M5SniperStrategy, SniperOrder
+from src.strategy.sniper import SniperStrategy, SniperOrder
 
 logger = logging.getLogger(__name__)
 
 
 class SniperBot:
     """
-    M5 RSI bot with limit order pre-placement for better entries.
+    RSI bot with limit order pre-placement for better entries.
 
-    Combines the reliability of RSI signals with the execution quality
-    of limit orders. Falls back to market orders when limit doesn't fill.
+    All constants are configurable via TradingConfig. Create different
+    JSON configs to run M1, M5, M15 or any other timeframe variant.
     """
 
-    def __init__(self, strategy: M5SniperStrategy, config: TradingConfig, broker=None):
+    def __init__(self, strategy: SniperStrategy, config: TradingConfig, broker=None):
         self.strategy = strategy
         self.config = config
 
@@ -46,7 +46,7 @@ class SniperBot:
             self.mt5 = broker
         else:
             from src.core.mt5_broker import MT5Broker
-            self.mt5 = MT5Broker()
+            self.mt5 = MT5Broker(symbol=config.symbol)
 
         self._shared_connection = False
         self.logger = logging.getLogger(f"src.bot.{strategy.bot_label}")
@@ -116,7 +116,6 @@ class SniperBot:
         # Pre-load candle data so trailing stop works immediately
         df = self.mt5.get_historical_data(timeframe=self.strategy.mt5_timeframe, bars=500)
         if df is not None and len(df) >= 200:
-            from src.core.indicators import compute_indicators
             self._last_df = compute_indicators(df, self.config)
         return True
 
@@ -125,6 +124,73 @@ class SniperBot:
             self.logger.info("Skipping disconnect (shared MT5 connection)")
             return
         self.mt5.disconnect()
+
+    # ── Position sizing ─────────────────────────────────────────────
+
+    def calculate_volume(self, balance: float, current_price: float,
+                         stop_distance: float, df: pd.DataFrame | None = None) -> float | None:
+        """
+        Calculate lot size based on the configured sizing mode.
+
+        Modes:
+        - legacy: position_size_pct * leverage / price (old behavior)
+        - fixed: use fixed_lots directly
+        - risk_pct: risk X% of account, SL distance determines size
+        - atr_adaptive: risk_pct scaled down when ATR is elevated
+        """
+        mode = self.config.sizing_mode
+
+        if mode == "fixed":
+            return self.config.fixed_lots
+
+        if mode == "risk_pct" or mode == "atr_adaptive":
+            risk_pct = self.config.risk_per_trade_pct
+
+            # ATR-adaptive: reduce risk when volatility is above median
+            if mode == "atr_adaptive" and df is not None and 'ATR' in df.columns:
+                atr_vals = df['ATR'].values
+                if len(atr_vals) >= 50:
+                    current_atr = float(atr_vals[-1])
+                    median_atr = float(np.median(atr_vals[-100:]))
+                    if current_atr > median_atr and median_atr > 0:
+                        damping = self.config.atr_damping
+                        scale = (median_atr / current_atr) ** damping
+                        risk_pct = risk_pct * scale
+                        self.logger.info(
+                            f"[SIZING] ATR adaptive: {current_atr:.2f} > median {median_atr:.2f}, "
+                            f"risk scaled to {risk_pct*100:.3f}%"
+                        )
+
+            # risk_amount / (stop_distance_per_unit * contract_size) = lots
+            risk_amount = balance * risk_pct
+            if stop_distance <= 0:
+                self.logger.warning("[SIZING] Stop distance <= 0, cannot calculate lot size")
+                return None
+
+            # For XAUUSD: 1 lot = 100 oz, price move of $1 = $100 per lot
+            # Generic: use broker's contract size info
+            # Delegate to broker for contract size awareness
+            return self.mt5.calculate_lot_size_from_risk(
+                risk_amount, stop_distance
+            ) if hasattr(self.mt5, 'calculate_lot_size_from_risk') else (
+                # Fallback: assume 100 oz contract size for gold
+                self._calculate_lots_fallback(risk_amount, stop_distance)
+            )
+
+        # Legacy mode (default)
+        return self.mt5.calculate_lot_size(
+            balance, self.config.per_position_size_pct,
+            self.config.leverage, current_price,
+        )
+
+    def _calculate_lots_fallback(self, risk_amount: float, stop_distance: float) -> float:
+        """Fallback lot calculation when broker doesn't support risk-based sizing."""
+        # XAUUSD: 1 lot = 100 oz, so $1 move = $100/lot
+        contract_size = 100.0
+        lots = risk_amount / (stop_distance * contract_size)
+        # Round to 0.01 step
+        lots = round(lots / 0.01) * 0.01
+        return max(0.01, lots)
 
     # ── Position management ─────────────────────────────────────────
 
@@ -140,27 +206,23 @@ class SniperBot:
         )
         stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
 
-        # Calculate TP using RSI level prediction:
-        # Where would price need to go for RSI to hit our exit threshold?
+        # Calculate TP using RSI level prediction
         from src.core.rsi_levels import calculate_rsi_sell_price, calculate_rsi_buy_price
         exit_rsi = self.strategy.get_exit_rsi(df, direction)
 
         if direction == 'LONG':
             fill_price = entry_price or current_price
             sl = fill_price - stop_distance
-            # TP = price where RSI would hit exit threshold
             tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
             if tp is None or tp <= fill_price:
-                # Fallback: use ATR-based TP if RSI calc fails
-                tp = fill_price + df.iloc[-1]['ATR'] * 3.0
+                tp = fill_price + df.iloc[-1]['ATR'] * self.config.tp_fallback_atr_mult
             order_type = ORDER_TYPE_BUY
         else:
             fill_price = entry_price or current_price
             sl = fill_price + stop_distance
-            # TP = price where RSI would hit exit threshold
             tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
             if tp is None or tp >= fill_price:
-                tp = fill_price - df.iloc[-1]['ATR'] * 3.0
+                tp = fill_price - df.iloc[-1]['ATR'] * self.config.tp_fallback_atr_mult
             order_type = ORDER_TYPE_SELL
 
         self.logger.info(
@@ -171,10 +233,7 @@ class SniperBot:
         if not info:
             return
 
-        volume = self.mt5.calculate_lot_size(
-            info['balance'], self.config.per_position_size_pct,
-            self.config.leverage, current_price,
-        )
+        volume = self.calculate_volume(info['balance'], current_price, stop_distance, df)
         if not volume:
             return
 
@@ -203,7 +262,9 @@ class SniperBot:
     def close_position(self, position, reason: str, emergency: bool = False):
         """Close a position."""
         ticket = position.ticket
-        result = self.mt5.close_position(position, self.strategy.magic_number, "m5s_close")
+        result = self.mt5.close_position(
+            position, self.strategy.magic_number, self.strategy.order_comment
+        )
         if not result:
             return
 
@@ -269,27 +330,33 @@ class SniperBot:
             self._breakeven_applied.discard(ticket)
             self._partial_closed.discard(ticket)
 
-    # ── Breakeven management ────────────────────────────────────────
+    # ── Breakeven & trailing management ─────────────────────────────
 
-    def _manage_breakeven(self, open_positions, current_atr: float):
-        """Move SL to breakeven, then trail as profit grows."""
+    def _manage_trailing(self, positions, current_atr: float, tick):
+        """
+        Update trailing stop using live tick data.
+
+        Uses config values for trail distances:
+        - trail_atr_after_breakeven: tighter trail once breakeven is applied
+        - trail_atr_before_breakeven: wider trail before breakeven
+        """
         be_trigger = self.config.breakeven_atr_trigger
-        if be_trigger <= 0:
+        if current_atr < 0.5:
             return
 
-        for pos in open_positions:
+        for pos in positions:
             ticket = pos.ticket
             entry = pos.price_open
-            current = pos.price_current
+            current = tick.bid if pos.type == ORDER_TYPE_BUY else tick.ask
 
             if pos.type == ORDER_TYPE_BUY:
-                move_atr = (current - entry) / current_atr if current_atr > 0 else 0
+                move_atr = (current - entry) / current_atr
             else:
-                move_atr = (entry - current) / current_atr if current_atr > 0 else 0
+                move_atr = (entry - current) / current_atr
 
-            # Stage 1: Move to breakeven when profit exceeds trigger
+            # Stage 1: Move to breakeven
             if ticket not in self._breakeven_applied:
-                if move_atr >= be_trigger:
+                if be_trigger > 0 and move_atr >= be_trigger:
                     offset = current_atr * self.config.breakeven_offset
                     new_sl = entry + offset if pos.type == ORDER_TYPE_BUY else entry - offset
                     if hasattr(self.mt5, 'modify_sl'):
@@ -297,11 +364,11 @@ class SniperBot:
                             self._breakeven_applied.add(ticket)
                             self.logger.info(f"[BREAKEVEN] Ticket {ticket}: SL -> ${new_sl:.2f}")
 
-            # Always trail: tighter after breakeven, wider before
+            # Stage 2: Trail
             if ticket in self._breakeven_applied:
-                trail_distance = current_atr * 1.0
+                trail_distance = current_atr * self.config.trail_atr_after_breakeven
             else:
-                trail_distance = current_atr * 1.5
+                trail_distance = current_atr * self.config.trail_atr_before_breakeven
 
             if pos.type == ORDER_TYPE_BUY:
                 new_sl = current - trail_distance
@@ -347,7 +414,7 @@ class SniperBot:
         # Update volatility
         if 'ATR' in df.columns and len(df) >= 100:
             atr_vals = df['ATR'].values
-            current_atr = atr_vals[-1]
+            current_atr = float(atr_vals[-1])
             atr_80th = float(np.percentile(atr_vals[-100:], 80))
             self._high_volatility = current_atr > atr_80th
 
@@ -383,8 +450,6 @@ class SniperBot:
         # Cancel previous sniper orders
         self.strategy.cancel_pending()
 
-        # Check if previous sniper filled (already handled by check_sniper_fills)
-        # Now do fallback: standard RSI check on closed candle
         has_long = any(p.type == ORDER_TYPE_BUY for p in open_positions)
         has_short = any(p.type == ORDER_TYPE_SELL for p in open_positions)
 
@@ -403,6 +468,7 @@ class SniperBot:
                 return  # Don't place sniper if we just entered
 
         # ── Place sniper orders for next candle ─────────────────────
+        current_atr = float(latest['ATR']) if 'ATR' in df.columns else 0
         levels = self.strategy.calculate_sniper_levels(df)
         current_price = latest['close']
 
@@ -416,12 +482,11 @@ class SniperBot:
                 entry = levels['buy_price']
                 sl = entry - stop_distance
 
-                # TP using RSI exit level prediction
                 from src.core.rsi_levels import calculate_rsi_sell_price
                 exit_rsi = self.strategy.get_exit_rsi(df, 'LONG')
                 tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
                 if tp is None or tp <= entry:
-                    tp = entry + current_atr * 3.0
+                    tp = entry + current_atr * self.config.tp_fallback_atr_mult
 
                 self.strategy.pending_buy = SniperOrder(
                     direction="LONG", entry_price=entry, sl=sl, tp=tp,
@@ -429,7 +494,8 @@ class SniperBot:
                 )
                 self.logger.info(
                     f"[SNIPER] Buy limit @ ${entry:.2f} "
-                    f"(RSI would hit {self.config.rsi_buy}, TP ${tp:.2f} at RSI {exit_rsi:.0f})"
+                    f"(RSI target {self.config.rsi_buy - self.config.sniper_rsi_offset:.0f}, "
+                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f})"
                 )
 
         if levels['sell_price'] and not has_short and self.config.enable_shorts:
@@ -442,12 +508,11 @@ class SniperBot:
                 entry = levels['sell_price']
                 sl = entry + stop_distance
 
-                # TP using RSI exit level prediction
                 from src.core.rsi_levels import calculate_rsi_buy_price
                 exit_rsi = self.strategy.get_exit_rsi(df, 'SHORT')
                 tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
                 if tp is None or tp >= entry:
-                    tp = entry - current_atr * 3.0
+                    tp = entry - current_atr * self.config.tp_fallback_atr_mult
 
                 self.strategy.pending_sell = SniperOrder(
                     direction="SHORT", entry_price=entry, sl=sl, tp=tp,
@@ -455,7 +520,8 @@ class SniperBot:
                 )
                 self.logger.info(
                     f"[SNIPER] Sell limit @ ${entry:.2f} "
-                    f"(RSI would hit {self.config.rsi_sell}, TP ${tp:.2f} at RSI {exit_rsi:.0f})"
+                    f"(RSI target {self.config.rsi_sell + self.config.sniper_rsi_offset:.0f}, "
+                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f})"
                 )
 
     # ── Continuous checks (every second) ────────────────────────────
@@ -475,12 +541,7 @@ class SniperBot:
                 self.close_position(pos, reason)
 
     def manage_trailing_continuous(self):
-        """
-        Update trailing stop every second using live tick data.
-
-        Handles both breakeven application and trailing.
-        This replaces the candle-level _manage_breakeven for open positions.
-        """
+        """Update trailing stop every second using live tick data."""
         tick = self.mt5.get_tick()
         if tick is None:
             return
@@ -494,45 +555,7 @@ class SniperBot:
         if self._last_df is not None and 'ATR' in self._last_df.columns:
             current_atr = float(self._last_df.iloc[-1]['ATR'])
 
-        # Safety: don't trail if we don't have valid ATR yet
-        if current_atr < 0.5:
-            return
-
-        be_trigger = self.config.breakeven_atr_trigger
-
-        for pos in positions:
-            ticket = pos.ticket
-            entry = pos.price_open
-            current = tick.bid if pos.type == ORDER_TYPE_BUY else tick.ask
-
-            if pos.type == ORDER_TYPE_BUY:
-                move_atr = (current - entry) / current_atr
-            else:
-                move_atr = (entry - current) / current_atr
-
-            # Stage 1: Move to breakeven
-            if ticket not in self._breakeven_applied:
-                be_trigger = self.config.breakeven_atr_trigger
-                if be_trigger > 0 and move_atr >= be_trigger:
-                    offset = current_atr * self.config.breakeven_offset
-                    new_sl = entry + offset if pos.type == ORDER_TYPE_BUY else entry - offset
-                    if hasattr(self.mt5, 'modify_sl'):
-                        if self.mt5.modify_sl(ticket, new_sl):
-                            self._breakeven_applied.add(ticket)
-                            self.logger.info(f"[BREAKEVEN] Ticket {ticket}: SL -> ${new_sl:.2f}")
-            else:
-                # Stage 2: Trail at 1.5 ATR behind current price
-                trail_distance = current_atr * 1.5
-                if pos.type == ORDER_TYPE_BUY:
-                    new_sl = current - trail_distance
-                    if new_sl > pos.sl:
-                        if hasattr(self.mt5, 'modify_sl'):
-                            self.mt5.modify_sl(ticket, new_sl)
-                else:
-                    new_sl = current + trail_distance
-                    if new_sl < pos.sl:
-                        if hasattr(self.mt5, 'modify_sl'):
-                            self.mt5.modify_sl(ticket, new_sl)
+        self._manage_trailing(positions, current_atr, tick)
 
     def check_sniper_fills(self):
         """Check if current price has hit a sniper level (runs every second)."""
@@ -596,6 +619,7 @@ class SniperBot:
 
         return {
             'bot_label': self.strategy.bot_label,
+            'config_name': self.config.config_name,
             'status': 'Paused' if self.risk.trading_paused else 'Running',
             'pause_reason': self.risk.pause_reason,
             'balance': balance, 'equity': equity, 'price': price,
@@ -618,22 +642,25 @@ class SniperBot:
             'rsi_sell': self.config.rsi_sell,
             'rsi_exit_long': self.config.rsi_exit_long,
             'rsi_exit_short': self.config.rsi_exit_short,
+            'sizing_mode': self.config.sizing_mode,
+            'timeframe': self.config.timeframe,
         }
 
     # ── Main loop ───────────────────────────────────────────────────
 
     def run(self, check_interval: int = 1):
         self.logger.info("=" * 80)
-        self.logger.info("EGON M5 SNIPER BOT STARTED")
-        self.logger.info(f"Active parameters:")
-        self.logger.info(f"  rsi_buy={self.config.rsi_buy}, "
-                         f"rsi_sell={self.config.rsi_sell}, "
-                         f"rsi_exit_long={self.config.rsi_exit_long}, "
-                         f"rsi_exit_short={self.config.rsi_exit_short}")
-        self.logger.info(f"  atr_multiplier={self.config.atr_multiplier}, "
-                         f"breakeven_atr_trigger={self.config.breakeven_atr_trigger}")
-        self.logger.info(f"  leverage={self.config.leverage}, "
-                         f"position_size_pct={self.config.position_size_pct}")
+        self.logger.info(f"EGON SNIPER BOT STARTED [{self.config.bot_label}]")
+        self.logger.info(f"  Config: {self.config.config_name or self.config.strategy}")
+        self.logger.info(f"  Timeframe: {self.config.timeframe}, Symbol: {self.config.symbol}")
+        self.logger.info(f"  RSI: buy={self.config.rsi_buy}, sell={self.config.rsi_sell}, "
+                         f"exit_long={self.config.rsi_exit_long}, exit_short={self.config.rsi_exit_short}")
+        self.logger.info(f"  Sniper offset: {self.config.sniper_rsi_offset}, "
+                         f"ATR mult: {self.config.atr_multiplier}")
+        self.logger.info(f"  Sizing: {self.config.sizing_mode}, "
+                         f"Breakeven: {self.config.breakeven_atr_trigger} ATR")
+        self.logger.info(f"  Trail: {self.config.trail_atr_after_breakeven} ATR (after BE), "
+                         f"{self.config.trail_atr_before_breakeven} ATR (before BE)")
         self.logger.info("=" * 80)
 
         if not self.connect():
@@ -642,6 +669,7 @@ class SniperBot:
 
         last_candle_check = 0.0
         last_data_refresh = 0.0
+        data_refresh_interval = self.config.data_refresh_interval_seconds
 
         try:
             while not self._stop_requested:
@@ -654,8 +682,8 @@ class SniperBot:
 
                     now = time.time()
 
-                    # Refresh indicator data every 30 seconds (for GUI display)
-                    if now - last_data_refresh >= 30:
+                    # Refresh indicator data periodically (for GUI display between candles)
+                    if now - last_data_refresh >= data_refresh_interval:
                         last_data_refresh = now
                         df = self.mt5.get_historical_data(
                             timeframe=self.strategy.mt5_timeframe, bars=500

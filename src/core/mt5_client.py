@@ -292,7 +292,7 @@ class MT5Client:
     def calculate_lot_size(
         self, balance: float, position_size_pct: float, leverage: int, current_price: float
     ) -> float | None:
-        """Calculate lot size from balance, position %, leverage, and price."""
+        """Calculate lot size from balance, position %, leverage, and price (legacy mode)."""
         sym_info = self.get_symbol_info()
         if sym_info is None:
             return None
@@ -301,6 +301,30 @@ class MT5Client:
         leveraged_value = base_value * leverage
         units = leveraged_value / current_price
         lots = units / sym_info.trade_contract_size
+
+        # Round to volume step
+        lots = round(lots / sym_info.volume_step) * sym_info.volume_step
+        lots = max(sym_info.volume_min, min(lots, sym_info.volume_max))
+        return lots
+
+    def calculate_lot_size_from_risk(
+        self, risk_amount: float, stop_distance: float
+    ) -> float | None:
+        """
+        Calculate lot size from dollar risk and stop distance.
+
+        Formula: lots = risk_amount / (stop_distance * contract_size)
+        This gives the lot size where hitting the stop loss costs exactly risk_amount.
+        """
+        sym_info = self.get_symbol_info()
+        if sym_info is None:
+            return None
+
+        if stop_distance <= 0:
+            return None
+
+        # $1 price move per lot = contract_size dollars P/L
+        lots = risk_amount / (stop_distance * sym_info.trade_contract_size)
 
         # Round to volume step
         lots = round(lots / sym_info.volume_step) * sym_info.volume_step

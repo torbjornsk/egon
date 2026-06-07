@@ -16,18 +16,53 @@ logger = logging.getLogger(__name__)
 class TradingConfig:
     """Validated trading configuration."""
 
-    # Strategy identity
+    # ── Bot identity ────────────────────────────────────────────────
+    # config_name: human-readable label for this config (shown in GUI)
+    config_name: str = ""
+    # bot_type: determines which strategy/bot class to instantiate
+    # Valid: "sniper", "rsi_scalper", "liquidity_zones", "tick_scalper", "momentum"
+    bot_type: str = "sniper"
     strategy: str = "m5_scalping"
 
-    # Position sizing
+    # ── Symbol & timeframe ──────────────────────────────────────────
+    symbol: str = "XAUUSD.p"
+    # Timeframe string: "M1", "M5", "M15", "H1", "H4"
+    timeframe: str = "M5"
+    # Unique magic number for MT5 order identification
+    magic_number: int = 234050
+    # Short label for logging and GUI display
+    bot_label: str = "M5S"
+    # Comment attached to MT5 orders
+    order_comment: str = "m5_sniper"
+
+    # ── Position sizing ─────────────────────────────────────────────
+    # Sizing mode: "legacy", "fixed", "risk_pct", "atr_adaptive"
+    # "legacy" = old behavior (position_size_pct * leverage / price)
+    # "fixed" = use fixed_lots directly
+    # "risk_pct" = risk X% of account per trade, SL distance determines lot size
+    # "atr_adaptive" = risk_pct but scales down when ATR is elevated
+    sizing_mode: str = "legacy"
+
+    # Legacy sizing (kept for backward compat)
     position_size_pct: float = 0.18
     leverage: int = 27
-    max_positions: int = 2
 
-    # Drawdown / safety
+    # Fixed lot sizing
+    fixed_lots: float = 0.05
+
+    # Risk-based sizing
+    risk_per_trade_pct: float = 0.02      # Risk 2% of account per trade
+
+    # ATR-adaptive sizing: scale risk down when ATR > median
+    # effective_risk = risk_per_trade_pct * (median_atr / current_atr) ^ atr_damping
+    atr_damping: float = 0.7              # 0 = no damping, 1 = full inverse scaling
+
+    max_positions: int = 1
+
+    # ── Drawdown / safety ───────────────────────────────────────────
     max_drawdown_limit: float = 0.35
 
-    # Indicators
+    # ── Indicators ──────────────────────────────────────────────────
     fast_ema: int = 9
     slow_ema: int = 21
     rsi_period: int = 14
@@ -36,25 +71,19 @@ class TradingConfig:
     rsi_exit_long: float = 60
     rsi_exit_short: float = 40
 
-    # ATR / stop loss
+    # ── ATR / stop loss ─────────────────────────────────────────────
     atr_multiplier: float = 2.0
     atr_high_volatility_multiplier: float = 1.5
 
-    # Profit target
+    # ── Profit target ───────────────────────────────────────────────
     profit_target_pct: float = 0.028
 
-    # Shorts
+    # ── Direction control ───────────────────────────────────────────
     enable_shorts: bool = True
-    # Require downtrend (fast EMA < slow EMA) for short entries
-    # True = original behavior (M5 style), False = symmetric RSI-only shorts
     short_requires_downtrend: bool = True
-    # Require uptrend (fast EMA > slow EMA) for long entries
-    # True = only buy in uptrends, False = buy on RSI alone (current behavior)
     long_requires_uptrend: bool = False
 
-    # RSI reversal entry: instead of entering immediately when RSI crosses threshold,
-    # wait for RSI to start reversing (current RSI > previous RSI for longs,
-    # current RSI < previous RSI for shorts). Catches the swing point.
+    # RSI reversal entry: wait for RSI to start reversing before entering
     entry_on_rsi_reversal: bool = False
 
     # RSI exit confirmation (M1 feature)
@@ -67,7 +96,7 @@ class TradingConfig:
     # Entry signal confirmation
     entry_signal_confirmations: int = 0
 
-    # Profit protection
+    # ── Profit protection ───────────────────────────────────────────
     use_profit_protection: bool = True
     profit_protection_threshold_pct: float = 0.04
     profit_protection_drawdown_limit_pct: float = 0.40
@@ -77,97 +106,103 @@ class TradingConfig:
     profit_protection_tightening_step_pct: float = 0.05
     profit_protection_minimum_drawdown_pct: float = 0.15
 
-    # Profit-based drawdown scaling (overrides base drawdown_limit when active)
-    # "none" = flat drawdown limit (current behavior)
-    # "tiered" = step-wise tiers based on profit multiples of threshold
-    # "continuous" = smooth curve scaling drawdown with profit size
+    # Profit-based drawdown scaling
     profit_protection_scaling: str = "none"
-
-    # Tiered scaling: list of [threshold_multiplier, drawdown_limit] pairs
     profit_protection_tiers: list = field(default_factory=lambda: [
         [1.0, 0.25], [1.5, 0.50], [2.0, 0.75]
     ])
-
-    # Continuous scaling: drawdown = min(max, base + rate * (peak_pct/threshold - 1))
     profit_protection_continuous_base: float = 0.20
     profit_protection_continuous_rate: float = 0.15
     profit_protection_continuous_max: float = 0.75
-
-    # Auto-volatility: only enable PP when ATR > 80th percentile of recent history
     profit_protection_auto_volatility: bool = False
 
-    # Loss backoff
+    # ── Loss backoff ────────────────────────────────────────────────
     use_loss_backoff: bool = True
     loss_backoff_multipliers: list[int] = field(default_factory=lambda: [1, 3, 7, 15])
-
-    # SL-only backoff: only trigger backoff on consecutive stop-loss exits (not RSI losses)
-    # When True, uses consecutive_sl_exits instead of consecutive_losses
-    # loss_backoff_sl_only_candles: flat number of candles to sit out (0 = use multiplier system)
     loss_backoff_sl_only: bool = False
-    loss_backoff_sl_threshold: int = 2       # consecutive SL exits before backoff kicks in
-    loss_backoff_sl_candles: int = 2         # flat candles to sit out
-
-    # Tighten stop loss after consecutive SL exits
-    # Each consecutive SL multiplies stop distance by this factor (0.5 = halve each time)
-    # 1.0 = disabled (no tightening)
+    loss_backoff_sl_threshold: int = 2
+    loss_backoff_sl_candles: int = 2
     sl_tightening_factor: float = 1.0
 
     # Block 2nd position when existing position is underwater
     block_second_when_underwater: bool = True
 
-    # Trading mode: controls which directions the bot will trade
-    # "both" = longs and shorts (default)
-    # "long_only" = only take long positions
-    # "short_only" = only take short positions
+    # ── Trading mode ────────────────────────────────────────────────
+    # "both" = longs and shorts, "long_only", "short_only"
     trading_mode: str = "both"
 
-    # Trend filter for entries
-    # "none" = no filter (current behavior)
-    # "ema_cross" = LONG requires uptrend (fast EMA > slow EMA), SHORT requires downtrend
-    # "ema_200" = LONG requires close > EMA200, SHORT requires close < EMA200
+    # Trend filter: "none", "ema_cross", "ema_200"
     trend_filter: str = "none"
 
-    # Liquidity zone strategy settings
-    zone_lookback: int = 100              # Bars to look back for zone detection
-    max_active_zones: int = 6             # Max zones to track simultaneously
-    zone_update_interval: int = 15        # Minutes between zone recalculations
-    zone_rr_ratio: float = 2.0            # Risk:reward ratio for TP placement
-    zone_min_strength: float = 0.4        # Minimum zone strength to place an order
-    zone_max_distance_atr: float = 3.0    # Max distance from price (in ATR) to place orders
-    zone_order_max_age_minutes: int = 120  # Cancel unfilled orders after this
-    zone_max_hold_minutes: int = 240      # Close positions held longer than this with no profit
+    # ── Sniper-specific settings ────────────────────────────────────
+    # RSI offset for limit order placement (deeper than entry threshold)
+    # e.g. rsi_buy=35, sniper_rsi_offset=10 -> limit order at RSI 25 level
+    sniper_rsi_offset: float = 10.0
+    # Min/max RSI bounds for sniper levels (safety clamps)
+    sniper_rsi_min: float = 15.0
+    sniper_rsi_max: float = 85.0
 
-    # Breakeven stop: move SL to entry once profit exceeds this multiple of ATR
-    breakeven_atr_trigger: float = 1.0    # 0 = disabled, 1.0 = move to BE after 1 ATR profit
-    breakeven_offset: float = 0.1         # Small offset above entry (in ATR) to cover spread
+    # ── Breakeven & trailing ────────────────────────────────────────
+    # Move SL to entry once profit exceeds this multiple of ATR (0 = disabled)
+    breakeven_atr_trigger: float = 1.0
+    # Small offset above entry (in ATR) to cover spread
+    breakeven_offset: float = 0.1
+    # Trail distance after breakeven is applied (in ATR multiples)
+    trail_atr_after_breakeven: float = 1.0
+    # Trail distance before breakeven (wider, in ATR multiples)
+    trail_atr_before_breakeven: float = 1.5
 
-    # Partial close: close a portion of the position at first target
+    # ── TP calculation ──────────────────────────────────────────────
+    # Fallback TP when RSI-based TP calculation fails (in ATR multiples)
+    tp_fallback_atr_mult: float = 3.0
+    # EMA divergence threshold (in ATR) for adaptive exit RSI shift
+    exit_rsi_trend_threshold: float = 0.5
+    # How much to shift exit RSI when trend is strong
+    exit_rsi_trend_shift: float = 5.0
+
+    # ── Partial close ───────────────────────────────────────────────
     partial_close_enabled: bool = False
-    partial_close_fraction: float = 0.5   # Close this fraction at first target (0.5 = half)
-    partial_close_atr_target: float = 1.5 # Close partial at this ATR multiple of profit
+    partial_close_fraction: float = 0.5
+    partial_close_atr_target: float = 1.5
 
-    # Tick scalper settings
-    tick_entry_threshold: float = 0.40    # Minimum composite score to enter
-    tick_exit_threshold: float = 0.50     # Minimum exit score to close
-    tick_micro_trend_window: int = 30     # Seconds of tick data for micro-trend
-    tick_support_lookback: int = 300      # Seconds of history for support/resistance
-    tick_cooldown_seconds: int = 30       # Seconds to wait between trades
-    tick_max_trades_per_day: int = 30     # Maximum trades per day
+    # ── Data refresh ────────────────────────────────────────────────
+    # Seconds between indicator data refreshes (for GUI display between candles)
+    data_refresh_interval_seconds: int = 30
 
-    # Momentum scalper settings
-    signal_window: int = 15               # Seconds of signal history to weight
-    heavy_weight_count: int = 5           # How many recent samples get dominant weight
-    entry_threshold: float = 0.45         # Weighted signal must exceed this to enter
-    hold_threshold: float = 0.15          # Signal below this = exit (conviction gone)
-    min_profit_for_signal_exit: float = 0.50  # Don't signal-exit if losing more than this
-    sl_atr_mult: float = 1.5             # SL distance in M5 ATR multiples
-    cooldown_seconds: int = 15            # Seconds between trades
-    max_trades_per_day: int = 300         # Daily trade cap
-    factor_window_ticks: int = 15         # Ticks used for factor calculations
+    # ── Liquidity zone strategy settings ────────────────────────────
+    zone_lookback: int = 100
+    max_active_zones: int = 6
+    zone_update_interval: int = 15
+    zone_rr_ratio: float = 2.0
+    zone_min_strength: float = 0.4
+    zone_max_distance_atr: float = 3.0
+    zone_order_max_age_minutes: int = 120
+    zone_max_hold_minutes: int = 240
+
+    # ── Tick scalper settings ───────────────────────────────────────
+    tick_entry_threshold: float = 0.40
+    tick_exit_threshold: float = 0.50
+    tick_micro_trend_window: int = 30
+    tick_support_lookback: int = 300
+    tick_cooldown_seconds: int = 30
+    tick_max_trades_per_day: int = 30
+
+    # ── Momentum scalper settings ───────────────────────────────────
+    signal_window: int = 15
+    heavy_weight_count: int = 5
+    entry_threshold: float = 0.45
+    hold_threshold: float = 0.15
+    min_profit_for_signal_exit: float = 0.50
+    sl_atr_mult: float = 1.5
+    cooldown_seconds: int = 15
+    max_trades_per_day: int = 300
+    factor_window_ticks: int = 15
+
+    # ── Computed properties ─────────────────────────────────────────
 
     @property
     def per_position_size_pct(self) -> float:
-        """Position size per individual position (split across max_positions)."""
+        """Position size per individual position (split across max_positions). Legacy mode only."""
         return self.position_size_pct / self.max_positions
 
     @property
@@ -206,12 +241,24 @@ def load_config(config_path: str | Path) -> TradingConfig:
         if k in TradingConfig.__dataclass_fields__
     })
 
-    logger.info(f"Config loaded: {config.strategy} from {path.name}")
-    logger.info(
-        f"Position: {config.position_size_pct*100:.0f}% total "
-        f"({config.per_position_size_pct*100:.1f}% x {config.max_positions}), "
-        f"Leverage: {config.leverage}x, "
-        f"Effective: {config.effective_leverage_total*100:.0f}%"
-    )
+    name = config.config_name or config.strategy
+    logger.info(f"Config loaded: {name} from {path.name}")
+
+    if config.sizing_mode == "legacy":
+        logger.info(
+            f"  Sizing: legacy ({config.position_size_pct*100:.0f}% x {config.leverage}x "
+            f"= {config.effective_leverage_total*100:.0f}% exposure, "
+            f"{config.per_position_size_pct*100:.1f}% per pos x {config.max_positions})"
+        )
+    elif config.sizing_mode == "fixed":
+        logger.info(f"  Sizing: fixed {config.fixed_lots} lots")
+    elif config.sizing_mode in ("risk_pct", "atr_adaptive"):
+        logger.info(
+            f"  Sizing: {config.sizing_mode} ({config.risk_per_trade_pct*100:.1f}% risk/trade, "
+            f"max {config.max_positions} positions)"
+        )
+
+    if config.bot_type:
+        logger.info(f"  Type: {config.bot_type}, TF: {config.timeframe}, Symbol: {config.symbol}")
 
     return config

@@ -378,6 +378,14 @@ class SimBroker:
         lots = round(lots / 0.01) * 0.01
         return max(0.01, lots)
 
+    def calculate_lot_size_from_risk(self, risk_amount: float, stop_distance: float) -> float | None:
+        """Calculate lot size from dollar risk and stop distance."""
+        if stop_distance <= 0:
+            return None
+        lots = risk_amount / (stop_distance * self.CONTRACT_SIZE)
+        lots = round(lots / 0.01) * 0.01
+        return max(0.01, lots)
+
     def get_deal_history(self, ticket: int) -> list | None:
         return self._deal_history.get(ticket)
 

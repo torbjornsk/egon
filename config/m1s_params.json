@@ -1,8 +1,19 @@
 {
+  "config_name": "M1 Sniper Standard",
+  "bot_type": "sniper",
   "strategy": "m1_sniper",
+  "symbol": "XAUUSD.p",
+  "timeframe": "M1",
+  "magic_number": 234101,
+  "bot_label": "M1S",
+  "order_comment": "m1_sniper",
+
+  "sizing_mode": "legacy",
   "position_size_pct": 0.15,
   "leverage": 25,
+  "risk_per_trade_pct": 0.015,
   "max_positions": 1,
+
   "max_drawdown_limit": 0.35,
   "fast_ema": 9,
   "slow_ema": 21,
@@ -11,18 +22,35 @@
   "rsi_sell": 65,
   "rsi_exit_long": 65,
   "rsi_exit_short": 35,
+
+  "sniper_rsi_offset": 7,
+  "sniper_rsi_min": 15,
+  "sniper_rsi_max": 85,
+
   "atr_multiplier": 1.75,
   "atr_high_volatility_multiplier": 1.5,
   "profit_target_pct": 0.015,
+
   "enable_shorts": true,
   "short_requires_downtrend": false,
+  "trading_mode": "both",
+
   "use_profit_protection": false,
   "profit_protection_auto_volatility": true,
   "profit_protection_threshold_pct": 0.04,
   "profit_protection_drawdown_limit_pct": 0.40,
   "use_loss_backoff": false,
-  "trading_mode": "both",
+
   "breakeven_atr_trigger": 0.7,
   "breakeven_offset": 0.1,
-  "_comment": "M1 Sniper. Same logic as M5S on M1 candles. RSI 14, entry 35/65 (fallback), sniper at RSI 28/72. Mean-revert exit at ~50. Breakeven at 0.7 ATR."
+  "trail_atr_after_breakeven": 1.0,
+  "trail_atr_before_breakeven": 1.5,
+
+  "tp_fallback_atr_mult": 3.0,
+  "exit_rsi_trend_threshold": 0.5,
+  "exit_rsi_trend_shift": 5.0,
+
+  "data_refresh_interval_seconds": 15,
+
+  "_comment": "M1 Sniper. Same logic as M5S on M1 candles. Tighter sniper offset (7 vs 10) for faster fills on smaller moves. Faster data refresh for M1 speed."
 }
