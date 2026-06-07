@@ -1,4 +1,8 @@
 {
+  "config_name": "M1 RSI Scalper",
+  "bot_type": "rsi_scalper",
+  "timeframe": "M1",
+  "bot_label": "M1",
   "strategy": "m1_scalping",
   "position_size_pct": 0.15,
   "leverage": 25,

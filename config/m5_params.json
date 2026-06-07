@@ -1,4 +1,8 @@
 {
+  "config_name": "M5 RSI Scalper",
+  "bot_type": "rsi_scalper",
+  "timeframe": "M5",
+  "bot_label": "M5",
   "strategy": "m5_scalping_balanced_aggressive",
   "position_size_pct": 0.18,
   "leverage": 27,

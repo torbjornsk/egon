@@ -1,4 +1,8 @@
 {
+  "config_name": "Tick Scalper",
+  "bot_type": "tick_scalper",
+  "timeframe": "M1",
+  "bot_label": "TICK",
   "strategy": "tick_scalper",
   "position_size_pct": 0.10,
   "leverage": 30,

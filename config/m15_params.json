@@ -1,4 +1,8 @@
 {
+  "config_name": "M15 RSI Scalper",
+  "bot_type": "rsi_scalper",
+  "timeframe": "M15",
+  "bot_label": "M15",
   "strategy": "m15_scalping",
   "position_size_pct": 0.15,
   "leverage": 15,

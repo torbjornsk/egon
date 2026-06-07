@@ -1,4 +1,8 @@
 {
+  "config_name": "Momentum Scalper",
+  "bot_type": "momentum",
+  "timeframe": "M5",
+  "bot_label": "MOM",
   "strategy": "momentum_scalper",
   "position_size_pct": 0.10,
   "leverage": 30,

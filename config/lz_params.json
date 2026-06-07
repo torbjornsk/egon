@@ -1,4 +1,8 @@
 {
+  "config_name": "Liquidity Zones",
+  "bot_type": "liquidity_zones",
+  "timeframe": "M5",
+  "bot_label": "LZ",
   "strategy": "liquidity_zones",
   "position_size_pct": 0.15,
   "leverage": 15,
