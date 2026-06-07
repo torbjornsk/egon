@@ -24,6 +24,52 @@ from src.services.trade_history import load_exit_reasons
 
 logger = logging.getLogger(__name__)
 
+# Fields that should render as dropdowns with specific choices
+DROPDOWN_FIELDS: dict[str, list[str]] = {
+    'sizing_mode': ['risk_pct', 'fixed', 'atr_adaptive'],
+    'trading_mode': ['both', 'long_only', 'short_only'],
+    'timeframe': ['M1', 'M5', 'M15', 'H1'],
+    'trend_filter': ['none', 'ema_cross', 'ema_200'],
+    'bot_type': ['sniper', 'rsi_scalper', 'liquidity_zones', 'tick_scalper', 'momentum'],
+}
+
+# Human-readable labels for config fields
+FIELD_LABELS: dict[str, str] = {
+    'config_name': 'Config Name',
+    'bot_type': 'Bot Type',
+    'timeframe': 'Timeframe',
+    'symbol': 'Symbol',
+    'magic_number': 'Magic Number',
+    'bot_label': 'Bot Label',
+    'sizing_mode': 'Sizing Mode',
+    'risk_per_trade_pct': 'Risk Per Trade (%)',
+    'fixed_lots': 'Fixed Lots',
+    'atr_damping': 'ATR Damping',
+    'max_positions': 'Max Positions',
+    'rsi_period': 'RSI Period',
+    'rsi_buy': 'Buy Below RSI',
+    'rsi_sell': 'Sell Above RSI',
+    'sniper_rsi_offset': 'Limit Order Offset',
+    'exit_rsi': 'Exit RSI (target)',
+    'adaptive_exit_enabled': 'Adaptive Exit',
+    'exit_rsi_trend_threshold': 'Trend Threshold (ATR)',
+    'exit_rsi_trend_shift': 'Trend Shift (RSI pts)',
+    'atr_multiplier': 'SL Distance (x ATR)',
+    'atr_high_volatility_multiplier': 'High-Vol SL Scale',
+    'breakeven_atr_trigger': 'BE Trigger (x ATR)',
+    'breakeven_offset': 'BE Offset (x ATR)',
+    'trail_atr_after_breakeven': 'Trail After BE (ATR)',
+    'trail_atr_before_breakeven': 'Trail Before BE (ATR)',
+    'enable_shorts': 'Enable Shorts',
+    'trading_mode': 'Trading Mode',
+    'max_drawdown_limit': 'Max Drawdown (%)',
+    'use_profit_protection': 'Profit Protection',
+    'fast_ema': 'Fast EMA',
+    'slow_ema': 'Slow EMA',
+    'schedule': 'Schedule (JSON)',
+    'volatility_guard': 'Volatility Guard (JSON)',
+}
+
 try:
     import matplotlib
     matplotlib.use('TkAgg')
@@ -366,29 +412,50 @@ class BotDetailPanel:
                 row = tk.Frame(self.config_inner, bg=BG_DARK)
                 row.pack(fill=tk.X, pady=1)
 
-                tk.Label(row, text=f"{field_name}:", bg=BG_DARK, fg=NEUTRAL,
-                         font=('Consolas', 8), width=30, anchor=tk.W).pack(side=tk.LEFT)
+                # Field label
+                label_text = FIELD_LABELS.get(field_name, field_name)
+                tk.Label(row, text=f"{label_text}:", bg=BG_DARK, fg=NEUTRAL,
+                         font=('Consolas', 8), width=28, anchor=tk.W).pack(side=tk.LEFT)
 
-                # Serialize dicts and lists as JSON for display
-                if isinstance(value, (dict, list)):
+                # Read-only fields
+                readonly = field_name in ('bot_type', 'magic_number')
+
+                # Determine widget type
+                dropdown_options = DROPDOWN_FIELDS.get(field_name)
+                is_bool = isinstance(value, bool)
+
+                var = tk.StringVar(value=str(value))
+
+                if dropdown_options or is_bool:
+                    # Dropdown (Combobox)
+                    options = dropdown_options if dropdown_options else ['True', 'False']
+                    display_val = str(value)
+                    if is_bool:
+                        display_val = 'True' if value else 'False'
+                    var.set(display_val)
+                    state = 'disabled' if readonly else 'readonly'
+                    combo = ttk.Combobox(row, textvariable=var, values=options,
+                                        state=state, width=14)
+                    combo.pack(side=tk.LEFT)
+                elif isinstance(value, (dict, list)):
+                    # JSON field (wider entry)
                     display_value = json.dumps(value) if value else '{}'
                     width = max(14, min(50, len(display_value)))
+                    var.set(display_value)
+                    entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=FG,
+                                     font=('Consolas', 9), width=width, insertbackground=FG)
+                    entry.pack(side=tk.LEFT)
                 else:
-                    display_value = str(value)
-                    width = 14
+                    # Normal text entry
+                    var.set(str(value))
+                    state = 'disabled' if readonly else 'normal'
+                    fg_color = NEUTRAL if readonly else FG
+                    entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=fg_color,
+                                     font=('Consolas', 9), width=14, insertbackground=FG,
+                                     state=state, disabledbackground=BG_DARK,
+                                     disabledforeground=NEUTRAL)
+                    entry.pack(side=tk.LEFT)
 
-                var = tk.StringVar(value=display_value)
-
-                # Read-only fields (immutable identity)
-                readonly = field_name in ('bot_type', 'magic_number')
-                state = 'disabled' if readonly else 'normal'
-                fg_color = NEUTRAL if readonly else FG
-
-                entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=fg_color,
-                                 font=('Consolas', 9), width=width, insertbackground=FG,
-                                 state=state, disabledbackground=BG_DARK,
-                                 disabledforeground=NEUTRAL)
-                entry.pack(side=tk.LEFT)
                 self.config_vars[field_name] = var
 
     def _get_field_groups(self) -> dict[str, list[str]]:
@@ -441,17 +508,20 @@ class BotDetailPanel:
 
         if bot_type == 'sniper':
             return {
-                'Identity': identity,
-                'Position Sizing': sizing,
-                'RSI Entry/Exit': rsi_fields,
-                'Sniper Limits': sniper_fields,
-                'Breakeven & Trail': trailing,
-                'ATR / Stops': atr_fields,
-                'Direction': direction,
-                'Risk Management': risk,
-                'Loss Backoff': backoff,
+                'Identity': ['config_name', 'bot_type', 'timeframe', 'symbol',
+                             'magic_number', 'bot_label'],
+                'Position Sizing': ['sizing_mode', 'risk_per_trade_pct', 'fixed_lots',
+                                    'atr_damping', 'max_positions'],
+                'RSI Entry': ['rsi_period', 'rsi_buy', 'rsi_sell', 'sniper_rsi_offset'],
+                'RSI Exit (Mean Revert)': ['exit_rsi', 'adaptive_exit_enabled',
+                                           'exit_rsi_trend_threshold', 'exit_rsi_trend_shift'],
+                'Stop Loss': ['atr_multiplier', 'atr_high_volatility_multiplier'],
+                'Trailing Stop': ['breakeven_atr_trigger', 'breakeven_offset',
+                                  'trail_atr_after_breakeven', 'trail_atr_before_breakeven'],
+                'Direction': ['enable_shorts', 'trading_mode'],
+                'Risk Management': ['max_drawdown_limit', 'use_profit_protection'],
+                'Trend Detection (EMA)': ['fast_ema', 'slow_ema'],
                 'Schedule & Guards': ['schedule', 'volatility_guard'],
-                'Other': other,
             }
         elif bot_type == 'rsi_scalper':
             return {

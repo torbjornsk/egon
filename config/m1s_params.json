@@ -8,9 +8,7 @@
   "bot_label": "M1S",
   "order_comment": "m1_sniper",
 
-  "sizing_mode": "legacy",
-  "position_size_pct": 0.15,
-  "leverage": 25,
+  "sizing_mode": "risk_pct",
   "risk_per_trade_pct": 0.015,
   "max_positions": 1,
 
@@ -24,8 +22,11 @@
   "rsi_exit_short": 35,
 
   "sniper_rsi_offset": 7,
-  "sniper_rsi_min": 15,
-  "sniper_rsi_max": 85,
+
+  "exit_rsi": 50,
+  "adaptive_exit_enabled": true,
+  "exit_rsi_trend_threshold": 0.5,
+  "exit_rsi_trend_shift": 5.0,
 
   "atr_multiplier": 1.75,
   "atr_high_volatility_multiplier": 1.5,

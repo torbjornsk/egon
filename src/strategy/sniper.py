@@ -89,8 +89,9 @@ class SniperStrategy:
         entry threshold, catching intra-candle wicks.
         """
         offset = self.config.sniper_rsi_offset
-        sniper_buy_rsi = max(self.config.sniper_rsi_min, self.config.rsi_buy - offset)
-        sniper_sell_rsi = min(self.config.sniper_rsi_max, self.config.rsi_sell + offset)
+        # Clamp to valid RSI range (0-100)
+        sniper_buy_rsi = max(0, self.config.rsi_buy - offset)
+        sniper_sell_rsi = min(100, self.config.rsi_sell + offset)
 
         buy_price = calculate_rsi_buy_price(df, sniper_buy_rsi, self.config.rsi_period)
         sell_price = calculate_rsi_sell_price(df, sniper_sell_rsi, self.config.rsi_period)
@@ -179,18 +180,23 @@ class SniperStrategy:
 
     def get_exit_rsi(self, df: pd.DataFrame, direction: str) -> float:
         """
-        Calculate the adaptive RSI exit threshold based on trend strength.
+        Calculate the exit RSI target.
 
-        Uses EMA divergence (fast - slow) normalized by ATR to gauge trend strength.
-        Configurable via exit_rsi_trend_threshold and exit_rsi_trend_shift.
+        If adaptive_exit_enabled: shifts the base exit_rsi based on trend strength.
+        Otherwise: returns the fixed exit_rsi value.
         """
+        base_exit = self.config.exit_rsi
+
+        if not self.config.adaptive_exit_enabled:
+            return base_exit
+
         latest = df.iloc[-1]
         ema_fast = latest.get('ema_fast', 0)
         ema_slow = latest.get('ema_slow', 0)
         atr = latest.get('ATR', 1)
 
         if atr <= 0:
-            return 50.0
+            return base_exit
 
         # Normalized EMA divergence: positive = uptrend, negative = downtrend
         divergence = (ema_fast - ema_slow) / atr
@@ -200,21 +206,21 @@ class SniperStrategy:
         if direction == 'LONG':
             if divergence < -threshold:
                 # Strong downtrend: counter-trend long, exit earlier
-                return 50.0 - shift
+                return base_exit - shift
             elif divergence > threshold:
                 # Strong uptrend: with-trend long, let it run
-                return 50.0 + shift
+                return base_exit + shift
             else:
-                return 50.0
+                return base_exit
         else:  # SHORT
             if divergence > threshold:
                 # Strong uptrend: counter-trend short, exit earlier
-                return 50.0 + shift
+                return base_exit + shift
             elif divergence < -threshold:
                 # Strong downtrend: with-trend short, let it run
-                return 50.0 - shift
+                return base_exit - shift
             else:
-                return 50.0
+                return base_exit
 
     def check_exit(
         self,
@@ -222,29 +228,17 @@ class SniperStrategy:
         position,
         context: dict,
     ) -> tuple[bool, str]:
-        """Check for exit signals on a position."""
+        """Check for exit signals on a position using mean-revert logic."""
         latest = df.iloc[-1]
 
         if position.type == ORDER_TYPE_BUY:
-            # Trend-adaptive mean revert exit
             exit_rsi = self.get_exit_rsi(df, 'LONG')
             if latest['RSI'] >= exit_rsi:
                 return True, f"Mean revert exit (RSI {latest['RSI']:.1f} >= {exit_rsi:.0f})"
-
-            # Safety: RSI extreme exit
-            threshold = self.config.rsi_exit_long
-            if latest['RSI'] > threshold:
-                return True, f"RSI exit ({latest['RSI']:.2f} > {threshold})"
         else:
-            # Trend-adaptive mean revert exit
             exit_rsi = self.get_exit_rsi(df, 'SHORT')
             if latest['RSI'] <= exit_rsi:
                 return True, f"Mean revert exit (RSI {latest['RSI']:.1f} <= {exit_rsi:.0f})"
-
-            # Safety: RSI extreme exit
-            threshold = self.config.rsi_exit_short
-            if latest['RSI'] < threshold:
-                return True, f"RSI exit ({latest['RSI']:.2f} < {threshold})"
 
         return False, ""
 

@@ -36,14 +36,13 @@ class TradingConfig:
     order_comment: str = "m5_sniper"
 
     # ── Position sizing ─────────────────────────────────────────────
-    # Sizing mode: "legacy", "fixed", "risk_pct", "atr_adaptive"
-    # "legacy" = old behavior (position_size_pct * leverage / price)
+    # Sizing mode: "fixed", "risk_pct", "atr_adaptive"
     # "fixed" = use fixed_lots directly
     # "risk_pct" = risk X% of account per trade, SL distance determines lot size
     # "atr_adaptive" = risk_pct but scales down when ATR is elevated
-    sizing_mode: str = "legacy"
+    sizing_mode: str = "risk_pct"
 
-    # Legacy sizing (kept for backward compat)
+    # Legacy sizing (kept for backward compat with old configs)
     position_size_pct: float = 0.18
     leverage: int = 27
 
@@ -138,9 +137,17 @@ class TradingConfig:
     # RSI offset for limit order placement (deeper than entry threshold)
     # e.g. rsi_buy=35, sniper_rsi_offset=10 -> limit order at RSI 25 level
     sniper_rsi_offset: float = 10.0
-    # Min/max RSI bounds for sniper levels (safety clamps)
-    sniper_rsi_min: float = 15.0
-    sniper_rsi_max: float = 85.0
+
+    # ── Exit RSI ────────────────────────────────────────────────────
+    # Base exit RSI level (mean revert target). Longs close when RSI >= this,
+    # shorts close when RSI <= this. Default 50 = true mean reversion.
+    exit_rsi: float = 50.0
+    # Adaptive exit: shift exit_rsi based on trend strength
+    adaptive_exit_enabled: bool = True
+    # EMA divergence threshold (in ATR) to trigger the shift
+    exit_rsi_trend_threshold: float = 0.5
+    # How many RSI points to shift when trend is strong
+    exit_rsi_trend_shift: float = 5.0
 
     # ── Breakeven & trailing ────────────────────────────────────────
     # Move SL to entry once profit exceeds this multiple of ATR (0 = disabled)
