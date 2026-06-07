@@ -169,6 +169,20 @@ class TradingConfig:
     # Seconds between indicator data refreshes (for GUI display between candles)
     data_refresh_interval_seconds: int = 30
 
+    # ── Schedule ────────────────────────────────────────────────────
+    # Time-based trading schedule (empty dict = always active)
+    # Format: {"active_hours": {"start": "08:00", "end": "22:00"},
+    #          "active_days": ["mon","tue","wed","thu","fri"],
+    #          "blackout_dates": ["2026-07-04"]}
+    schedule: dict = field(default_factory=dict)
+
+    # ── Volatility Guard ────────────────────────────────────────────
+    # Halts entries during ATR spikes (empty dict = disabled)
+    # Format: {"enabled": true, "atr_spike_multiplier": 2.5,
+    #          "cooldown_minutes": 15, "resume_below_multiplier": 1.5,
+    #          "lookback_bars": 100}
+    volatility_guard: dict = field(default_factory=dict)
+
     # ── Liquidity zone strategy settings ────────────────────────────
     zone_lookback: int = 100
     max_active_zones: int = 6

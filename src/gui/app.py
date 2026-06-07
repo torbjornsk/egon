@@ -330,9 +330,17 @@ class BotDetailPanel:
                 tk.Label(row, text=f"{field_name}:", bg=BG_DARK, fg=NEUTRAL,
                          font=('Consolas', 8), width=30, anchor=tk.W).pack(side=tk.LEFT)
 
-                var = tk.StringVar(value=str(value))
+                # Serialize dicts and lists as JSON for display
+                if isinstance(value, (dict, list)):
+                    display_value = json.dumps(value) if value else '{}'
+                    width = max(14, min(50, len(display_value)))
+                else:
+                    display_value = str(value)
+                    width = 14
+
+                var = tk.StringVar(value=display_value)
                 entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=FG,
-                                 font=('Consolas', 9), width=14, insertbackground=FG)
+                                 font=('Consolas', 9), width=width, insertbackground=FG)
                 entry.pack(side=tk.LEFT)
                 self.config_vars[field_name] = var
 
@@ -395,6 +403,7 @@ class BotDetailPanel:
                 'Direction': direction,
                 'Risk Management': risk,
                 'Loss Backoff': backoff,
+                'Schedule & Guards': ['schedule', 'volatility_guard'],
                 'Other': other,
             }
         elif bot_type == 'rsi_scalper':
@@ -485,9 +494,20 @@ class BotDetailPanel:
                     data[field_name] = int(raw)
                 elif field_type == 'bool' or field_type is bool:
                     data[field_name] = raw.lower() in ('true', '1', 'yes')
+                elif field_type == 'dict' or field_type is dict:
+                    # Parse JSON string back to dict
+                    if raw and raw != '{}':
+                        data[field_name] = json.loads(raw)
+                    else:
+                        data[field_name] = {}
+                elif field_type == 'list' or field_type is list:
+                    if raw and raw != '[]':
+                        data[field_name] = json.loads(raw)
+                    else:
+                        data[field_name] = []
                 else:
                     data[field_name] = raw
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, json.JSONDecodeError):
                 data[field_name] = raw
 
         try:
@@ -646,6 +666,26 @@ class BotDetailPanel:
         )
         if sniper_text:
             ind_text += f"\n{sniper_text}"
+
+        # Schedule info
+        sched = state.get('schedule', {})
+        if sched.get('enabled'):
+            if sched.get('paused'):
+                ind_text += f"\nSchedule: PAUSED - {sched.get('next_resume', '')}"
+            else:
+                ind_text += "\nSchedule: Active"
+
+        # Volatility guard info
+        vg = state.get('volatility_guard', {})
+        if vg.get('enabled'):
+            if vg.get('paused'):
+                ratio = vg.get('ratio', 0)
+                ind_text += f"\nVol Guard: PAUSED (ATR {ratio:.1f}x median)"
+            else:
+                ratio = vg.get('ratio', 0)
+                if ratio > 0:
+                    ind_text += f"\nVol Guard: OK (ATR {ratio:.1f}x median)"
+
         self.ind_lbl.config(text=ind_text)
 
         # Positions

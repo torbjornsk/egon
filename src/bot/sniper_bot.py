@@ -25,6 +25,8 @@ from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL
 from src.core.position import PositionManager
 from src.core.risk import RiskManager
 from src.core.timezone import get_local_now, LOCAL_TZ, MT5_TZ
+from src.core.scheduler import Scheduler
+from src.core.volatility_guard import VolatilityGuard
 from src.strategy.sniper import SniperStrategy, SniperOrder
 
 logger = logging.getLogger(__name__)
@@ -89,6 +91,18 @@ class SniperBot:
         # Sniper state
         self._sniper_active: bool = False
         self._last_df: pd.DataFrame | None = None
+
+        # Scheduler (time-based pause)
+        self.scheduler = Scheduler(
+            schedule_config=config.schedule,
+            bot_label=strategy.bot_label,
+        )
+
+        # Volatility guard (ATR spike pause)
+        self.volatility_guard = VolatilityGuard(
+            guard_config=config.volatility_guard,
+            bot_label=strategy.bot_label,
+        )
 
     # ── Properties ──────────────────────────────────────────────────
 
@@ -424,7 +438,7 @@ class SniperBot:
                 pos.ticket, self.mt5.mt5_timestamp_to_local(pos.time), pos.profit
             )
 
-        # ── Exit logic ──────────────────────────────────────────────
+        # ── Exit logic (always runs, regardless of schedule/guard) ──
         for pos in open_positions:
             if self.is_profit_protection_active():
                 should_exit, reason = self.positions.check_profit_protection(
@@ -440,6 +454,17 @@ class SniperBot:
             })
             if should_exit:
                 self.close_position(pos, reason)
+
+        # ── Schedule check (blocks new entries only) ────────────────
+        if not self.scheduler.check():
+            self.strategy.cancel_pending()
+            return
+
+        # ── Volatility guard (blocks new entries only) ──────────────
+        if 'ATR' in df.columns:
+            if not self.volatility_guard.check(df['ATR'].values):
+                self.strategy.cancel_pending()
+                return
 
         # ── Entry logic ─────────────────────────────────────────────
         open_positions = self.mt5.get_open_positions(self.strategy.magic_number)
@@ -644,6 +669,13 @@ class SniperBot:
             'rsi_exit_short': self.config.rsi_exit_short,
             'sizing_mode': self.config.sizing_mode,
             'timeframe': self.config.timeframe,
+            'schedule': {
+                'enabled': self.scheduler.is_enabled,
+                'paused': self.scheduler.is_paused,
+                'reason': self.scheduler.pause_reason,
+                'next_resume': self.scheduler.get_next_resume(),
+            },
+            'volatility_guard': self.volatility_guard.get_status(),
         }
 
     # ── Main loop ───────────────────────────────────────────────────
@@ -661,6 +693,17 @@ class SniperBot:
                          f"Breakeven: {self.config.breakeven_atr_trigger} ATR")
         self.logger.info(f"  Trail: {self.config.trail_atr_after_breakeven} ATR (after BE), "
                          f"{self.config.trail_atr_before_breakeven} ATR (before BE)")
+        if self.scheduler.is_enabled:
+            sched = self.config.schedule
+            hours = sched.get('active_hours', {})
+            days = sched.get('active_days', [])
+            self.logger.info(f"  Schedule: {hours.get('start','?')}-{hours.get('end','?')} "
+                             f"{','.join(days)}")
+        if self.volatility_guard.is_enabled:
+            vg = self.config.volatility_guard
+            self.logger.info(f"  Volatility Guard: spike={vg.get('atr_spike_multiplier')}x, "
+                             f"resume={vg.get('resume_below_multiplier')}x, "
+                             f"cooldown={vg.get('cooldown_minutes')}min")
         self.logger.info("=" * 80)
 
         if not self.connect():
