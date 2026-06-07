@@ -299,6 +299,7 @@ class BotManager:
         """Apply GUI overrides to a loaded TradingConfig (mutates in place)."""
         if not overrides:
             return
+        import json as _json
         from src.core.config import TradingConfig
         for field_name, value in overrides.items():
             if field_name not in TradingConfig.__dataclass_fields__:
@@ -313,8 +314,14 @@ class BotManager:
                 elif field_type == 'bool' or field_type is bool:
                     if isinstance(value, str):
                         value = value.lower() in ('true', '1', 'yes')
+                elif field_type == 'dict' or field_type is dict:
+                    if isinstance(value, str):
+                        value = _json.loads(value) if value.strip() else {}
+                elif field_type == 'list' or field_type is list:
+                    if isinstance(value, str):
+                        value = _json.loads(value) if value.strip() else []
                 setattr(config, field_name, value)
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError, _json.JSONDecodeError) as e:
                 logger.warning(f"Cannot cast {field_name}={value}: {e}")
 
     def stop_bot(self, label: str):
