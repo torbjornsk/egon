@@ -378,8 +378,16 @@ class BotDetailPanel:
                     width = 14
 
                 var = tk.StringVar(value=display_value)
-                entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=FG,
-                                 font=('Consolas', 9), width=width, insertbackground=FG)
+
+                # Read-only fields (immutable identity)
+                readonly = field_name in ('bot_type', 'magic_number')
+                state = 'disabled' if readonly else 'normal'
+                fg_color = NEUTRAL if readonly else FG
+
+                entry = tk.Entry(row, textvariable=var, bg=BG_MEDIUM, fg=fg_color,
+                                 font=('Consolas', 9), width=width, insertbackground=FG,
+                                 state=state, disabledbackground=BG_DARK,
+                                 disabledforeground=NEUTRAL)
                 entry.pack(side=tk.LEFT)
                 self.config_vars[field_name] = var
 
@@ -849,52 +857,120 @@ class BotDetailContainer:
             self.placeholder.pack(padx=20, pady=40)
 
     def _create_new_config(self):
-        """Create a new config file from template."""
+        """Show dialog to pick bot type + name, then auto-create config file."""
         from src.core.paths import resolve_path
         from src.core.config import TradingConfig
+        from src.services.bot_manager import BOT_REGISTRY
         import dataclasses
+        import random
 
-        template = TradingConfig()
-        template.config_name = "New Sniper Config"
-        template.bot_type = "sniper"
-        template.timeframe = "M5"
-        template.magic_number = 234900
-        template.bot_label = "NEW"
-        template.order_comment = "new_sniper"
+        # Dialog window
+        dialog = tk.Toplevel()
+        dialog.title("New Bot Profile")
+        dialog.geometry("350x180")
+        dialog.configure(bg=BG_DARK)
+        dialog.transient()
+        dialog.grab_set()
 
-        config_dir = str(resolve_path('config'))
-        path = filedialog.asksaveasfilename(
-            initialdir=config_dir,
-            defaultextension='.json',
-            filetypes=[('JSON files', '*.json')],
-            title='Create New Config',
-            initialfile='sniper_new.json',
-        )
-        if not path:
-            return
+        tk.Label(dialog, text="Create New Bot Profile", bg=BG_DARK, fg=ACCENT,
+                 font=('Arial', 10, 'bold')).pack(pady=(12, 8))
 
-        data = {}
-        for field in dataclasses.fields(template):
-            val = getattr(template, field.name)
-            if not isinstance(val, (list, dict)):
-                data[field.name] = val
+        # Bot type selector
+        type_frame = tk.Frame(dialog, bg=BG_DARK)
+        type_frame.pack(fill=tk.X, padx=20, pady=4)
+        tk.Label(type_frame, text="Bot Type:", bg=BG_DARK, fg=FG,
+                 font=('Consolas', 9), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        bot_types = list(BOT_REGISTRY.keys())
+        type_var = tk.StringVar(value='sniper')
+        type_combo = ttk.Combobox(type_frame, textvariable=type_var, values=bot_types,
+                                  state='readonly', width=18)
+        type_combo.pack(side=tk.LEFT)
 
-        with open(path, 'w') as f:
-            json.dump(data, f, indent=2)
+        # Name input
+        name_frame = tk.Frame(dialog, bg=BG_DARK)
+        name_frame.pack(fill=tk.X, padx=20, pady=4)
+        tk.Label(name_frame, text="Name:", bg=BG_DARK, fg=FG,
+                 font=('Consolas', 9), width=12, anchor=tk.W).pack(side=tk.LEFT)
+        name_var = tk.StringVar(value='')
+        name_entry = tk.Entry(name_frame, textvariable=name_var, bg=BG_MEDIUM, fg=FG,
+                              font=('Consolas', 9), width=20, insertbackground=FG)
+        name_entry.pack(side=tk.LEFT)
+        name_entry.focus_set()
 
-        self.instance_panel.refresh_config_list()
+        result = {'created': False}
 
-        # Open the new config
-        instance = {
-            'config_path': path,
-            'config_name': template.config_name,
-            'bot_type': 'sniper',
-            'bot_label': 'NEW',
-            'timeframe': 'M5',
-            'instance_id': 'NEW',
-            'filename': Path(path).name,
-        }
-        self.open_instance(instance)
+        def _do_create():
+            bot_type = type_var.get()
+            name = name_var.get().strip()
+            if not name:
+                name = f"New {bot_type.replace('_', ' ').title()}"
+
+            # Generate unique magic number (random in 235000-239999 range)
+            existing_magics = set()
+            for cfg in self.bot_manager.list_available_configs():
+                # Read magic from file
+                try:
+                    with open(cfg['path'], 'r') as fp:
+                        raw = json.load(fp)
+                    existing_magics.add(raw.get('magic_number', 0))
+                except Exception:
+                    pass
+
+            magic = random.randint(235000, 239999)
+            while magic in existing_magics:
+                magic = random.randint(235000, 239999)
+
+            # Create template config
+            template = TradingConfig()
+            template.config_name = name
+            template.bot_type = bot_type
+            template.magic_number = magic
+            template.bot_label = f"{bot_type[:3].upper()}{magic % 1000}"
+            template.order_comment = f"{bot_type}_{magic}"
+
+            # Auto-generate filename
+            safe_name = name.lower().replace(' ', '_')[:20]
+            filename = f"{bot_type}_{safe_name}_{magic}.json"
+            config_dir = resolve_path('config')
+            path = str(config_dir / filename)
+
+            # Write config
+            data = {}
+            for field in dataclasses.fields(template):
+                val = getattr(template, field.name)
+                if isinstance(val, (dict, list)):
+                    data[field.name] = val
+                else:
+                    data[field.name] = val
+
+            with open(path, 'w') as f:
+                json.dump(data, f, indent=2)
+
+            result['created'] = True
+            result['path'] = path
+            result['instance'] = {
+                'config_path': path,
+                'config_name': name,
+                'bot_type': bot_type,
+                'bot_label': template.bot_label,
+                'timeframe': template.timeframe,
+                'instance_id': template.bot_label,
+                'filename': filename,
+            }
+            dialog.destroy()
+
+        # Buttons
+        btn_frame = tk.Frame(dialog, bg=BG_DARK)
+        btn_frame.pack(pady=(12, 0))
+        ttk.Button(btn_frame, text="Create", command=_do_create, width=10).pack(side=tk.LEFT, padx=4)
+        ttk.Button(btn_frame, text="Cancel", command=dialog.destroy, width=8).pack(side=tk.LEFT, padx=4)
+
+        # Wait for dialog to close
+        dialog.wait_window()
+
+        if result['created']:
+            self.instance_panel.refresh_config_list()
+            self.open_instance(result['instance'])
 
     def update(self):
         """Update all open panels."""
