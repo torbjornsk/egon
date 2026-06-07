@@ -20,7 +20,7 @@ class TradingConfig:
     # config_name: human-readable label for this config (shown in GUI)
     config_name: str = ""
     # bot_type: determines which strategy/bot class to instantiate
-    # Valid: "sniper", "rsi_scalper", "liquidity_zones", "tick_scalper", "momentum"
+    # Valid: "sniper", "rsi_scalper", "liquidity_zones", "tick_scalper", "momentum", "breakout"
     bot_type: str = "sniper"
     strategy: str = "m5_scalping"
 

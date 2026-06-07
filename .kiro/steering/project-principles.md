@@ -9,6 +9,8 @@
 - Kiro AI follows clean architecture principles and separates code into functions, classes and files based on level of abstraction
 - Kiro AI reviews itself, and checks the code and surrounding code on changes!
 - Kiro creates git commits after doing changes, and consults the git history when needed
+- Kiro notes down important learnings in the .kiro folder, and keeps this clean of unnecessary information
+- Kiro updates the documentation in the docs folder on any major bot or GUI change
 
 
 ## Code Quality
@@ -43,7 +45,7 @@
 - Position sizing: `per_position_size_pct = position_size_pct / max_positions`
 - Profit protection threshold = percentage of INVESTED amount (balance × per_position_size_pct)
 - Exit logic should run BEFORE entry logic so the same candle can trigger exit + re-entry
-- All magic numbers must be unique per bot type (M5=234000, M1=234001, M15=234015, M5S=234050, LZ=234100, TICK=234200)
+- All magic numbers must be unique per bot type (M5=234000, M1=234001, M15=234015, M5S=234050, LZ=234100, TICK=234200, BRK=234300)
 
 ## When Making Changes
 
