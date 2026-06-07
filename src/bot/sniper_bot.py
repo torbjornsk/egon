@@ -94,13 +94,13 @@ class SniperBot:
 
         # Scheduler (time-based pause)
         self.scheduler = Scheduler(
-            schedule_config=config.schedule,
+            config=config,
             bot_label=strategy.bot_label,
         )
 
         # Volatility guard (ATR spike pause)
         self.volatility_guard = VolatilityGuard(
-            guard_config=config.volatility_guard,
+            config=config,
             bot_label=strategy.bot_label,
         )
 

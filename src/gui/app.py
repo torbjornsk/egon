@@ -68,6 +68,19 @@ FIELD_LABELS: dict[str, str] = {
     'slow_ema': 'Slow EMA',
     'schedule': 'Schedule (JSON)',
     'volatility_guard': 'Volatility Guard (JSON)',
+    'schedule_enabled': 'Schedule Enabled',
+    'schedule_mon': 'Monday Hours',
+    'schedule_tue': 'Tuesday Hours',
+    'schedule_wed': 'Wednesday Hours',
+    'schedule_thu': 'Thursday Hours',
+    'schedule_fri': 'Friday Hours',
+    'schedule_sat': 'Saturday Hours',
+    'schedule_sun': 'Sunday Hours',
+    'schedule_closed': 'Closed Windows',
+    'vg_enabled': 'Vol Guard Enabled',
+    'vg_atr_spike_multiplier': 'Spike Threshold (x)',
+    'vg_cooldown_minutes': 'Cooldown (min)',
+    'vg_resume_below_multiplier': 'Resume Below (x)',
 }
 
 try:
@@ -521,7 +534,11 @@ class BotDetailPanel:
                 'Direction': ['enable_shorts', 'trading_mode'],
                 'Risk Management': ['max_drawdown_limit', 'use_profit_protection'],
                 'Trend Detection (EMA)': ['fast_ema', 'slow_ema'],
-                'Schedule & Guards': ['schedule', 'volatility_guard'],
+                'Schedule & Guards': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
+                                    'schedule_wed', 'schedule_thu', 'schedule_fri',
+                                    'schedule_sat', 'schedule_sun', 'schedule_closed',
+                                    'vg_enabled', 'vg_atr_spike_multiplier',
+                                    'vg_cooldown_minutes', 'vg_resume_below_multiplier'],
             }
         elif bot_type == 'rsi_scalper':
             return {

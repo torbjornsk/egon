@@ -1,74 +1,101 @@
 """
 Scheduler -- time-based trading schedule for bots.
 
-Controls when a bot is allowed to enter new positions.
-When outside schedule: bot stays connected, existing positions still managed
-(exits fire, trailing works), but no new entries are placed.
+Uses flat config fields:
+  schedule_enabled: bool
+  schedule_mon..schedule_sun: "HH:MM-HH:MM" or "" (closed)
+  schedule_closed: list of "YYYY-MM-DD HH:MM-HH:MM" (news event windows)
 
-Configuration via TradingConfig fields (from JSON):
-  "schedule": {
-    "active_hours": {"start": "08:00", "end": "22:00"},
-    "active_days": ["mon", "tue", "wed", "thu", "fri"],
-    "blackout_dates": ["2026-07-04", "2026-12-25"],
-    "timezone": "Europe/Berlin"
-  }
+When outside schedule or during a closed window: bot stays connected,
+existing positions are still managed, but no new entries are placed.
 """
 
 import logging
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 
 from src.core.timezone import get_local_now
 
 logger = logging.getLogger(__name__)
 
+DAY_FIELDS = ['schedule_mon', 'schedule_tue', 'schedule_wed', 'schedule_thu',
+              'schedule_fri', 'schedule_sat', 'schedule_sun']
 DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+
+def _parse_time_range(s: str) -> tuple[time, time] | None:
+    """Parse 'HH:MM-HH:MM' into (start_time, end_time). Returns None if empty/invalid."""
+    s = s.strip()
+    if not s:
+        return None
+    try:
+        parts = s.split('-')
+        if len(parts) != 2:
+            return None
+        start = parts[0].strip().split(':')
+        end = parts[1].strip().split(':')
+        return (time(int(start[0]), int(start[1])),
+                time(int(end[0]), int(end[1])))
+    except (ValueError, IndexError):
+        return None
+
+
+def _parse_closed_window(s: str) -> tuple[datetime, datetime] | None:
+    """Parse 'YYYY-MM-DD HH:MM-HH:MM' into (start_dt, end_dt). Returns None if invalid."""
+    s = s.strip()
+    if not s:
+        return None
+    try:
+        # Split on space: "2026-06-10 14:30-15:00"
+        date_part, time_part = s.rsplit(' ', 1)
+        d = date.fromisoformat(date_part)
+        times = time_part.split('-')
+        if len(times) != 2:
+            return None
+        start_parts = times[0].strip().split(':')
+        end_parts = times[1].strip().split(':')
+        start_dt = datetime(d.year, d.month, d.day,
+                            int(start_parts[0]), int(start_parts[1]))
+        end_dt = datetime(d.year, d.month, d.day,
+                          int(end_parts[0]), int(end_parts[1]))
+        return (start_dt, end_dt)
+    except (ValueError, IndexError):
+        return None
 
 
 class Scheduler:
     """
-    Evaluates whether trading is allowed based on time-of-day,
-    day-of-week, and blackout dates.
+    Evaluates whether trading is allowed based on per-day hours
+    and closed windows (news events).
     """
 
-    def __init__(self, schedule_config: dict | None = None, bot_label: str = ""):
+    def __init__(self, config, bot_label: str = ""):
         self.logger = logging.getLogger(f"src.bot.{bot_label}") if bot_label else logger
-        self._config = schedule_config or {}
-        self._paused_by_schedule = False
+        self._enabled = getattr(config, 'schedule_enabled', False)
+        self._paused = False
         self._pause_reason = ""
 
-        # Parse config
-        hours = self._config.get('active_hours', {})
-        self._start_time = self._parse_time(hours.get('start', '00:00'))
-        self._end_time = self._parse_time(hours.get('end', '23:59'))
+        # Parse per-day schedules
+        self._day_hours: dict[int, tuple[time, time] | None] = {}
+        for i, field_name in enumerate(DAY_FIELDS):
+            raw = getattr(config, field_name, "")
+            self._day_hours[i] = _parse_time_range(raw)
 
-        days = self._config.get('active_days', DAY_NAMES[:5])  # Default: Mon-Fri
-        self._active_days = set(d.lower()[:3] for d in days)
-
-        blackouts = self._config.get('blackout_dates', [])
-        self._blackout_dates = set()
-        for d in blackouts:
-            try:
-                self._blackout_dates.add(date.fromisoformat(d))
-            except (ValueError, TypeError):
-                pass
-
-    @staticmethod
-    def _parse_time(t: str) -> time:
-        """Parse HH:MM string to time object."""
-        try:
-            parts = t.split(':')
-            return time(int(parts[0]), int(parts[1]))
-        except (ValueError, IndexError):
-            return time(0, 0)
+        # Parse closed windows
+        self._closed_windows: list[tuple[datetime, datetime]] = []
+        closed_list = getattr(config, 'schedule_closed', [])
+        if isinstance(closed_list, list):
+            for entry in closed_list:
+                parsed = _parse_closed_window(str(entry))
+                if parsed:
+                    self._closed_windows.append(parsed)
 
     @property
     def is_enabled(self) -> bool:
-        """True if schedule config was provided (non-empty)."""
-        return bool(self._config)
+        return self._enabled
 
     @property
     def is_paused(self) -> bool:
-        return self._paused_by_schedule
+        return self._paused
 
     @property
     def pause_reason(self) -> str:
@@ -77,80 +104,77 @@ class Scheduler:
     def check(self) -> bool:
         """
         Check if trading is currently allowed.
-
-        Returns True if entries are allowed, False if paused by schedule.
+        Returns True if entries are allowed, False if paused.
         """
-        if not self.is_enabled:
+        if not self._enabled:
             return True
 
         now = get_local_now()
         current_time = now.time()
-        current_day = DAY_NAMES[now.weekday()]
-        current_date = now.date()
+        current_weekday = now.weekday()  # 0=Monday
+        now_naive = now.replace(tzinfo=None)
 
-        # Blackout date check
-        if current_date in self._blackout_dates:
-            self._set_paused(True, f"Blackout date: {current_date.isoformat()}")
+        # Check closed windows first (news events override everything)
+        for start_dt, end_dt in self._closed_windows:
+            if start_dt <= now_naive <= end_dt:
+                self._set_paused(True,
+                    f"Closed window: {start_dt.strftime('%H:%M')}-{end_dt.strftime('%H:%M')}")
+                return False
+
+        # Check per-day schedule
+        day_range = self._day_hours.get(current_weekday)
+        if day_range is None:
+            # No schedule for this day = closed
+            self._set_paused(True, f"Closed: {DAY_NAMES[current_weekday]}")
             return False
 
-        # Day-of-week check
-        if current_day not in self._active_days:
-            self._set_paused(True, f"Inactive day: {current_day}")
-            return False
-
-        # Time-of-day check
-        if self._start_time <= self._end_time:
-            # Normal range (e.g., 08:00 - 22:00)
-            in_window = self._start_time <= current_time <= self._end_time
+        start_time, end_time = day_range
+        if start_time <= end_time:
+            in_window = start_time <= current_time <= end_time
         else:
-            # Overnight range (e.g., 22:00 - 06:00)
-            in_window = current_time >= self._start_time or current_time <= self._end_time
+            # Overnight range
+            in_window = current_time >= start_time or current_time <= end_time
 
         if not in_window:
-            start_str = self._start_time.strftime('%H:%M')
-            end_str = self._end_time.strftime('%H:%M')
-            self._set_paused(True, f"Outside hours ({start_str}-{end_str})")
+            self._set_paused(True,
+                f"Outside hours ({start_time.strftime('%H:%M')}-{end_time.strftime('%H:%M')})")
             return False
 
         self._set_paused(False, "")
         return True
 
     def get_next_resume(self) -> str:
-        """Get a human-readable string of when trading will resume."""
-        if not self._paused_by_schedule:
+        """Human-readable string of when trading will resume."""
+        if not self._paused:
             return "Active now"
 
         now = get_local_now()
-        current_day = DAY_NAMES[now.weekday()]
+        now_naive = now.replace(tzinfo=None)
 
-        # If paused by blackout, next day
-        if now.date() in self._blackout_dates:
-            return f"After blackout ({now.date().isoformat()})"
+        # If in a closed window, show when it ends
+        for start_dt, end_dt in self._closed_windows:
+            if start_dt <= now_naive <= end_dt:
+                return f"After {end_dt.strftime('%H:%M')}"
 
-        # If paused by day, find next active day
-        if current_day not in self._active_days:
-            for offset in range(1, 8):
-                next_day_idx = (now.weekday() + offset) % 7
-                if DAY_NAMES[next_day_idx] in self._active_days:
-                    return f"Resumes {DAY_NAMES[next_day_idx].capitalize()} {self._start_time.strftime('%H:%M')}"
-            return "No active days configured"
+        # Find next open day/time
+        for offset in range(0, 8):
+            check_day = (now.weekday() + offset) % 7
+            day_range = self._day_hours.get(check_day)
+            if day_range is None:
+                continue
+            start_time, _ = day_range
+            if offset == 0 and now.time() < start_time:
+                return f"Today at {start_time.strftime('%H:%M')}"
+            elif offset > 0:
+                return f"{DAY_NAMES[check_day].capitalize()} {start_time.strftime('%H:%M')}"
 
-        # If paused by time, resume at start_time today or tomorrow
-        if now.time() > self._end_time:
-            # Past end time, resume next active day
-            for offset in range(1, 8):
-                next_day_idx = (now.weekday() + offset) % 7
-                if DAY_NAMES[next_day_idx] in self._active_days:
-                    return f"Resumes {DAY_NAMES[next_day_idx].capitalize()} {self._start_time.strftime('%H:%M')}"
-
-        return f"Resumes at {self._start_time.strftime('%H:%M')}"
+        return "No active schedule"
 
     def _set_paused(self, paused: bool, reason: str):
-        """Set pause state, logging on transitions."""
-        if paused != self._paused_by_schedule:
+        if paused != self._paused:
             if paused:
                 self.logger.info(f"[SCHEDULE] Paused: {reason}")
             else:
-                self.logger.info("[SCHEDULE] Resumed: trading window active")
-        self._paused_by_schedule = paused
+                self.logger.info("[SCHEDULE] Resumed")
+        self._paused = paused
         self._pause_reason = reason

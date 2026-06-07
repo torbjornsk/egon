@@ -177,18 +177,25 @@ class TradingConfig:
     data_refresh_interval_seconds: int = 30
 
     # ── Schedule ────────────────────────────────────────────────────
-    # Time-based trading schedule (empty dict = always active)
-    # Format: {"active_hours": {"start": "08:00", "end": "22:00"},
-    #          "active_days": ["mon","tue","wed","thu","fri"],
-    #          "blackout_dates": ["2026-07-04"]}
-    schedule: dict = field(default_factory=dict)
+    # Per-day trading hours ("HH:MM-HH:MM" or "" for closed)
+    schedule_enabled: bool = False
+    schedule_mon: str = "08:00-22:00"
+    schedule_tue: str = "08:00-22:00"
+    schedule_wed: str = "08:00-22:00"
+    schedule_thu: str = "08:00-22:00"
+    schedule_fri: str = "08:00-20:00"
+    schedule_sat: str = ""
+    schedule_sun: str = ""
+    # Closed windows for news events: list of "YYYY-MM-DD HH:MM-HH:MM" strings
+    schedule_closed: list = field(default_factory=list)
 
     # ── Volatility Guard ────────────────────────────────────────────
-    # Halts entries during ATR spikes (empty dict = disabled)
-    # Format: {"enabled": true, "atr_spike_multiplier": 2.5,
-    #          "cooldown_minutes": 15, "resume_below_multiplier": 1.5,
-    #          "lookback_bars": 100}
-    volatility_guard: dict = field(default_factory=dict)
+    # Halts entries during ATR spikes
+    vg_enabled: bool = False
+    vg_atr_spike_multiplier: float = 2.5
+    vg_cooldown_minutes: int = 15
+    vg_resume_below_multiplier: float = 1.5
+    vg_lookback_bars: int = 100
 
     # ── Liquidity zone strategy settings ────────────────────────────
     zone_lookback: int = 100
