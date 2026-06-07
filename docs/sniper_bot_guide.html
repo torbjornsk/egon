@@ -232,24 +232,40 @@ EMAs are used internally for two purposes: (1) the adaptive exit RSI shift (dete
 </div>
 
 <h3>Schedule</h3>
-<table>
-    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
-    <tr><td><code>schedule</code></td><td>Schedule (JSON)</td><td>Time-based trading window. When outside the window, new entries are paused but existing positions are still managed (exits and trailing still work). Empty <code>{}</code> = always active.</td><td><code>{"active_hours": {"start": "08:00", "end": "22:00"}, "active_days": ["mon","tue","wed","thu","fri"]}</code></td></tr>
-</table>
 
-<h3>Volatility Guard</h3>
+<p>The schedule controls when the bot is allowed to enter new positions. Outside the schedule, existing positions are still managed (exits and trailing still work) but no new entries are placed.</p>
+
 <table>
     <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
-    <tr><td><code>volatility_guard</code></td><td>Volatility Guard (JSON)</td><td>Pauses entries when ATR spikes above a multiple of its recent median. Prevents entering during breakouts. Empty <code>{}</code> = disabled.</td><td><code>{"enabled": true, "atr_spike_multiplier": 2.5, "cooldown_minutes": 15, "resume_below_multiplier": 1.5}</code></td></tr>
+    <tr><td><code>schedule_enabled</code></td><td>Schedule Enabled</td><td>Master toggle. False = always active (no schedule).</td><td>True</td></tr>
+    <tr><td><code>schedule_mon</code></td><td>Monday Hours</td><td>Trading hours for Monday. Format: "HH:MM-HH:MM". Empty = closed all day.</td><td>"08:00-22:00"</td></tr>
+    <tr><td><code>schedule_tue</code></td><td>Tuesday Hours</td><td>Same format.</td><td>"08:00-22:00"</td></tr>
+    <tr><td><code>schedule_wed</code></td><td>Wednesday Hours</td><td>Same format.</td><td>"08:00-22:00"</td></tr>
+    <tr><td><code>schedule_thu</code></td><td>Thursday Hours</td><td>Same format.</td><td>"08:00-22:00"</td></tr>
+    <tr><td><code>schedule_fri</code></td><td>Friday Hours</td><td>Often shorter (markets close early Friday).</td><td>"08:00-20:00"</td></tr>
+    <tr><td><code>schedule_sat</code></td><td>Saturday Hours</td><td>Usually empty (markets closed).</td><td>""</td></tr>
+    <tr><td><code>schedule_sun</code></td><td>Sunday Hours</td><td>Usually empty.</td><td>""</td></tr>
+    <tr><td><code>schedule_closed</code></td><td>Closed Windows</td><td>List of date+time windows to pause during (news events). These override the daily schedule. Format: "YYYY-MM-DD HH:MM-HH:MM"</td><td>["2026-06-10 14:30-15:00"]</td></tr>
 </table>
 
 <div class="note">
-<strong>Volatility guard fields explained:</strong>
-<ul>
-    <li><code>atr_spike_multiplier</code>: Pause when ATR > median x this value (2.5 = pause at 2.5x normal)</li>
-    <li><code>cooldown_minutes</code>: Minimum time to stay paused before re-evaluating</li>
-    <li><code>resume_below_multiplier</code>: Resume when ATR drops below median x this value (1.5 = resume once calmed to 1.5x normal)</li>
-</ul>
+<strong>News event example:</strong> If NFP (Non-Farm Payrolls) is released on June 10 at 14:30, add <code>"2026-06-10 14:30-15:00"</code> to schedule_closed. The bot will pause entries during that window even if it's within normal trading hours. Open positions are still managed (trailing stops still work).
+</div>
+
+<h3>Volatility Guard</h3>
+
+<p>Automatically pauses entries when ATR spikes beyond normal levels (breakout detection). Prevents entering during high-volatility events where mean reversion is unreliable.</p>
+
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>vg_enabled</code></td><td>Vol Guard Enabled</td><td>Master toggle. False = no volatility guard.</td><td>True</td></tr>
+    <tr><td><code>vg_atr_spike_multiplier</code></td><td>Spike Threshold (x)</td><td>Pause when current ATR exceeds median ATR times this value. 2.5 = pause when ATR is 2.5x its recent typical level.</td><td>2.5</td></tr>
+    <tr><td><code>vg_cooldown_minutes</code></td><td>Cooldown (min)</td><td>Minimum minutes to stay paused before checking if ATR has calmed down.</td><td>15</td></tr>
+    <tr><td><code>vg_resume_below_multiplier</code></td><td>Resume Below (x)</td><td>Resume trading when ATR drops below median times this value. Should be lower than spike threshold to avoid rapid on/off.</td><td>1.5</td></tr>
+</table>
+
+<div class="note">
+<strong>How it works:</strong> The guard compares current ATR to the median ATR of the last ~100 bars. If ATR spikes to 2.5x its normal level (likely a breakout or news event), entries are paused. After the cooldown period, it checks if ATR has dropped below 1.5x median. If so, normal trading resumes. If ATR is still elevated, it stays paused.
 </div>
 
 <h2>When It Works Well</h2>
@@ -301,10 +317,20 @@ EMAs are used internally for two purposes: (1) the adaptive exit RSI shift (dete
   "trading_mode": "both",
   "max_drawdown_limit": 0.35,
 
-  "schedule": {
-    "active_hours": {"start": "08:00", "end": "22:00"},
-    "active_days": ["mon", "tue", "wed", "thu", "fri"]
-  }
+  "schedule_enabled": true,
+  "schedule_mon": "08:00-22:00",
+  "schedule_tue": "08:00-22:00",
+  "schedule_wed": "08:00-22:00",
+  "schedule_thu": "08:00-22:00",
+  "schedule_fri": "08:00-20:00",
+  "schedule_sat": "",
+  "schedule_sun": "",
+  "schedule_closed": [],
+
+  "vg_enabled": true,
+  "vg_atr_spike_multiplier": 2.5,
+  "vg_cooldown_minutes": 15,
+  "vg_resume_below_multiplier": 1.5
 }</code></pre>
 
 <h2>Tuning Tips</h2>
