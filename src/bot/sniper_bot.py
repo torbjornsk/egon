@@ -694,16 +694,16 @@ class SniperBot:
         self.logger.info(f"  Trail: {self.config.trail_atr_after_breakeven} ATR (after BE), "
                          f"{self.config.trail_atr_before_breakeven} ATR (before BE)")
         if self.scheduler.is_enabled:
-            sched = self.config.schedule
-            hours = sched.get('active_hours', {})
-            days = sched.get('active_days', [])
-            self.logger.info(f"  Schedule: {hours.get('start','?')}-{hours.get('end','?')} "
-                             f"{','.join(days)}")
+            self.logger.info(
+                f"  Schedule: Mon={self.config.schedule_mon}, Tue={self.config.schedule_tue}, "
+                f"Fri={self.config.schedule_fri}"
+            )
         if self.volatility_guard.is_enabled:
-            vg = self.config.volatility_guard
-            self.logger.info(f"  Volatility Guard: spike={vg.get('atr_spike_multiplier')}x, "
-                             f"resume={vg.get('resume_below_multiplier')}x, "
-                             f"cooldown={vg.get('cooldown_minutes')}min")
+            self.logger.info(
+                f"  Volatility Guard: spike={self.config.vg_atr_spike_multiplier}x, "
+                f"resume={self.config.vg_resume_below_multiplier}x, "
+                f"cooldown={self.config.vg_cooldown_minutes}min"
+            )
         self.logger.info("=" * 80)
 
         if not self.connect():
