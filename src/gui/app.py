@@ -233,7 +233,7 @@ class BotDetailPanel:
         self.loaded_path: str = instance.get('config_path', '')
 
         # Fixed-width column frame
-        self.frame = tk.Frame(parent, bg=BG_DARK, width=420)
+        self.frame = tk.Frame(parent, bg=BG_DARK, width=420, relief=tk.GROOVE, borderwidth=1)
         self.frame.pack_propagate(False)
         self._build()
         self._load_config_fields()
@@ -812,16 +812,23 @@ class BotDetailContainer:
 
         self.inner.bind('<Configure>',
                         lambda e: self.canvas.configure(scrollregion=self.canvas.bbox('all')))
-        self.canvas.create_window((0, 0), window=self.inner, anchor='nw')
+        self._canvas_window = self.canvas.create_window((0, 0), window=self.inner, anchor='nw')
         self.canvas.configure(xscrollcommand=self.h_scrollbar.set)
+
+        # Make inner frame fill canvas height
+        self.canvas.bind('<Configure>', self._on_canvas_configure)
 
         self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Placeholder when no panels open
-        self.placeholder = tk.Label(self.inner, text="Double-click a bot to open it here",
+        self.placeholder = tk.Label(self.inner, text="Click a bot in the list to open it here",
                                     bg=BG_DARK, fg=NEUTRAL, font=('Arial', 10))
         self.placeholder.pack(padx=20, pady=40)
+
+    def _on_canvas_configure(self, event):
+        """Keep inner frame height matching the canvas height."""
+        self.canvas.itemconfig(self._canvas_window, height=event.height)
 
     def open_instance(self, instance: dict):
         """Open a bot detail panel for the given instance."""
@@ -844,7 +851,7 @@ class BotDetailContainer:
             on_close_callback=self._on_panel_closed,
             instance=instance,
         )
-        panel.frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 2))
+        panel.frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 2))
         self.panels.append(panel)
 
     def _on_panel_closed(self, panel: BotDetailPanel):
