@@ -1003,6 +1003,14 @@ class EgonGUI:
         self.chart_timeframe = 'M5'
         self._market_update_counter = 0
 
+        # Global log buffer (shared by both log panels)
+        import io
+        self._global_log_buffer = io.StringIO()
+        handler = logging.StreamHandler(self._global_log_buffer)
+        handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(handler)
+
         self._build_ui()
         self._update_loop()
 
@@ -1029,35 +1037,18 @@ class EgonGUI:
         )
         top_paned.add(self.detail_container.frame, width=900, minsize=400)
 
-        # Bottom: tabbed area (chart, trades, log, market, calculator)
-        bottom = ttk.Notebook(main_paned)
-        main_paned.add(bottom, minsize=200)
+        # Bottom: two side-by-side tabbed panels
+        bottom_paned = tk.PanedWindow(main_paned, orient=tk.HORIZONTAL, bg=BG_DARK,
+                                      sashwidth=4, sashrelief=tk.RAISED)
+        main_paned.add(bottom_paned, minsize=200)
 
-        # Chart tab
-        if HAS_MATPLOTLIB:
-            chart_frame = tk.Frame(bottom, bg=BG_DARK)
-            bottom.add(chart_frame, text=" Chart ")
-            self._build_chart(chart_frame)
+        # Left bottom notebook
+        self.bottom_left = self._build_tabbed_panel(bottom_paned)
+        bottom_paned.add(self.bottom_left['notebook'], width=700, minsize=300)
 
-        # Trade history tab
-        hist_frame = tk.Frame(bottom, bg=BG_DARK)
-        bottom.add(hist_frame, text=" Trades ")
-        self._build_trade_history(hist_frame)
-
-        # Log tab
-        log_frame = tk.Frame(bottom, bg=BG_DARK)
-        bottom.add(log_frame, text=" Log ")
-        self._build_log(log_frame)
-
-        # Market tab
-        market_frame = tk.Frame(bottom, bg=BG_DARK)
-        bottom.add(market_frame, text=" Market ")
-        self._build_market_tab(market_frame)
-
-        # Sizing calculator tab
-        calc_frame = tk.Frame(bottom, bg=BG_DARK)
-        bottom.add(calc_frame, text=" Sizing Calc ")
-        self.sizing_calc = SizingCalculator(calc_frame)
+        # Right bottom notebook
+        self.bottom_right = self._build_tabbed_panel(bottom_paned)
+        bottom_paned.add(self.bottom_right['notebook'], width=700, minsize=300)
 
         # Load configs
         self.instance_panel.refresh_config_list()
@@ -1065,67 +1056,88 @@ class EgonGUI:
     def _on_instance_selected(self, instance: dict):
         self.detail_container.open_instance(instance)
 
-    # ── Chart ───────────────────────────────────────────────────────
+    def _build_tabbed_panel(self, parent) -> dict:
+        """Build a complete tabbed panel (chart, trades, log, market, calc). Returns state dict."""
+        import io
 
-    def _build_chart(self, parent):
-        chart_ctrl = tk.Frame(parent, bg=BG_DARK)
-        chart_ctrl.pack(fill=tk.X, padx=6, pady=(4, 0))
-        self.chart_tf_var = tk.StringVar(value='M5')
-        for tf in ['M1', 'M5', 'M15']:
-            ttk.Radiobutton(chart_ctrl, text=tf, variable=self.chart_tf_var, value=tf,
-                            command=lambda: setattr(self, 'chart_timeframe', self.chart_tf_var.get())
-                            ).pack(side=tk.LEFT, padx=3)
+        notebook = ttk.Notebook(parent)
+        panel = {'notebook': notebook}
 
-        self.fig = Figure(figsize=(10, 3), dpi=100, facecolor=BG_DARK)
-        self.ax = self.fig.add_subplot(111, facecolor=BG_MEDIUM)
-        self.canvas = FigureCanvasTkAgg(self.fig, master=parent)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=6, pady=(2, 4))
+        # Chart tab
+        if HAS_MATPLOTLIB:
+            chart_frame = tk.Frame(notebook, bg=BG_DARK)
+            notebook.add(chart_frame, text=" Chart ")
 
-    # ── Trade history ───────────────────────────────────────────────
+            chart_ctrl = tk.Frame(chart_frame, bg=BG_DARK)
+            chart_ctrl.pack(fill=tk.X, padx=6, pady=(4, 0))
+            tf_var = tk.StringVar(value='M5')
+            for tf in ['M1', 'M5', 'M15']:
+                ttk.Radiobutton(chart_ctrl, text=tf, variable=tf_var, value=tf).pack(side=tk.LEFT, padx=3)
 
-    def _build_trade_history(self, parent):
+            fig = Figure(figsize=(10, 3), dpi=100, facecolor=BG_DARK)
+            ax = fig.add_subplot(111, facecolor=BG_MEDIUM)
+            canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=6, pady=(2, 4))
+
+            panel['chart'] = {'fig': fig, 'ax': ax, 'canvas': canvas, 'tf_var': tf_var}
+
+        # Trade history tab
+        hist_frame = tk.Frame(notebook, bg=BG_DARK)
+        notebook.add(hist_frame, text=" Trades ")
+
         cols = ('Time', 'Bot', 'Type', 'Entry', 'Exit', 'Profit', 'Reason')
-        self.trade_tree = ttk.Treeview(parent, columns=cols, show='headings', height=10)
+        tree = ttk.Treeview(hist_frame, columns=cols, show='headings', height=10)
         for c in cols:
-            self.trade_tree.heading(c, text=c)
-        self.trade_tree.column('Time', width=100)
-        self.trade_tree.column('Bot', width=50)
-        self.trade_tree.column('Type', width=45)
-        self.trade_tree.column('Entry', width=70)
-        self.trade_tree.column('Exit', width=70)
-        self.trade_tree.column('Profit', width=65)
-        self.trade_tree.column('Reason', width=200)
-
-        tree_scroll = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=self.trade_tree.yview)
-        self.trade_tree.configure(yscrollcommand=tree_scroll.set)
-        self.trade_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
+            tree.heading(c, text=c)
+        tree.column('Time', width=100)
+        tree.column('Bot', width=50)
+        tree.column('Type', width=45)
+        tree.column('Entry', width=70)
+        tree.column('Exit', width=70)
+        tree.column('Profit', width=65)
+        tree.column('Reason', width=200)
+        tree_scroll = ttk.Scrollbar(hist_frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscrollcommand=tree_scroll.set)
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 6), pady=4)
-        self.trade_tree.tag_configure('profit', foreground=SUCCESS)
-        self.trade_tree.tag_configure('loss', foreground=ERROR)
+        tree.tag_configure('profit', foreground=SUCCESS)
+        tree.tag_configure('loss', foreground=ERROR)
+        panel['trade_tree'] = tree
 
-    # ── Log ─────────────────────────────────────────────────────────
+        # Log tab
+        log_frame = tk.Frame(notebook, bg=BG_DARK)
+        notebook.add(log_frame, text=" Log ")
 
-    def _build_log(self, parent):
-        self.log_text = tk.Text(parent, wrap=tk.WORD, bg=BG_MEDIUM, fg=FG,
-                                font=('Consolas', 8), height=12)
-        log_scroll = ttk.Scrollbar(parent, command=self.log_text.yview)
-        self.log_text.config(yscrollcommand=log_scroll.set)
-        self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
+        log_text = tk.Text(log_frame, wrap=tk.WORD, bg=BG_MEDIUM, fg=FG,
+                           font=('Consolas', 8), height=12)
+        log_scroll = ttk.Scrollbar(log_frame, command=log_text.yview)
+        log_text.config(yscrollcommand=log_scroll.set)
+        log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
         log_scroll.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 6), pady=4)
 
-        # Attach a handler to the root logger to capture ALL log output
-        import io
-        self._global_log_buffer = io.StringIO()
-        self._global_log_pos = 0
-        handler = logging.StreamHandler(self._global_log_buffer)
-        handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(handler)
+        # Each log panel gets its own position tracker on the shared global buffer
+        panel['log_text'] = log_text
+        panel['log_pos'] = 0
 
-    # ── Market dashboard ────────────────────────────────────────────
+        # Market tab
+        market_frame = tk.Frame(notebook, bg=BG_DARK)
+        notebook.add(market_frame, text=" Market ")
+        market_labels = self._build_market_widgets(market_frame)
+        panel['market_labels'] = market_labels['grid']
+        panel['spread_lbl'] = market_labels['spread']
+        panel['bid_lbl'] = market_labels['bid']
+        panel['ask_lbl'] = market_labels['ask']
 
-    def _build_market_tab(self, parent):
+        # Sizing calculator tab
+        calc_frame = tk.Frame(notebook, bg=BG_DARK)
+        notebook.add(calc_frame, text=" Sizing Calc ")
+        SizingCalculator(calc_frame)
+
+        return panel
+
+    def _build_market_widgets(self, parent) -> dict:
+        """Build market dashboard widgets, return label references."""
         grid_frame = tk.Frame(parent, bg=BG_DARK)
         grid_frame.pack(fill=tk.X, padx=6, pady=(6, 4))
 
@@ -1135,7 +1147,7 @@ class EgonGUI:
                      font=('Consolas', 9, 'bold'), width=10, anchor=tk.CENTER
                      ).grid(row=0, column=col, padx=2, pady=(0, 4))
 
-        self.market_labels: dict[str, dict[str, tk.Label]] = {}
+        market_grid = {}
         for row, tf in enumerate(['M1', 'M5', 'M15'], start=1):
             tk.Label(grid_frame, text=tf, bg=BG_DARK, fg=FG,
                      font=('Consolas', 9, 'bold')).grid(row=row, column=0, padx=2)
@@ -1146,30 +1158,31 @@ class EgonGUI:
                                relief=tk.FLAT, padx=3, pady=2)
                 lbl.grid(row=row, column=col, padx=2, pady=1)
                 labels[key] = lbl
-            self.market_labels[tf] = labels
+            market_grid[tf] = labels
 
-        # Spread info
         tk.Frame(parent, bg=BG_LIGHT, height=1).pack(fill=tk.X, padx=6, pady=4)
         spread_row = tk.Frame(parent, bg=BG_DARK)
         spread_row.pack(fill=tk.X, padx=6, pady=(0, 4))
 
         tk.Label(spread_row, text="Spread:", bg=BG_DARK, fg=NEUTRAL,
                  font=('Consolas', 9)).pack(side=tk.LEFT)
-        self.spread_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=WARNING,
-                                   font=('Consolas', 9, 'bold'))
-        self.spread_lbl.pack(side=tk.LEFT, padx=(4, 16))
+        spread_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=WARNING,
+                              font=('Consolas', 9, 'bold'))
+        spread_lbl.pack(side=tk.LEFT, padx=(4, 16))
 
         tk.Label(spread_row, text="Bid:", bg=BG_DARK, fg=NEUTRAL,
                  font=('Consolas', 9)).pack(side=tk.LEFT)
-        self.bid_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
-                                font=('Consolas', 9))
-        self.bid_lbl.pack(side=tk.LEFT, padx=(4, 16))
+        bid_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
+                           font=('Consolas', 9))
+        bid_lbl.pack(side=tk.LEFT, padx=(4, 16))
 
         tk.Label(spread_row, text="Ask:", bg=BG_DARK, fg=NEUTRAL,
                  font=('Consolas', 9)).pack(side=tk.LEFT)
-        self.ask_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
-                                font=('Consolas', 9))
-        self.ask_lbl.pack(side=tk.LEFT)
+        ask_lbl = tk.Label(spread_row, text="--", bg=BG_DARK, fg=FG,
+                           font=('Consolas', 9))
+        ask_lbl.pack(side=tk.LEFT)
+
+        return {'grid': market_grid, 'spread': spread_lbl, 'bid': bid_lbl, 'ask': ask_lbl}
 
     # ── Update loop ─────────────────────────────────────────────────
 
@@ -1180,14 +1193,14 @@ class EgonGUI:
             self.instance_panel.update_status()
 
             if HAS_MATPLOTLIB:
-                self._update_chart()
-            self._update_trade_history()
-            self._update_log()
+                self._update_charts()
+            self._update_trade_histories()
+            self._update_logs()
 
             self._market_update_counter += 1
             if self._market_update_counter >= 5:
                 self._market_update_counter = 0
-                self._update_market()
+                self._update_markets()
         except Exception as e:
             logger.error(f"GUI update error: {e}")
         self.root.after(1000, self._update_loop)
@@ -1197,131 +1210,157 @@ class EgonGUI:
         price = self.market.get_price()
         self.instance_panel.update_account(info, price)
 
-    def _update_chart(self):
+    def _update_charts(self):
+        """Update charts in both bottom panels."""
         if not self.market.connected:
             return
-        try:
-            bars = 100 if self.chart_timeframe == 'M1' else 60 if self.chart_timeframe == 'M15' else 50
-            df = self.market.get_chart_data(self.chart_timeframe, bars)
-            if df is None or len(df) == 0:
-                return
-            self.ax.clear()
-            for i in range(len(df)):
-                row = df.iloc[i]
-                color = SUCCESS if row['close'] >= row['open'] else ERROR
-                body_h = abs(row['close'] - row['open'])
-                body_b = min(row['open'], row['close'])
-                rect = Rectangle((i - 0.3, body_b), 0.6, body_h,
-                                 facecolor=color, edgecolor=color, alpha=0.8)
-                self.ax.add_patch(rect)
-                self.ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1, alpha=0.6)
+        for panel in [self.bottom_left, self.bottom_right]:
+            chart = panel.get('chart')
+            if not chart:
+                continue
+            try:
+                tf = chart['tf_var'].get()
+                bars = 100 if tf == 'M1' else 60 if tf == 'M15' else 50
+                df = self.market.get_chart_data(tf, bars)
+                if df is None or len(df) == 0:
+                    continue
+                ax = chart['ax']
+                ax.clear()
+                for i in range(len(df)):
+                    row = df.iloc[i]
+                    color = SUCCESS if row['close'] >= row['open'] else ERROR
+                    body_h = abs(row['close'] - row['open'])
+                    body_b = min(row['open'], row['close'])
+                    rect = Rectangle((i - 0.3, body_b), 0.6, body_h,
+                                     facecolor=color, edgecolor=color, alpha=0.8)
+                    ax.add_patch(rect)
+                    ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1, alpha=0.6)
 
-            # Mark sniper levels if a sniper bot is selected
-            selected = self.instance_panel.get_selected()
-            if selected:
-                state = self.bot_manager.get_state(selected.get('instance_id', ''))
-                sniper = state.get('sniper', {})
-                if sniper.get('buy_level'):
-                    self.ax.axhline(sniper['buy_level'], color=SUCCESS, linestyle='--',
-                                    alpha=0.6, linewidth=1)
-                if sniper.get('sell_level'):
-                    self.ax.axhline(sniper['sell_level'], color=ERROR, linestyle='--',
-                                    alpha=0.6, linewidth=1)
+                # Mark sniper levels if a bot is selected
+                selected = self.instance_panel.get_selected()
+                if selected:
+                    state = self.bot_manager.get_state(selected.get('instance_id', ''))
+                    sniper = state.get('sniper', {})
+                    if sniper.get('buy_level'):
+                        ax.axhline(sniper['buy_level'], color=SUCCESS, linestyle='--',
+                                   alpha=0.6, linewidth=1)
+                    if sniper.get('sell_level'):
+                        ax.axhline(sniper['sell_level'], color=ERROR, linestyle='--',
+                                   alpha=0.6, linewidth=1)
 
-            self.ax.set_xlim(-1, len(df))
-            self.ax.set_ylim(df['low'].min() * 0.9999, df['high'].max() * 1.0001)
-            self.ax.tick_params(colors=FG, labelsize=7)
-            for spine in self.ax.spines.values():
-                spine.set_color(BG_LIGHT)
-            self.ax.grid(True, alpha=0.2, color=BG_LIGHT)
-            self.ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
-            self.canvas.draw()
-        except Exception as e:
-            logger.error(f"Chart error: {e}")
+                ax.set_xlim(-1, len(df))
+                ax.set_ylim(df['low'].min() * 0.9999, df['high'].max() * 1.0001)
+                ax.tick_params(colors=FG, labelsize=7)
+                for spine in ax.spines.values():
+                    spine.set_color(BG_LIGHT)
+                ax.grid(True, alpha=0.2, color=BG_LIGHT)
+                ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:.2f}'))
+                chart['canvas'].draw()
+            except Exception as e:
+                logger.error(f"Chart error: {e}")
 
-    def _update_trade_history(self):
+    def _update_trade_histories(self):
+        """Update trade history trees in both panels."""
         history = self.market.get_trade_history()
         exit_reasons = load_exit_reasons()
-        for item in self.trade_tree.get_children():
-            self.trade_tree.delete(item)
-        for pos in history[:50]:
-            ticket_str = str(pos.get('ticket', ''))
-            pid_str = str(pos.get('position_id', ''))
-            reason = exit_reasons.get(pid_str, {}).get('reason') or \
-                     exit_reasons.get(ticket_str, {}).get('reason') or \
-                     pos.get('exit_reason', 'Unknown')
-            tag = 'profit' if pos['profit'] > 0 else 'loss'
-            self.trade_tree.insert('', tk.END, values=(
-                pos['exit_time'].strftime('%m-%d %H:%M'),
-                pos['bot'], pos['type'],
-                f"${pos['entry_price']:.2f}", f"${pos['exit_price']:.2f}",
-                f"${pos['profit']:.2f}", reason,
-            ), tags=(tag,))
+        for panel in [self.bottom_left, self.bottom_right]:
+            tree = panel.get('trade_tree')
+            if not tree:
+                continue
+            for item in tree.get_children():
+                tree.delete(item)
+            for pos in history[:50]:
+                ticket_str = str(pos.get('ticket', ''))
+                pid_str = str(pos.get('position_id', ''))
+                reason = exit_reasons.get(pid_str, {}).get('reason') or \
+                         exit_reasons.get(ticket_str, {}).get('reason') or \
+                         pos.get('exit_reason', 'Unknown')
+                tag = 'profit' if pos['profit'] > 0 else 'loss'
+                tree.insert('', tk.END, values=(
+                    pos['exit_time'].strftime('%m-%d %H:%M'),
+                    pos['bot'], pos['type'],
+                    f"${pos['entry_price']:.2f}", f"${pos['exit_price']:.2f}",
+                    f"${pos['profit']:.2f}", reason,
+                ), tags=(tag,))
 
-    def _update_log(self):
-        """Read new log output from the global log buffer (captures all loggers)."""
+    def _update_logs(self):
+        """Read new log output and push to both log panels."""
         content = self._global_log_buffer.getvalue()
-        new_content = content[self._global_log_pos:]
-        self._global_log_pos = len(content)
 
-        # Trim buffer if too large
+        for panel in [self.bottom_left, self.bottom_right]:
+            log_text = panel.get('log_text')
+            if not log_text:
+                continue
+            pos = panel.get('log_pos', 0)
+            new_content = content[pos:]
+            panel['log_pos'] = len(content)
+
+            if new_content:
+                log_text.insert(tk.END, new_content)
+                line_count = int(log_text.index('end-1c').split('.')[0])
+                if line_count > 3000:
+                    log_text.delete('1.0', f'{line_count - 2000}.0')
+                log_text.see(tk.END)
+
+        # Trim shared buffer if too large
         if len(content) > 500_000:
             trimmed = content[-100_000:]
             self._global_log_buffer.truncate(0)
             self._global_log_buffer.seek(0)
             self._global_log_buffer.write(trimmed)
-            self._global_log_pos = len(trimmed)
+            # Reset both panel positions
+            for panel in [self.bottom_left, self.bottom_right]:
+                panel['log_pos'] = len(trimmed)
 
-        if new_content:
-            self.log_text.insert(tk.END, new_content)
-            line_count = int(self.log_text.index('end-1c').split('.')[0])
-            if line_count > 3000:
-                self.log_text.delete('1.0', f'{line_count - 2000}.0')
-            self.log_text.see(tk.END)
-
-    def _update_market(self):
+    def _update_markets(self):
+        """Update market dashboards in both panels."""
         try:
             overview = self.market.get_market_overview()
         except Exception as e:
             logger.error(f"Market dashboard error: {e}")
             return
 
-        for tf in ['M1', 'M5', 'M15']:
-            data = overview.get(tf)
-            labels = self.market_labels.get(tf, {})
-            if not data:
-                for lbl in labels.values():
-                    lbl.config(text="--", fg=NEUTRAL)
+        for panel in [self.bottom_left, self.bottom_right]:
+            market_labels = panel.get('market_labels')
+            if not market_labels:
                 continue
 
-            rsi = data['rsi']
-            if rsi < 30:
-                rsi_color = SUCCESS
-            elif rsi < 40:
-                rsi_color = '#66cc66'
-            elif rsi > 70:
-                rsi_color = ERROR
-            elif rsi > 60:
-                rsi_color = '#cc6666'
-            else:
-                rsi_color = FG
-            labels['rsi'].config(text=f"{rsi:.1f}", fg=rsi_color)
-            labels['atr'].config(text=f"${data['atr']:.2f}", fg=FG)
+            for tf in ['M1', 'M5', 'M15']:
+                data = overview.get(tf)
+                labels = market_labels.get(tf, {})
+                if not data:
+                    for lbl in labels.values():
+                        lbl.config(text="--", fg=NEUTRAL)
+                    continue
 
-            if data['uptrend']:
-                labels['trend'].config(text="UP", fg=SUCCESS)
-            else:
-                labels['trend'].config(text="DOWN", fg=ERROR)
+                rsi = data['rsi']
+                if rsi < 30:
+                    rsi_color = SUCCESS
+                elif rsi < 40:
+                    rsi_color = '#66cc66'
+                elif rsi > 70:
+                    rsi_color = ERROR
+                elif rsi > 60:
+                    rsi_color = '#cc6666'
+                else:
+                    rsi_color = FG
+                labels['rsi'].config(text=f"{rsi:.1f}", fg=rsi_color)
+                labels['atr'].config(text=f"${data['atr']:.2f}", fg=FG)
 
-            labels['ema_fast'].config(text=f"${data['ema_fast']:.2f}", fg=FG)
-            labels['ema_slow'].config(text=f"${data['ema_slow']:.2f}", fg=FG)
-            labels['close'].config(text=f"${data['close']:.2f}", fg=FG)
+                if data['uptrend']:
+                    labels['trend'].config(text="UP", fg=SUCCESS)
+                else:
+                    labels['trend'].config(text="DOWN", fg=ERROR)
 
-        spread = overview.get('spread', 0)
-        spread_color = SUCCESS if spread < 0.30 else WARNING if spread < 0.50 else ERROR
-        self.spread_lbl.config(text=f"${spread:.3f}", fg=spread_color)
-        self.bid_lbl.config(text=f"${overview.get('bid', 0):.2f}")
-        self.ask_lbl.config(text=f"${overview.get('ask', 0):.2f}")
+                labels['ema_fast'].config(text=f"${data['ema_fast']:.2f}", fg=FG)
+                labels['ema_slow'].config(text=f"${data['ema_slow']:.2f}", fg=FG)
+                labels['close'].config(text=f"${data['close']:.2f}", fg=FG)
+
+            spread = overview.get('spread', 0)
+            spread_color = SUCCESS if spread < 0.30 else WARNING if spread < 0.50 else ERROR
+            panel['spread_lbl'].config(text=f"${spread:.3f}", fg=spread_color)
+            panel['bid_lbl'].config(text=f"${overview.get('bid', 0):.2f}")
+            panel['ask_lbl'].config(text=f"${overview.get('ask', 0):.2f}")
 
     def on_closing(self):
         self.bot_manager.stop_all()
