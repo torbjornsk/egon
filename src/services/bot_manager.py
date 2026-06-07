@@ -192,6 +192,13 @@ def _create_momentum_bot(config):
     return MomentumScalper(config)
 
 
+def _create_breakout_bot(config):
+    """Factory: create a BaseTradingBot with BreakoutStrategy."""
+    from src.strategy.breakout import BreakoutStrategy
+    strategy = BreakoutStrategy(config)
+    return BaseTradingBot(strategy, config)
+
+
 # Registry: bot_type -> factory function
 BOT_REGISTRY: dict[str, callable] = {
     'sniper': _create_sniper_bot,
@@ -199,6 +206,7 @@ BOT_REGISTRY: dict[str, callable] = {
     'liquidity_zones': _create_zone_bot,
     'tick_scalper': _create_tick_bot,
     'momentum': _create_momentum_bot,
+    'breakout': _create_breakout_bot,
 }
 
 # Legacy label -> (bot_type, default config path) mapping for backward compat
@@ -212,6 +220,7 @@ LEGACY_LABEL_MAP: dict[str, tuple[str, str]] = {
     'LZ': ('liquidity_zones', 'config/lz_params.json'),
     'TICK': ('tick_scalper', 'config/tick_params.json'),
     'MOM': ('momentum', 'config/momentum_params.json'),
+    'BRK': ('breakout', 'config/breakout_params.json'),
 }
 
 

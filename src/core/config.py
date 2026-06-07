@@ -226,6 +226,22 @@ class TradingConfig:
     max_trades_per_day: int = 300
     factor_window_ticks: int = 15
 
+    # ── Breakout strategy settings ──────────────────────────────────
+    # Number of candles to look back for high/low breakout level
+    breakout_bars: int = 5
+    # Minimum ATR value to avoid trading in dead markets (in price units, e.g. $2.0 for gold)
+    breakout_min_atr: float = 2.0
+    # Bars to wait after a breakout signal before allowing re-entry
+    breakout_re_entry_bars: int = 1
+    # SL distance in ATR multiples (tighter than sniper -- breakout uses momentum)
+    breakout_sl_atr_mult: float = 1.0
+    # Trail distance in ATR multiples (tight trailing for momentum capture)
+    breakout_trail_atr_mult: float = 0.6
+    # Daily risk limits
+    breakout_max_daily_loss_pct: float = 0.05
+    breakout_max_daily_trades: int = 150
+    breakout_max_drawdown_pct: float = 0.15
+
     # ── Computed properties ─────────────────────────────────────────
 
     @property
