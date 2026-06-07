@@ -1071,8 +1071,9 @@ class EgonGUI:
         for pos in history[:50]:
             ticket_str = str(pos.get('ticket', ''))
             pid_str = str(pos.get('position_id', ''))
-            reason = exit_reasons.get(ticket_str, {}).get('reason') or \
-                     exit_reasons.get(pid_str, {}).get('reason') or 'Unknown'
+            reason = exit_reasons.get(pid_str, {}).get('reason') or \
+                     exit_reasons.get(ticket_str, {}).get('reason') or \
+                     pos.get('exit_reason', 'Unknown')
             tag = 'profit' if pos['profit'] > 0 else 'loss'
             self.trade_tree.insert('', tk.END, values=(
                 pos['exit_time'].strftime('%m-%d %H:%M'),

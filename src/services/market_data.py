@@ -160,6 +160,15 @@ class MarketDataService:
             else:
                 continue
             direction = 'BUY' if entry_deal.type == mt5.DEAL_TYPE_BUY else 'SELL'
+            # Infer exit reason from MT5 deal reason code
+            if exit_deal.reason == 4:  # DEAL_REASON_SL
+                exit_reason = 'Stop loss'
+            elif exit_deal.reason == 5:  # DEAL_REASON_TP
+                exit_reason = 'Take profit'
+            elif exit_deal.reason == 3:  # DEAL_REASON_CLIENT (manual or bot close)
+                exit_reason = 'Bot/Manual close'
+            else:
+                exit_reason = 'MT5 close'
             result.append({
                 'ticket': exit_deal.ticket, 'position_id': pid, 'bot': bot,
                 'type': direction, 'volume': entry_deal.volume,
@@ -167,6 +176,7 @@ class MarketDataService:
                 'profit': exit_deal.profit,
                 'entry_time': mt5_to_local(entry_deal.time),
                 'exit_time': mt5_to_local(exit_deal.time),
+                'exit_reason': exit_reason,
             })
         result.sort(key=lambda x: x['exit_time'], reverse=True)
         return result[:100]
