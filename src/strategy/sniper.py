@@ -180,12 +180,15 @@ class SniperStrategy:
 
     def get_exit_rsi(self, df: pd.DataFrame, direction: str) -> float:
         """
-        Calculate the exit RSI target.
+        Calculate the exit RSI target for the given direction.
 
-        If adaptive_exit_enabled: shifts the base exit_rsi based on trend strength.
-        Otherwise: returns the fixed exit_rsi value.
+        Uses exit_rsi_long / exit_rsi_short as the base values.
+        If adaptive_exit_enabled: shifts the base based on trend strength.
         """
-        base_exit = self.config.exit_rsi
+        if direction == 'LONG':
+            base_exit = self.config.exit_rsi_long
+        else:
+            base_exit = self.config.exit_rsi_short
 
         if not self.config.adaptive_exit_enabled:
             return base_exit

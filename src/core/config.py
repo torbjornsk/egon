@@ -139,9 +139,13 @@ class TradingConfig:
     sniper_rsi_offset: float = 10.0
 
     # ── Exit RSI ────────────────────────────────────────────────────
-    # Base exit RSI level (mean revert target). Longs close when RSI >= this,
-    # shorts close when RSI <= this. Default 50 = true mean reversion.
+    # Base exit RSI level (mean revert target). Kept for backward compat.
+    # Prefer exit_rsi_long / exit_rsi_short for per-direction control.
     exit_rsi: float = 50.0
+    # Per-direction exit RSI targets. Longs close when RSI >= exit_rsi_long,
+    # shorts close when RSI <= exit_rsi_short. Set both to 50 for true mean reversion.
+    exit_rsi_long: float = 50.0
+    exit_rsi_short: float = 50.0
     # Adaptive exit: shift exit_rsi based on trend strength
     adaptive_exit_enabled: bool = True
     # EMA divergence threshold (in ATR) to trigger the shift
@@ -284,6 +288,13 @@ def load_config(config_path: str | Path) -> TradingConfig:
         k: v for k, v in data.items()
         if k in TradingConfig.__dataclass_fields__
     })
+
+    # Backward compat: if config has exit_rsi but not exit_rsi_long/short,
+    # populate per-direction fields from the single value
+    if 'exit_rsi' in data and 'exit_rsi_long' not in data:
+        config.exit_rsi_long = config.exit_rsi
+    if 'exit_rsi' in data and 'exit_rsi_short' not in data:
+        config.exit_rsi_short = config.exit_rsi
 
     name = config.config_name or config.strategy
     logger.info(f"Config loaded: {name} from {path.name}")

@@ -24,6 +24,8 @@
   "sniper_rsi_offset": 10,
 
   "exit_rsi": 50,
+  "exit_rsi_long": 50,
+  "exit_rsi_short": 50,
   "adaptive_exit_enabled": true,
   "exit_rsi_trend_threshold": 0.5,
   "exit_rsi_trend_shift": 5.0,
