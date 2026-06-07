@@ -149,3 +149,43 @@ class BreakoutStrategy:
         mechanism handles the exit.
         """
         return False, ""
+
+    # -- State for GUI --------------------------------------------------------
+
+    def get_strategy_state(self, df: pd.DataFrame) -> dict:
+        """
+        Return breakout-specific state for GUI display.
+
+        Shows: N-bar high/low levels, current ATR, trend direction,
+        and whether conditions are met for entry.
+        """
+        n = self.config.breakout_bars
+        if df is None or len(df) < n + 2:
+            return {}
+
+        latest = df.iloc[-1]
+        lookback = df.iloc[-(n + 1):-1]
+
+        highest_high = float(lookback['high'].max())
+        lowest_low = float(lookback['low'].min())
+        current_atr = float(latest.get('ATR', 0))
+        close = float(latest['close'])
+        is_uptrend = bool(latest.get('uptrend', False))
+        is_downtrend = bool(latest.get('downtrend', False))
+
+        # Distance to breakout levels
+        dist_to_high = highest_high - close
+        dist_to_low = close - lowest_low
+
+        return {
+            'breakout_high': highest_high,
+            'breakout_low': lowest_low,
+            'close': close,
+            'atr': current_atr,
+            'uptrend': is_uptrend,
+            'downtrend': is_downtrend,
+            'dist_to_high': dist_to_high,
+            'dist_to_low': dist_to_low,
+            'atr_filter_ok': current_atr >= self.config.breakout_min_atr,
+            'bars_since_signal': self._bars_processed - self._last_breakout_bar,
+        }

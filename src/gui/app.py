@@ -30,7 +30,7 @@ DROPDOWN_FIELDS: dict[str, list[str]] = {
     'trading_mode': ['both', 'long_only', 'short_only'],
     'timeframe': ['M1', 'M5', 'M15', 'H1'],
     'trend_filter': ['none', 'ema_cross', 'ema_200'],
-    'bot_type': ['sniper', 'rsi_scalper', 'liquidity_zones', 'tick_scalper', 'momentum'],
+    'bot_type': ['sniper', 'rsi_scalper', 'liquidity_zones', 'tick_scalper', 'momentum', 'breakout'],
 }
 
 # Human-readable labels for config fields
@@ -81,6 +81,14 @@ FIELD_LABELS: dict[str, str] = {
     'vg_atr_spike_multiplier': 'Spike Threshold (x)',
     'vg_cooldown_minutes': 'Cooldown (min)',
     'vg_resume_below_multiplier': 'Resume Below (x)',
+    'breakout_bars': 'Breakout Bars (N)',
+    'breakout_min_atr': 'Min ATR ($)',
+    'breakout_re_entry_bars': 'Re-entry Cooldown (bars)',
+    'breakout_sl_atr_mult': 'SL Distance (x ATR)',
+    'breakout_trail_atr_mult': 'Trail Distance (x ATR)',
+    'breakout_max_daily_loss_pct': 'Max Daily Loss (%)',
+    'breakout_max_daily_trades': 'Max Daily Trades',
+    'breakout_max_drawdown_pct': 'Max Total Drawdown (%)',
 }
 
 try:
@@ -160,12 +168,12 @@ class BotInstancePanel:
 
     def refresh_config_list(self):
         """Scan config/ and rebuild the instance list from available configs."""
+        from src.services.bot_manager import BOT_REGISTRY
         configs = self.bot_manager.list_available_configs()
         self.instances = []
         for cfg in configs:
-            # Only show configs with a recognized bot_type
-            if cfg['bot_type'] in ('sniper', 'rsi_scalper', 'liquidity_zones',
-                                   'tick_scalper', 'momentum'):
+            # Only show configs with a recognized bot_type (registered in BOT_REGISTRY)
+            if cfg['bot_type'] in BOT_REGISTRY:
                 instance_id = cfg['bot_label'] or cfg['filename']
                 self.instances.append({
                     'config_path': cfg['path'],
@@ -580,6 +588,24 @@ class BotDetailPanel:
                 'ATR / Stops': atr_fields,
                 'Risk Management': risk,
             }
+        elif bot_type == 'breakout':
+            breakout_fields = ['breakout_bars', 'breakout_min_atr',
+                               'breakout_re_entry_bars', 'breakout_sl_atr_mult',
+                               'breakout_trail_atr_mult']
+            breakout_risk = ['max_drawdown_limit', 'breakout_max_daily_loss_pct',
+                             'breakout_max_daily_trades', 'breakout_max_drawdown_pct']
+            return {
+                'Identity': ['config_name', 'bot_type', 'timeframe', 'symbol',
+                             'magic_number', 'bot_label'],
+                'Position Sizing': ['sizing_mode', 'risk_per_trade_pct', 'fixed_lots',
+                                    'max_positions'],
+                'Breakout Entry': breakout_fields,
+                'Trend Filter (EMA)': ['fast_ema', 'slow_ema'],
+                'Trailing Stop': ['breakeven_atr_trigger', 'breakeven_offset',
+                                  'trail_atr_after_breakeven', 'trail_atr_before_breakeven'],
+                'Direction': ['enable_shorts', 'short_requires_downtrend', 'trading_mode'],
+                'Risk Management': breakout_risk,
+            }
         else:
             # Fallback: show all
             return {'All': list(self.config_vars.keys())}
@@ -741,6 +767,9 @@ class BotDetailPanel:
         trades = state.get('trades_today', 0)
         losses = state.get('consecutive_losses', 0)
 
+        # Strategy-specific state (breakout levels, etc.)
+        strat_state = ind.get('strategy_state', {})
+
         sniper = state.get('sniper', {})
         sniper_text = ""
         if sniper.get('buy_level'):
@@ -748,12 +777,32 @@ class BotDetailPanel:
         if sniper.get('sell_level'):
             sniper_text += f"  Sniper Sell: ${sniper['sell_level']:.2f}"
 
-        ind_text = (
-            f"RSI: {rsi:.1f}  ATR: ${atr:.2f}  Trend: {trend}\n"
-            f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
-        )
-        if sniper_text:
-            ind_text += f"\n{sniper_text}"
+        # Build indicator text based on bot type
+        bot_type = self.current_instance.get('bot_type', '')
+
+        if bot_type == 'breakout' and strat_state:
+            # Breakout-specific display
+            brk_high = strat_state.get('breakout_high', 0)
+            brk_low = strat_state.get('breakout_low', 0)
+            dist_high = strat_state.get('dist_to_high', 0)
+            dist_low = strat_state.get('dist_to_low', 0)
+            atr_ok = strat_state.get('atr_filter_ok', False)
+            bars_since = strat_state.get('bars_since_signal', 999)
+
+            ind_text = (
+                f"ATR: ${atr:.2f}  Trend: {trend}  ATR Filter: {'OK' if atr_ok else 'LOW'}\n"
+                f"Breakout High: ${brk_high:.2f} (${dist_high:.2f} away)\n"
+                f"Breakout Low:  ${brk_low:.2f} (${dist_low:.2f} away)\n"
+                f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
+            )
+        else:
+            # Default display (sniper, rsi_scalper, etc.)
+            ind_text = (
+                f"RSI: {rsi:.1f}  ATR: ${atr:.2f}  Trend: {trend}\n"
+                f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
+            )
+            if sniper_text:
+                ind_text += f"\n{sniper_text}"
 
         # Schedule info
         sched = state.get('schedule', {})
@@ -1323,17 +1372,32 @@ class EgonGUI:
                     ax.add_patch(rect)
                     ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1, alpha=0.6)
 
-                # Mark sniper levels if a bot is selected
+                # Mark levels if a bot is selected
                 selected = self.instance_panel.get_selected()
                 if selected:
                     state = self.bot_manager.get_state(selected.get('instance_id', ''))
-                    sniper = state.get('sniper', {})
-                    if sniper.get('buy_level'):
-                        ax.axhline(sniper['buy_level'], color=SUCCESS, linestyle='--',
-                                   alpha=0.6, linewidth=1)
-                    if sniper.get('sell_level'):
-                        ax.axhline(sniper['sell_level'], color=ERROR, linestyle='--',
-                                   alpha=0.6, linewidth=1)
+                    bot_type = selected.get('bot_type', '')
+
+                    if bot_type == 'breakout':
+                        # Show breakout high/low levels
+                        strat_state = state.get('indicators', {}).get('strategy_state', {})
+                        if strat_state.get('breakout_high'):
+                            ax.axhline(strat_state['breakout_high'], color=SUCCESS,
+                                       linestyle='--', alpha=0.7, linewidth=1.2,
+                                       label=f"High ${strat_state['breakout_high']:.2f}")
+                        if strat_state.get('breakout_low'):
+                            ax.axhline(strat_state['breakout_low'], color=ERROR,
+                                       linestyle='--', alpha=0.7, linewidth=1.2,
+                                       label=f"Low ${strat_state['breakout_low']:.2f}")
+                    else:
+                        # Show sniper levels for RSI-based bots
+                        sniper = state.get('sniper', {})
+                        if sniper.get('buy_level'):
+                            ax.axhline(sniper['buy_level'], color=SUCCESS, linestyle='--',
+                                       alpha=0.6, linewidth=1)
+                        if sniper.get('sell_level'):
+                            ax.axhline(sniper['sell_level'], color=ERROR, linestyle='--',
+                                       alpha=0.6, linewidth=1)
 
                 ax.set_xlim(-1, len(df))
                 ax.set_ylim(df['low'].min() * 0.9999, df['high'].max() * 1.0001)

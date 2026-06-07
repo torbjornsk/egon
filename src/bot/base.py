@@ -650,6 +650,9 @@ class BaseTradingBot:
                     'uptrend': bool(latest['uptrend']),
                     'downtrend': bool(latest['downtrend']),
                 }
+                # Strategy-specific state (e.g. breakout levels)
+                if hasattr(self.strategy, 'get_strategy_state'):
+                    indicators['strategy_state'] = self.strategy.get_strategy_state(df)
         except Exception:
             pass
 
