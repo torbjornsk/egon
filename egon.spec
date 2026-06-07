@@ -35,6 +35,7 @@ a = Analysis(
     datas=[
         ('config', 'config'),
         ('data', 'data'),
+        ('docs', 'docs'),
     ],
     hiddenimports=[
         'MetaTrader5',
@@ -64,6 +65,8 @@ a = Analysis(
         'src.core.position',
         'src.core.risk',
         'src.core.rsi_levels',
+        'src.core.scheduler',
+        'src.core.volatility_guard',
         'src.core.tick_analysis',
         'src.core.timezone',
         'src.core.trend',
@@ -84,6 +87,7 @@ a = Analysis(
         'src.strategy.m5_scalping',
         'src.strategy.m5_sniper',
         'src.strategy.momentum_signal',
+        'src.strategy.sniper',
     ],
     hookspath=[],
     hooksconfig={},
