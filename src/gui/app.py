@@ -92,7 +92,12 @@ class BotInstancePanel:
         self.list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.list_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Mouse wheel scrolling for the instance list
+        self.list_canvas.bind('<MouseWheel>',
+                              lambda e: self.list_canvas.yview_scroll(-1 * (e.delta // 120), 'units'))
+
         self.instance_widgets: list[tk.Frame] = []
+        self._row_refs: list[dict] = []
 
     def refresh_config_list(self):
         """Scan config/ and rebuild the instance list from available configs."""
@@ -216,33 +221,45 @@ class BotInstancePanel:
 
 
 class BotDetailPanel:
-    """Right panel: config editing, controls, positions, indicators for selected bot."""
+    """A single bot detail column: config editing, controls, positions, indicators."""
 
-    def __init__(self, parent, bot_manager: BotManager, instance_panel: BotInstancePanel):
+    def __init__(self, parent, bot_manager: BotManager, instance_panel, on_close_callback, instance: dict):
         self.bot_manager = bot_manager
         self.instance_panel = instance_panel
-        self.current_instance: dict | None = None
+        self.on_close = on_close_callback
+        self.current_instance: dict = instance
         self.config_vars: dict[str, tk.StringVar] = {}
         self.loaded_config = None
-        self.loaded_path: str = ''
+        self.loaded_path: str = instance.get('config_path', '')
 
-        self.frame = tk.Frame(parent, bg=BG_DARK)
+        # Fixed-width column frame
+        self.frame = tk.Frame(parent, bg=BG_DARK, width=420)
+        self.frame.pack_propagate(False)
         self._build()
+        self._load_config_fields()
+        self._update_controls()
 
     def _build(self):
         f = self.frame
 
-        # ── Header: config name + controls ──────────────────────────
+        # ── Header: config name + close button ──────────────────────
         header = tk.Frame(f, bg=BG_DARK)
         header.pack(fill=tk.X, padx=6, pady=(6, 4))
 
-        self.name_lbl = tk.Label(header, text="No bot selected", bg=BG_DARK, fg=ACCENT,
-                                 font=('Arial', 11, 'bold'), anchor=tk.W)
+        self.name_lbl = tk.Label(header, text=self.current_instance.get('config_name', ''),
+                                 bg=BG_DARK, fg=ACCENT,
+                                 font=('Arial', 10, 'bold'), anchor=tk.W)
         self.name_lbl.pack(side=tk.LEFT)
+
+        # Close button (stops bot + removes panel)
+        close_btn = tk.Label(header, text="\u2715", bg=BG_DARK, fg=ERROR,
+                             font=('Arial', 12, 'bold'), cursor='hand2')
+        close_btn.pack(side=tk.RIGHT, padx=(4, 0))
+        close_btn.bind('<Button-1>', lambda e: self._close())
 
         self.status_lbl = tk.Label(header, text="", bg=BG_DARK, fg=NEUTRAL,
                                    font=('Arial', 9))
-        self.status_lbl.pack(side=tk.LEFT, padx=(12, 0))
+        self.status_lbl.pack(side=tk.RIGHT, padx=(0, 8))
 
         # Control buttons
         ctrl = tk.Frame(f, bg=BG_DARK)
@@ -309,17 +326,12 @@ class BotDetailPanel:
         self.config_canvas.bind('<MouseWheel>',
                                 lambda e: self.config_canvas.yview_scroll(-1 * (e.delta // 120), 'units'))
 
-    def show_instance(self, instance: dict):
-        """Load and display a bot instance's config."""
-        if instance.get('_new'):
-            self._create_new_config()
-            return
-
-        self.current_instance = instance
-        self.loaded_path = instance['config_path']
-        self.name_lbl.config(text=instance['config_name'])
-        self._load_config_fields()
-        self._update_controls()
+    def _close(self):
+        """Close this panel: stop the bot if running, then remove."""
+        iid = self.current_instance.get('instance_id', '')
+        if self.bot_manager.is_running(iid):
+            self.bot_manager.stop_bot(iid)
+        self.on_close(self)
 
     def _load_config_fields(self):
         """Load config from file and build editable fields."""
@@ -550,52 +562,6 @@ class BotDetailPanel:
         if self.loaded_path:
             self._load_config_fields()
 
-    def _create_new_config(self):
-        """Create a new config from a sniper template."""
-        from src.core.paths import resolve_path
-        from src.core.config import TradingConfig
-
-        template = TradingConfig()
-        template.config_name = "New Sniper Config"
-        template.bot_type = "sniper"
-        template.timeframe = "M5"
-        template.magic_number = 234900  # Pick an unused magic number
-        template.bot_label = "NEW"
-        template.order_comment = "new_sniper"
-
-        config_dir = str(resolve_path('config'))
-        path = filedialog.asksaveasfilename(
-            initialdir=config_dir,
-            defaultextension='.json',
-            filetypes=[('JSON files', '*.json')],
-            title='Create New Config',
-            initialfile='sniper_new.json',
-        )
-        if not path:
-            return
-
-        # Write template
-        import dataclasses
-        data = {}
-        for field in dataclasses.fields(template):
-            val = getattr(template, field.name)
-            if not isinstance(val, (list, dict)):
-                data[field.name] = val
-
-        with open(path, 'w') as f:
-            json.dump(data, f, indent=2)
-
-        self.loaded_path = path
-        self.current_instance = {
-            'config_path': path,
-            'config_name': template.config_name,
-            'bot_type': 'sniper',
-            'instance_id': 'NEW',
-        }
-        self._load_config_fields()
-        self.name_lbl.config(text=template.config_name)
-        self.instance_panel.refresh_config_list()
-
     def _update_controls(self):
         """Update button states based on whether the bot is running."""
         if not self.current_instance:
@@ -820,8 +786,124 @@ class SizingCalculator:
             self.result_lbl.config(text="Enter valid numbers", fg=NEUTRAL)
 
 
+class BotDetailContainer:
+    """Horizontally scrollable container for multiple BotDetailPanel columns."""
+
+    def __init__(self, parent, bot_manager: BotManager, instance_panel):
+        self.bot_manager = bot_manager
+        self.instance_panel = instance_panel
+        self.panels: list[BotDetailPanel] = []
+
+        self.frame = tk.Frame(parent, bg=BG_DARK)
+
+        # Horizontal scrollable area
+        self.canvas = tk.Canvas(self.frame, bg=BG_DARK, highlightthickness=0)
+        self.h_scrollbar = ttk.Scrollbar(self.frame, orient=tk.HORIZONTAL,
+                                         command=self.canvas.xview)
+        self.inner = tk.Frame(self.canvas, bg=BG_DARK)
+
+        self.inner.bind('<Configure>',
+                        lambda e: self.canvas.configure(scrollregion=self.canvas.bbox('all')))
+        self.canvas.create_window((0, 0), window=self.inner, anchor='nw')
+        self.canvas.configure(xscrollcommand=self.h_scrollbar.set)
+
+        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # Placeholder when no panels open
+        self.placeholder = tk.Label(self.inner, text="Double-click a bot to open it here",
+                                    bg=BG_DARK, fg=NEUTRAL, font=('Arial', 10))
+        self.placeholder.pack(padx=20, pady=40)
+
+    def open_instance(self, instance: dict):
+        """Open a bot detail panel for the given instance."""
+        if instance.get('_new'):
+            # Handle new config creation (delegate to first panel or create special)
+            self._create_new_config()
+            return
+
+        # Don't open duplicates
+        iid = instance.get('instance_id', '')
+        for panel in self.panels:
+            if panel.current_instance.get('instance_id') == iid:
+                return  # Already open
+
+        # Hide placeholder
+        self.placeholder.pack_forget()
+
+        panel = BotDetailPanel(
+            self.inner, self.bot_manager, self.instance_panel,
+            on_close_callback=self._on_panel_closed,
+            instance=instance,
+        )
+        panel.frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 2))
+        self.panels.append(panel)
+
+    def _on_panel_closed(self, panel: BotDetailPanel):
+        """Remove a panel from the container."""
+        panel.frame.destroy()
+        self.panels.remove(panel)
+        self.instance_panel.update_status()
+
+        if not self.panels:
+            self.placeholder.pack(padx=20, pady=40)
+
+    def _create_new_config(self):
+        """Create a new config file from template."""
+        from src.core.paths import resolve_path
+        from src.core.config import TradingConfig
+        import dataclasses
+
+        template = TradingConfig()
+        template.config_name = "New Sniper Config"
+        template.bot_type = "sniper"
+        template.timeframe = "M5"
+        template.magic_number = 234900
+        template.bot_label = "NEW"
+        template.order_comment = "new_sniper"
+
+        config_dir = str(resolve_path('config'))
+        path = filedialog.asksaveasfilename(
+            initialdir=config_dir,
+            defaultextension='.json',
+            filetypes=[('JSON files', '*.json')],
+            title='Create New Config',
+            initialfile='sniper_new.json',
+        )
+        if not path:
+            return
+
+        data = {}
+        for field in dataclasses.fields(template):
+            val = getattr(template, field.name)
+            if not isinstance(val, (list, dict)):
+                data[field.name] = val
+
+        with open(path, 'w') as f:
+            json.dump(data, f, indent=2)
+
+        self.instance_panel.refresh_config_list()
+
+        # Open the new config
+        instance = {
+            'config_path': path,
+            'config_name': template.config_name,
+            'bot_type': 'sniper',
+            'bot_label': 'NEW',
+            'timeframe': 'M5',
+            'instance_id': 'NEW',
+            'filename': Path(path).name,
+        }
+        self.open_instance(instance)
+
+    def update(self):
+        """Update all open panels."""
+        for panel in self.panels:
+            panel.update()
+
+
 class EgonGUI:
-    """Main GUI: left instance list, right detail, bottom chart/history/log."""
+    """Main GUI: left instance list, right multi-panel detail, bottom chart/history/log."""
 
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -856,11 +938,13 @@ class EgonGUI:
         self.instance_panel = BotInstancePanel(
             top_paned, self.bot_manager, self._on_instance_selected
         )
-        top_paned.add(self.instance_panel.frame, width=320, minsize=250)
+        top_paned.add(self.instance_panel.frame, width=280, minsize=220)
 
-        # Right: detail panel
-        self.detail_panel = BotDetailPanel(top_paned, self.bot_manager, self.instance_panel)
-        top_paned.add(self.detail_panel.frame, width=500, minsize=350)
+        # Right: multi-panel detail container
+        self.detail_container = BotDetailContainer(
+            top_paned, self.bot_manager, self.instance_panel
+        )
+        top_paned.add(self.detail_container.frame, width=900, minsize=400)
 
         # Bottom: tabbed area (chart, trades, log, market, calculator)
         bottom = ttk.Notebook(main_paned)
@@ -896,7 +980,7 @@ class EgonGUI:
         self.instance_panel.refresh_config_list()
 
     def _on_instance_selected(self, instance: dict):
-        self.detail_panel.show_instance(instance)
+        self.detail_container.open_instance(instance)
 
     # ── Chart ───────────────────────────────────────────────────────
 
@@ -1000,7 +1084,7 @@ class EgonGUI:
     def _update_loop(self):
         try:
             self._update_account()
-            self.detail_panel.update()
+            self.detail_container.update()
             self.instance_panel.update_status()
 
             if HAS_MATPLOTLIB:
