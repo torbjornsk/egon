@@ -40,7 +40,7 @@ end_date = datetime.now()
 start_date = end_date - timedelta(days=7)
 
 # Try different symbol variations
-for symbol_name in ['XAUUSD', 'XAUUSDm', 'GOLD', 'XAUUSD.']:
+for symbol_name in ['XAUUSD.p', 'XAUUSD', 'XAUUSDm', 'GOLD', 'XAUUSD.']:
     print(f"\nTrying symbol: {symbol_name}")
     
     # Check if symbol exists

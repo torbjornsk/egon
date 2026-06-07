@@ -1,0 +1,86 @@
+{
+  "12471395": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (65.06 > 55)",
+    "exit_time": "2026-05-26T10:00:00.634431+02:00",
+    "bot": "M15"
+  },
+  "12494953": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (59.77 > 55)",
+    "exit_time": "2026-05-26T22:45:01.097613+02:00",
+    "bot": "M15"
+  },
+  "12507008": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:46:26.771704+02:00",
+    "bot": "M15"
+  },
+  "12513805": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 55.6% from peak $26.60 to $11.80 (limit 50% after 50min)",
+    "exit_time": "2026-05-27T14:19:44.089994+02:00",
+    "bot": "M15"
+  },
+  "12520351": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 50.3% from peak $24.66 to $12.26 (limit 50% after 32min)",
+    "exit_time": "2026-05-27T15:47:18.129485+02:00",
+    "bot": "M15"
+  },
+  "12529542": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (35.99 < 45)",
+    "exit_time": "2026-05-28T02:00:01.035973+02:00",
+    "bot": "M15"
+  },
+  "12534517": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T05:15:50.763620+02:00",
+    "bot": "M15"
+  },
+  "12539176": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (56.66 > 55)",
+    "exit_time": "2026-05-28T09:00:01.080884+02:00",
+    "bot": "M15"
+  },
+  "12558369": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 53.0% from peak $25.38 to $11.92 (limit 50% after 2min)",
+    "exit_time": "2026-05-28T16:16:52.281585+02:00",
+    "bot": "M15"
+  },
+  "12562300": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-28T18:42:08.416905+02:00",
+    "bot": "M15"
+  },
+  "12581473": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (40.37 < 45)",
+    "exit_time": "2026-05-28T22:00:00.399957+02:00",
+    "bot": "M15"
+  },
+  "12603402": {
+    "reason": "RSI exit",
+    "full_reason": "RSI exit (68.47 > 55)",
+    "exit_time": "2026-05-29T03:15:00.511631+02:00",
+    "bot": "M15"
+  },
+  "12647256": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-29T11:50:31.992483+02:00",
+    "bot": "M15"
+  },
+  "12714344": {
+    "reason": "Weekend close",
+    "full_reason": "Weekend protection -- Weekend close in 30 minutes",
+    "exit_time": "2026-05-29T22:30:00.425008+02:00",
+    "bot": "M15"
+  }
+}

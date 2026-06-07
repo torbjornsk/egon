@@ -1,0 +1,1202 @@
+{
+  "12821737": {
+    "reason": "Mean revert exit (RSI 40.1 <= ...",
+    "full_reason": "Mean revert exit (RSI 40.1 <= 55)",
+    "exit_time": "2026-06-05T10:35:00.276030+02:00",
+    "bot": "M5S"
+  },
+  "12821419": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T10:01:38.991037+02:00",
+    "bot": "M5S"
+  },
+  "12820934": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T09:42:20.539862+02:00",
+    "bot": "M5S"
+  },
+  "12820239": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T09:23:41.873393+02:00",
+    "bot": "M5S"
+  },
+  "12818981": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T08:25:18.648237+02:00",
+    "bot": "M5S"
+  },
+  "12817977": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T07:36:15.937591+02:00",
+    "bot": "M5S"
+  },
+  "12816859": {
+    "reason": "Mean revert exit (RSI 45.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 45.6 >= 45)",
+    "exit_time": "2026-06-05T05:50:00.361537+02:00",
+    "bot": "M5S"
+  },
+  "12816265": {
+    "reason": "Mean revert exit (RSI 49.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 49.6 >= 45)",
+    "exit_time": "2026-06-05T04:50:00.631951+02:00",
+    "bot": "M5S"
+  },
+  "12815442": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T04:30:45.846821+02:00",
+    "bot": "M5S"
+  },
+  "12813835": {
+    "reason": "Mean revert exit (RSI 47.4 >= ...",
+    "full_reason": "Mean revert exit (RSI 47.4 >= 45)",
+    "exit_time": "2026-06-05T02:40:00.417758+02:00",
+    "bot": "M5S"
+  },
+  "12813365": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T02:12:13.668020+02:00",
+    "bot": "M5S"
+  },
+  "12813280": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T01:31:12.637482+02:00",
+    "bot": "M5S"
+  },
+  "12812877": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T01:02:21.126736+02:00",
+    "bot": "M5S"
+  },
+  "12812290": {
+    "reason": "Mean revert exit (RSI 55.0 >= ...",
+    "full_reason": "Mean revert exit (RSI 55.0 >= 50)",
+    "exit_time": "2026-06-05T00:23:29.219660+02:00",
+    "bot": "M5S"
+  },
+  "12812097": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T21:54:08.387274+02:00",
+    "bot": "M5S"
+  },
+  "12811658": {
+    "reason": "Mean revert exit (RSI 46.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 46.6 >= 45)",
+    "exit_time": "2026-06-04T20:50:00.799157+02:00",
+    "bot": "M5S"
+  },
+  "12811510": {
+    "reason": "Mean revert exit (RSI 41.9 <= ...",
+    "full_reason": "Mean revert exit (RSI 41.9 <= 45)",
+    "exit_time": "2026-06-04T20:35:00.907021+02:00",
+    "bot": "M5S"
+  },
+  "12811326": {
+    "reason": "Mean revert exit (RSI 48.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 48.1 >= 45)",
+    "exit_time": "2026-06-04T20:15:00.981347+02:00",
+    "bot": "M5S"
+  },
+  "12811185": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T20:00:40.231045+02:00",
+    "bot": "M5S"
+  },
+  "12810955": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T19:41:28.903611+02:00",
+    "bot": "M5S"
+  },
+  "12809789": {
+    "reason": "Mean revert exit (RSI 35.5 <= ...",
+    "full_reason": "Mean revert exit (RSI 35.5 <= 45)",
+    "exit_time": "2026-06-04T19:15:00.482640+02:00",
+    "bot": "M5S"
+  },
+  "12807879": {
+    "reason": "Mean revert exit (RSI 49.7 >= ...",
+    "full_reason": "Mean revert exit (RSI 49.7 >= 45)",
+    "exit_time": "2026-06-04T17:50:00.318548+02:00",
+    "bot": "M5S"
+  },
+  "12807297": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T16:48:41.398033+02:00",
+    "bot": "M5S"
+  },
+  "12806026": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T16:37:00.886772+02:00",
+    "bot": "M5S"
+  },
+  "12804241": {
+    "reason": "Mean revert exit (RSI 43.3 <= ...",
+    "full_reason": "Mean revert exit (RSI 43.3 <= 55)",
+    "exit_time": "2026-06-04T15:55:00.350387+02:00",
+    "bot": "M5S"
+  },
+  "12803602": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T15:34:22.452137+02:00",
+    "bot": "M5S"
+  },
+  "12802033": {
+    "reason": "Mean revert exit (RSI 50.2 <= ...",
+    "full_reason": "Mean revert exit (RSI 50.2 <= 55)",
+    "exit_time": "2026-06-04T15:00:00.276935+02:00",
+    "bot": "M5S"
+  },
+  "12800717": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-04T14:11:39.634010+02:00",
+    "bot": "M5S"
+  },
+  "12800219": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T13:57:12.728997+02:00",
+    "bot": "M5S"
+  },
+  "12799779": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T13:47:23.351809+02:00",
+    "bot": "M5S"
+  },
+  "12799148": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T13:41:54.567430+02:00",
+    "bot": "M5S"
+  },
+  "12798727": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T13:26:48.604925+02:00",
+    "bot": "M5S"
+  },
+  "12798415": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T13:17:01.365374+02:00",
+    "bot": "M5S"
+  },
+  "12797410": {
+    "reason": "Mean revert exit (RSI 54.3 <= ...",
+    "full_reason": "Mean revert exit (RSI 54.3 <= 55)",
+    "exit_time": "2026-06-04T12:10:00.425705+02:00",
+    "bot": "M5S"
+  },
+  "12796080": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T10:31:59.173481+02:00",
+    "bot": "M5S"
+  },
+  "12795214": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T10:11:15.738232+02:00",
+    "bot": "M5S"
+  },
+  "12794629": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T09:25:51.604874+02:00",
+    "bot": "M5S"
+  },
+  "12793317": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-04T08:10:22.818159+02:00",
+    "bot": "M5S"
+  },
+  "12793236": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T07:55:17.989718+02:00",
+    "bot": "M5S"
+  },
+  "12793045": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T07:46:15.883448+02:00",
+    "bot": "M5S"
+  },
+  "12792693": {
+    "reason": "Mean revert exit (RSI 32.9 <= ...",
+    "full_reason": "Mean revert exit (RSI 32.9 <= 45)",
+    "exit_time": "2026-06-04T07:40:01.958340+02:00",
+    "bot": "M5S"
+  },
+  "12792540": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T07:13:11.674150+02:00",
+    "bot": "M5S"
+  },
+  "12792475": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T07:03:50.607685+02:00",
+    "bot": "M5S"
+  },
+  "12792380": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T06:59:52.092014+02:00",
+    "bot": "M5S"
+  },
+  "12792320": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T06:48:09.685827+02:00",
+    "bot": "M5S"
+  },
+  "12792243": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T06:40:35.871777+02:00",
+    "bot": "M5S"
+  },
+  "12792175": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T06:36:37.352230+02:00",
+    "bot": "M5S"
+  },
+  "12791662": {
+    "reason": "Mean revert exit (RSI 58.5 >= ...",
+    "full_reason": "Mean revert exit (RSI 58.5 >= 55)",
+    "exit_time": "2026-06-04T06:25:00.838874+02:00",
+    "bot": "M5S"
+  },
+  "12791005": {
+    "reason": "Mean revert exit (RSI 38.1 <= ...",
+    "full_reason": "Mean revert exit (RSI 38.1 <= 45)",
+    "exit_time": "2026-06-04T05:55:01.800199+02:00",
+    "bot": "M5S"
+  },
+  "12790075": {
+    "reason": "Mean revert exit (RSI 40.7 <= ...",
+    "full_reason": "Mean revert exit (RSI 40.7 <= 45)",
+    "exit_time": "2026-06-04T04:30:00.822255+02:00",
+    "bot": "M5S"
+  },
+  "12789852": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T03:36:01.650059+02:00",
+    "bot": "M5S"
+  },
+  "12789651": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T03:23:01.874889+02:00",
+    "bot": "M5S"
+  },
+  "12789198": {
+    "reason": "Mean revert exit (RSI 60.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 60.2 >= 55)",
+    "exit_time": "2026-06-04T03:15:00.901802+02:00",
+    "bot": "M5S"
+  },
+  "12788302": {
+    "reason": "Mean revert exit (RSI 43.7 <= ...",
+    "full_reason": "Mean revert exit (RSI 43.7 <= 45)",
+    "exit_time": "2026-06-04T02:40:00.728205+02:00",
+    "bot": "M5S"
+  },
+  "12787949": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T01:45:07.465078+02:00",
+    "bot": "M5S"
+  },
+  "12787779": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T01:15:52.956244+02:00",
+    "bot": "M5S"
+  },
+  "12787312": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-04T00:37:48.166586+02:00",
+    "bot": "M5S"
+  },
+  "12787165": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T00:16:14.102592+02:00",
+    "bot": "M5S"
+  },
+  "12787078": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T00:12:08.325378+02:00",
+    "bot": "M5S"
+  },
+  "12786791": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T00:04:21.394014+02:00",
+    "bot": "M5S"
+  },
+  "12786846": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-04T00:04:21.392006+02:00",
+    "bot": "M5S"
+  },
+  "12786622": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T22:32:55.474232+02:00",
+    "bot": "M5S"
+  },
+  "12786595": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T22:32:42.448900+02:00",
+    "bot": "M5S"
+  },
+  "12785917": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T21:16:02.904178+02:00",
+    "bot": "M5S"
+  },
+  "12785629": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T20:35:26.805704+02:00",
+    "bot": "M5S"
+  },
+  "12785585": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T20:35:26.803697+02:00",
+    "bot": "M5S"
+  },
+  "12784023": {
+    "reason": "Mean revert exit (RSI 57.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 57.9 >= 55)",
+    "exit_time": "2026-06-03T19:10:00.918595+02:00",
+    "bot": "M5S"
+  },
+  "12783838": {
+    "reason": "Mean revert exit (RSI 57.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 57.9 >= 55)",
+    "exit_time": "2026-06-03T19:10:00.890079+02:00",
+    "bot": "M5S"
+  },
+  "12783711": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T18:07:19.221031+02:00",
+    "bot": "M5S"
+  },
+  "12780003": {
+    "reason": "Mean revert exit (RSI 76.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 76.2 >= 55)",
+    "exit_time": "2026-06-03T16:50:00.322837+02:00",
+    "bot": "M5S"
+  },
+  "12779736": {
+    "reason": "Mean revert exit (RSI 76.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 76.2 >= 55)",
+    "exit_time": "2026-06-03T16:50:00.292716+02:00",
+    "bot": "M5S"
+  },
+  "12776782": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T14:55:05.728236+02:00",
+    "bot": "M5S"
+  },
+  "12776409": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T14:55:05.725061+02:00",
+    "bot": "M5S"
+  },
+  "12776132": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T14:33:39.148766+02:00",
+    "bot": "M5S"
+  },
+  "12774260": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T13:30:10.146150+02:00",
+    "bot": "M5S"
+  },
+  "12772197": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T11:57:55.249559+02:00",
+    "bot": "M5S"
+  },
+  "12771269": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T11:15:20.198523+02:00",
+    "bot": "M5S"
+  },
+  "12771059": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T11:15:20.196519+02:00",
+    "bot": "M5S"
+  },
+  "12770194": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T10:51:49.369501+02:00",
+    "bot": "M5S"
+  },
+  "12770273": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T10:36:45.802390+02:00",
+    "bot": "M5S"
+  },
+  "12767211": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T08:23:17.982171+02:00",
+    "bot": "M5S"
+  },
+  "12766902": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:55:47.858588+02:00",
+    "bot": "M5S"
+  },
+  "12766811": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:42:29.239098+02:00",
+    "bot": "M5S"
+  },
+  "12766699": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:38:29.525763+02:00",
+    "bot": "M5S"
+  },
+  "12766366": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:30:37.158602+02:00",
+    "bot": "M5S"
+  },
+  "12766450": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:30:37.156598+02:00",
+    "bot": "M5S"
+  },
+  "12765930": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:24:27.024924+02:00",
+    "bot": "M5S"
+  },
+  "12765882": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T07:20:16.289239+02:00",
+    "bot": "M5S"
+  },
+  "12765724": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T06:51:25.778555+02:00",
+    "bot": "M5S"
+  },
+  "12765809": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T06:46:05.939641+02:00",
+    "bot": "M5S"
+  },
+  "12765647": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T06:36:19.071559+02:00",
+    "bot": "M5S"
+  },
+  "12765609": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T06:31:08.052139+02:00",
+    "bot": "M5S"
+  },
+  "12765477": {
+    "reason": "Mean revert exit (RSI 36.5 <= ...",
+    "full_reason": "Mean revert exit (RSI 36.5 <= 45)",
+    "exit_time": "2026-06-03T06:20:01.005225+02:00",
+    "bot": "M5S"
+  },
+  "12764620": {
+    "reason": "Mean revert exit (RSI 56.5 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.5 >= 55)",
+    "exit_time": "2026-06-03T04:10:00.329246+02:00",
+    "bot": "M5S"
+  },
+  "12764578": {
+    "reason": "Mean revert exit (RSI 56.5 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.5 >= 55)",
+    "exit_time": "2026-06-03T04:10:00.299698+02:00",
+    "bot": "M5S"
+  },
+  "12763441": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T02:39:30.081371+02:00",
+    "bot": "M5S"
+  },
+  "12762840": {
+    "reason": "Mean revert exit (RSI 64.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 64.9 >= 55)",
+    "exit_time": "2026-06-03T02:25:00.422032+02:00",
+    "bot": "M5S"
+  },
+  "12762710": {
+    "reason": "Mean revert exit (RSI 64.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 64.9 >= 55)",
+    "exit_time": "2026-06-03T02:25:00.392295+02:00",
+    "bot": "M5S"
+  },
+  "12762597": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T01:28:47.480090+02:00",
+    "bot": "M5S"
+  },
+  "12762454": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T01:19:40.633199+02:00",
+    "bot": "M5S"
+  },
+  "12762300": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-03T01:10:55.947558+02:00",
+    "bot": "M5S"
+  },
+  "12759821": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T19:36:42.179872+02:00",
+    "bot": "M5S"
+  },
+  "12759948": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T19:35:38.974543+02:00",
+    "bot": "M5S"
+  },
+  "12759884": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T19:16:35.744594+02:00",
+    "bot": "M5S"
+  },
+  "12759538": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T19:09:17.655431+02:00",
+    "bot": "M5S"
+  },
+  "12759284": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T19:02:00.323302+02:00",
+    "bot": "M5S"
+  },
+  "12759076": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T18:35:31.076248+02:00",
+    "bot": "M5S"
+  },
+  "12758903": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T18:26:16.526854+02:00",
+    "bot": "M5S"
+  },
+  "12758111": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T17:47:35.475891+02:00",
+    "bot": "M5S"
+  },
+  "12758061": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T17:43:24.787390+02:00",
+    "bot": "M5S"
+  },
+  "12756895": {
+    "reason": "Mean revert exit (RSI 57.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 57.2 >= 55)",
+    "exit_time": "2026-06-02T17:10:01.692070+02:00",
+    "bot": "M5S"
+  },
+  "12756653": {
+    "reason": "Mean revert exit (RSI 57.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 57.2 >= 55)",
+    "exit_time": "2026-06-02T17:10:01.662921+02:00",
+    "bot": "M5S"
+  },
+  "12755797": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T16:17:57.177416+02:00",
+    "bot": "M5S"
+  },
+  "12755551": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T16:17:51.167356+02:00",
+    "bot": "M5S"
+  },
+  "12753793": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T15:54:52.197945+02:00",
+    "bot": "M5S"
+  },
+  "12755270": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T15:52:26.790219+02:00",
+    "bot": "M5S"
+  },
+  "12754775": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T15:43:26.076167+02:00",
+    "bot": "M5S"
+  },
+  "12753598": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T15:30:08.866006+02:00",
+    "bot": "M5S"
+  },
+  "12753084": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 42.8% from peak $19.36 to $11.08 (limit 40% after 7min)",
+    "exit_time": "2026-06-02T15:07:27.849100+02:00",
+    "bot": "M5S"
+  },
+  "12752936": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.2% from peak $18.82 to $11.26 (limit 40% after 12min)",
+    "exit_time": "2026-06-02T15:07:18.776293+02:00",
+    "bot": "M5S"
+  },
+  "12752630": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T14:59:15.174696+02:00",
+    "bot": "M5S"
+  },
+  "12751324": {
+    "reason": "Mean revert exit (RSI 60.7 >= ...",
+    "full_reason": "Mean revert exit (RSI 60.7 >= 55)",
+    "exit_time": "2026-06-02T14:25:00.647150+02:00",
+    "bot": "M5S"
+  },
+  "12751242": {
+    "reason": "Mean revert exit (RSI 60.7 >= ...",
+    "full_reason": "Mean revert exit (RSI 60.7 >= 55)",
+    "exit_time": "2026-06-02T14:25:00.618980+02:00",
+    "bot": "M5S"
+  },
+  "12750374": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T12:38:42.602167+02:00",
+    "bot": "M5S"
+  },
+  "12749840": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T12:21:55.953234+02:00",
+    "bot": "M5S"
+  },
+  "12749081": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T11:09:24.311425+02:00",
+    "bot": "M5S"
+  },
+  "12748301": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T10:56:56.289982+02:00",
+    "bot": "M5S"
+  },
+  "12742625": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-02T05:26:05.666393+02:00",
+    "bot": "M5S"
+  },
+  "12739764": {
+    "reason": "Mean revert exit (RSI 55.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 55.1 >= 55)",
+    "exit_time": "2026-06-02T02:25:00.420405+02:00",
+    "bot": "M5S"
+  },
+  "12738862": {
+    "reason": "Mean revert exit (RSI 50.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 50.6 >= 50, wave done)",
+    "exit_time": "2026-06-01T22:40:00.707144+02:00",
+    "bot": "M5S"
+  },
+  "12738813": {
+    "reason": "Mean revert exit (RSI 50.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 50.6 >= 50, wave done)",
+    "exit_time": "2026-06-01T22:40:00.690634+02:00",
+    "bot": "M5S"
+  },
+  "12738613": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T21:52:55.587392+02:00",
+    "bot": "M5S"
+  },
+  "12738527": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T21:52:30.531826+02:00",
+    "bot": "M5S"
+  },
+  "12737525": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T19:44:25.308950+02:00",
+    "bot": "M5S"
+  },
+  "12736134": {
+    "reason": "Mean revert exit (RSI 67.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 67.6 >= 50, wave done)",
+    "exit_time": "2026-06-01T18:55:00.782371+02:00",
+    "bot": "M5S"
+  },
+  "12736102": {
+    "reason": "Mean revert exit (RSI 67.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 67.6 >= 50, wave done)",
+    "exit_time": "2026-06-01T18:55:00.753218+02:00",
+    "bot": "M5S"
+  },
+  "12734528": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T18:24:12.372447+02:00",
+    "bot": "M5S"
+  },
+  "12734320": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T17:35:31.797978+02:00",
+    "bot": "M5S"
+  },
+  "12732822": {
+    "reason": "Mean revert exit (RSI 55.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 55.2 >= 50, wave done)",
+    "exit_time": "2026-06-01T17:00:01.025144+02:00",
+    "bot": "M5S"
+  },
+  "12732542": {
+    "reason": "Mean revert exit (RSI 55.2 >= ...",
+    "full_reason": "Mean revert exit (RSI 55.2 >= 50, wave done)",
+    "exit_time": "2026-06-01T17:00:00.996070+02:00",
+    "bot": "M5S"
+  },
+  "12731858": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.4% from peak $22.92 to $13.42 (limit 40% after 12min)",
+    "exit_time": "2026-06-01T16:12:00.338403+02:00",
+    "bot": "M5S"
+  },
+  "12731600": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 47.0% from peak $13.54 to $7.18 (limit 40% after 16min)",
+    "exit_time": "2026-06-01T16:10:34.137404+02:00",
+    "bot": "M5S"
+  },
+  "12730993": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T15:55:19.864206+02:00",
+    "bot": "M5S"
+  },
+  "12730955": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-01T15:54:10.683248+02:00",
+    "bot": "M5S"
+  },
+  "12530757": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T21:23:20.864178+02:00",
+    "bot": "M5S"
+  },
+  "12527756": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T17:44:45.814223+02:00",
+    "bot": "M5S"
+  },
+  "12527832": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T17:44:28.785483+02:00",
+    "bot": "M5S"
+  },
+  "12523294": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 45.0% from peak $26.60 to $14.62 (limit 40% after 4min)",
+    "exit_time": "2026-05-27T15:54:00.833857+02:00",
+    "bot": "M5S"
+  },
+  "12522980": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 44.9% from peak $18.54 to $10.22 (limit 40% after 2min)",
+    "exit_time": "2026-05-27T15:46:52.064656+02:00",
+    "bot": "M5S"
+  },
+  "12522682": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.8% from peak $20.38 to $12.06 (limit 40% after 7min)",
+    "exit_time": "2026-05-27T15:46:52.036166+02:00",
+    "bot": "M5S"
+  },
+  "12521697": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.8% from peak $37.56 to $21.86 (limit 40% after 7min)",
+    "exit_time": "2026-05-27T15:36:50.674817+02:00",
+    "bot": "M5S"
+  },
+  "12521163": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.3% from peak $17.44 to $10.42 (limit 40% after 11min)",
+    "exit_time": "2026-05-27T15:36:10.588003+02:00",
+    "bot": "M5S"
+  },
+  "12515728": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T14:20:08.447268+02:00",
+    "bot": "M5S"
+  },
+  "12515558": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.2% from peak $41.66 to $24.50 (limit 40% after 10min)",
+    "exit_time": "2026-05-27T14:19:48.415128+02:00",
+    "bot": "M5S"
+  },
+  "12515161": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.7% from peak $17.40 to $10.32 (limit 40% after 4min)",
+    "exit_time": "2026-05-27T14:03:59.583334+02:00",
+    "bot": "M5S"
+  },
+  "12514629": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:58:15.970138+02:00",
+    "bot": "M5S"
+  },
+  "12513804": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:58:15.969136+02:00",
+    "bot": "M5S"
+  },
+  "12514204": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 49.9% from peak $15.28 to $7.66 (limit 40% after 14min)",
+    "exit_time": "2026-05-27T13:48:53.017657+02:00",
+    "bot": "M5S"
+  },
+  "12512988": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:30:21.069766+02:00",
+    "bot": "M5S"
+  },
+  "12513189": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:28:02.757597+02:00",
+    "bot": "M5S"
+  },
+  "12512602": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:05:29.037230+02:00",
+    "bot": "M5S"
+  },
+  "12511954": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T13:05:12.013093+02:00",
+    "bot": "M5S"
+  },
+  "12512321": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:59:57.341672+02:00",
+    "bot": "M5S"
+  },
+  "12511181": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:46:17.891106+02:00",
+    "bot": "M5S"
+  },
+  "12510927": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:42:06.495839+02:00",
+    "bot": "M5S"
+  },
+  "12509980": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:38:55.132046+02:00",
+    "bot": "M5S"
+  },
+  "12510144": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:38:55.130973+02:00",
+    "bot": "M5S"
+  },
+  "12509734": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T12:08:48.201765+02:00",
+    "bot": "M5S"
+  },
+  "12507496": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T10:35:47.781358+02:00",
+    "bot": "M5S"
+  },
+  "12506757": {
+    "reason": "Mean revert exit (RSI 53.0 >= ...",
+    "full_reason": "Mean revert exit (RSI 53.0 >= 50, wave done)",
+    "exit_time": "2026-05-27T10:05:00.632755+02:00",
+    "bot": "M5S"
+  },
+  "12505681": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T10:03:12.408175+02:00",
+    "bot": "M5S"
+  },
+  "12504859": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T09:49:52.650922+02:00",
+    "bot": "M5S"
+  },
+  "12505229": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:59:07.292871+02:00",
+    "bot": "M5S"
+  },
+  "12504744": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:31:24.082243+02:00",
+    "bot": "M5S"
+  },
+  "12504207": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:19:03.591919+02:00",
+    "bot": "M5S"
+  },
+  "12504120": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T08:18:18.502520+02:00",
+    "bot": "M5S"
+  },
+  "12502410": {
+    "reason": "Mean revert exit (RSI 59.4 >= ...",
+    "full_reason": "Mean revert exit (RSI 59.4 >= 50, wave done)",
+    "exit_time": "2026-05-27T06:45:01.362698+02:00",
+    "bot": "M5S"
+  },
+  "12502378": {
+    "reason": "Mean revert exit (RSI 59.4 >= ...",
+    "full_reason": "Mean revert exit (RSI 59.4 >= 50, wave done)",
+    "exit_time": "2026-05-27T06:45:01.332656+02:00",
+    "bot": "M5S"
+  },
+  "12502343": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T06:25:15.830846+02:00",
+    "bot": "M5S"
+  },
+  "12501497": {
+    "reason": "Mean revert exit (RSI 56.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.6 >= 50, wave done)",
+    "exit_time": "2026-05-27T05:10:00.546637+02:00",
+    "bot": "M5S"
+  },
+  "12501065": {
+    "reason": "Mean revert exit (RSI 56.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.6 >= 50, wave done)",
+    "exit_time": "2026-05-27T05:10:00.516606+02:00",
+    "bot": "M5S"
+  },
+  "12501292": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:37:41.149995+02:00",
+    "bot": "M5S"
+  },
+  "12500716": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:17:10.820656+02:00",
+    "bot": "M5S"
+  },
+  "12500645": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T04:07:22.623693+02:00",
+    "bot": "M5S"
+  },
+  "12500029": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-27T03:43:31.735032+02:00",
+    "bot": "M5S"
+  },
+  "12498209": {
+    "reason": "Mean revert exit (RSI 51.4 >= ...",
+    "full_reason": "Mean revert exit (RSI 51.4 >= 50, wave done)",
+    "exit_time": "2026-05-27T00:55:00.572143+02:00",
+    "bot": "M5S"
+  },
+  "12498083": {
+    "reason": "Mean revert exit (RSI 51.4 >= ...",
+    "full_reason": "Mean revert exit (RSI 51.4 >= 50, wave done)",
+    "exit_time": "2026-05-27T00:55:00.541496+02:00",
+    "bot": "M5S"
+  },
+  "12496190": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T21:49:14.769353+02:00",
+    "bot": "M5S"
+  },
+  "12495558": {
+    "reason": "Mean revert exit (RSI 56.0 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.0 >= 50, wave done)",
+    "exit_time": "2026-05-26T21:00:01.037374+02:00",
+    "bot": "M5S"
+  },
+  "12495450": {
+    "reason": "Mean revert exit (RSI 56.0 >= ...",
+    "full_reason": "Mean revert exit (RSI 56.0 >= 50, wave done)",
+    "exit_time": "2026-05-26T21:00:01.007041+02:00",
+    "bot": "M5S"
+  },
+  "12495260": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T20:14:11.578809+02:00",
+    "bot": "M5S"
+  },
+  "12494954": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T20:02:19.097172+02:00",
+    "bot": "M5S"
+  },
+  "12494496": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:56:11.389474+02:00",
+    "bot": "M5S"
+  },
+  "12494376": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T19:55:52.358825+02:00",
+    "bot": "M5S"
+  },
+  "12493098": {
+    "reason": "Mean revert exit (RSI 54.3 >= ...",
+    "full_reason": "Mean revert exit (RSI 54.3 >= 50, wave done)",
+    "exit_time": "2026-05-26T18:30:00.365002+02:00",
+    "bot": "M5S"
+  },
+  "12493027": {
+    "reason": "Mean revert exit (RSI 54.3 >= ...",
+    "full_reason": "Mean revert exit (RSI 54.3 >= 50, wave done)",
+    "exit_time": "2026-05-26T18:30:00.334394+02:00",
+    "bot": "M5S"
+  },
+  "12492457": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T17:56:27.290481+02:00",
+    "bot": "M5S"
+  },
+  "12492880": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T17:56:26.287892+02:00",
+    "bot": "M5S"
+  },
+  "12492344": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-05-26T17:49:55.578680+02:00",
+    "bot": "M5S"
+  },
+  "12485734": {
+    "reason": "Mean revert exit (RSI 59.3 >= ...",
+    "full_reason": "Mean revert exit (RSI 59.3 >= 50, wave done)",
+    "exit_time": "2026-05-26T15:01:18.861055+02:00",
+    "bot": "M5S"
+  }
+}

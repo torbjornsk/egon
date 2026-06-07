@@ -28,13 +28,13 @@ dmypy.json
 uv.lock
 .python-version
 
-# Data and results
-data/
+# Data and results (keep exit_reasons files, ignore the rest)
+data/sentiment_cache.json
 results/*.png
 results/*.csv
+tests/cache/
 *.csv
 *.log
-trading_bot.log
 
 # IDE
 .vscode/
@@ -63,7 +63,11 @@ desktop.ini
 config/*_live.json
 config/*_production.json
 config/*_secret.json
+config/mrktedge_credentials.json
 
 # Documentation builds
 docs/_build/
 site/
+
+# PyInstaller
+*.spec.bak

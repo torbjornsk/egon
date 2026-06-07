@@ -1,0 +1,88 @@
+name: Build and Release Egon
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller
+          pip install MetaTrader5 pandas numpy pytz matplotlib
+
+      - name: Generate version
+        id: version
+        shell: bash
+        run: |
+          VERSION="v2.$(date +%Y.%m%d).${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Update version in pyproject.toml
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Strip the 'v' prefix for pyproject.toml
+          PEP_VERSION="${VERSION#v}"
+          sed -i "s/^version = .*/version = \"$PEP_VERSION\"/" pyproject.toml
+
+      - name: Run import checks
+        run: |
+          python -c "from src.core.config import TradingConfig, load_config; print('config OK')"
+          python -c "from src.core.broker import TIMEFRAME_MAP; print('broker OK')"
+          python -c "from src.strategy.sniper import SniperStrategy; print('sniper OK')"
+          python -c "from src.bot.sniper_bot import SniperBot; print('sniper_bot OK')"
+          python -c "from src.services.bot_manager import BotManager, BOT_REGISTRY; print('bot_manager OK')"
+          python -c "from src.gui.app import EgonGUI; print('gui OK')"
+
+      - name: Build with PyInstaller
+        run: pyinstaller egon.spec --noconfirm
+
+      - name: Copy config and data to dist
+        run: |
+          xcopy /E /I /Y config dist\Egon\config
+          xcopy /E /I /Y data dist\Egon\data
+          xcopy /E /I /Y docs dist\Egon\docs
+
+      - name: Create zip archive
+        shell: bash
+        run: |
+          cd dist
+          7z a -tzip "../Egon-${{ steps.version.outputs.version }}.zip" Egon/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Egon ${{ steps.version.outputs.version }}
+          body: |
+            Automated build from commit ${{ github.sha }}
+            
+            **Changes:** ${{ github.event.head_commit.message }}
+            
+            **Installation:**
+            1. Download `Egon-${{ steps.version.outputs.version }}.zip`
+            2. Extract to any folder
+            3. Run `Egon.exe`
+            4. MetaTrader5 must be installed and logged in
+            
+            Config files are in the `config/` subfolder and can be edited.
+          files: Egon-${{ steps.version.outputs.version }}.zip
+          draft: false
+          prerelease: false

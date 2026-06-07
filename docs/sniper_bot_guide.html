@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egon Sniper Bot - User Guide</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg2: #16213e;
+            --bg3: #0f3460;
+            --text: #e0e0e0;
+            --accent: #00adb5;
+            --success: #4ec9b0;
+            --warning: #dcdcaa;
+            --error: #f48771;
+            --muted: #808080;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 3rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 { color: var(--accent); margin-bottom: 0.5rem; font-size: 2rem; }
+        h2 { color: var(--accent); margin: 2rem 0 0.8rem; border-bottom: 1px solid var(--bg3); padding-bottom: 0.3rem; }
+        h3 { color: var(--success); margin: 1.5rem 0 0.5rem; }
+        p { margin-bottom: 1rem; }
+        code { background: var(--bg2); padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; font-size: 0.9em; }
+        pre { background: var(--bg2); padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+        pre code { padding: 0; }
+        .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { padding: 0.6rem 1rem; text-align: left; border: 1px solid var(--bg3); }
+        th { background: var(--bg2); color: var(--accent); }
+        tr:nth-child(even) { background: var(--bg2); }
+        .note { background: var(--bg3); border-left: 4px solid var(--accent); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .warning { background: #2d1f00; border-left: 4px solid var(--warning); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .danger { background: #2d0f0f; border-left: 4px solid var(--error); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .diagram { background: var(--bg2); padding: 1.5rem; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.85em; line-height: 1.4; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+        a { color: var(--accent); }
+        ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.3rem; }
+    </style>
+</head>
+<body>
+
+<h1>Egon Sniper Bot</h1>
+<p class="subtitle">RSI mean-reversion scalping with limit order pre-placement</p>
+
+<h2>How It Works</h2>
+
+<p>The sniper bot exploits a simple market behavior: when RSI reaches extreme levels (oversold/overbought), price tends to snap back toward the mean. Instead of waiting for the candle to close to confirm the signal, the bot <strong>pre-calculates</strong> what price would push RSI to those levels and places limit orders there in advance.</p>
+
+<div class="diagram">
+Price Action with RSI Sniper:
+
+    $2,345 ─────────────────────── RSI 65 (sell signal zone)
+        \                         Limit SELL placed here (offset 10 -> RSI 75 level)
+         \    /\    /\
+          \  /  \  /  \   &larr; Normal oscillation (profitable)
+           \/    \/    \
+    $2,335 ─────────────── RSI 50 (mean - where exits happen)
+                          \
+                           \
+    $2,325 ─────────────────── RSI 35 (buy signal zone)
+                               Limit BUY placed here (offset 10 -> RSI 25 level)
+</div>
+
+<h3>The Two Entry Mechanisms</h3>
+
+<ol>
+    <li><strong>Sniper Limit Order (primary)</strong> &mdash; placed at a price that would push RSI even deeper than the entry threshold. Catches intra-candle wicks. No spread cost (limit order provides liquidity).</li>
+    <li><strong>Fallback Market Order</strong> &mdash; if the limit didn't fill and the candle closes with RSI past the threshold, enters at market price. Never misses a valid signal.</li>
+</ol>
+
+<h3>Exit Logic: Mean Reversion</h3>
+
+<p>The exit target is configurable via <code>exit_rsi</code> (default: 50). The position closes when RSI returns to this level. With <strong>adaptive exit</strong> enabled, the target shifts based on trend:</p>
+<ul>
+    <li><strong>With-trend</strong> (e.g., long in an uptrend): exits at exit_rsi + shift (e.g., 55) &mdash; lets winners run</li>
+    <li><strong>Against-trend</strong> (e.g., long in a downtrend): exits at exit_rsi - shift (e.g., 45) &mdash; gets out earlier</li>
+    <li><strong>Neutral/sideways</strong>: exits at the base exit_rsi (e.g., 50)</li>
+</ul>
+
+<p>There are no separate "safety exit" thresholds. The mean-revert exit is the only RSI-based exit. The trailing stop and breakeven system handle downside protection.</p>
+
+<h2>Configuration Reference</h2>
+
+<h3>Identity</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>config_name</code></td><td>Config Name</td><td>Human-readable name shown in GUI</td><td>"M5 Sniper Aggressive"</td></tr>
+    <tr><td><code>timeframe</code></td><td>Timeframe</td><td>Candle timeframe (dropdown: M1, M5, M15, H1)</td><td>"M5"</td></tr>
+    <tr><td><code>symbol</code></td><td>Symbol</td><td>Trading instrument</td><td>"XAUUSD.p"</td></tr>
+    <tr><td><code>magic_number</code></td><td>Magic Number</td><td>Unique ID for MT5 orders (auto-generated, read-only)</td><td>234050</td></tr>
+    <tr><td><code>bot_label</code></td><td>Bot Label</td><td>Short label for logs and display</td><td>"M5S"</td></tr>
+</table>
+
+<h3>Position Sizing</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>sizing_mode</code></td><td>Sizing Mode</td><td>Dropdown: <strong>risk_pct</strong> (recommended), <strong>fixed</strong>, or <strong>atr_adaptive</strong></td><td>"risk_pct"</td></tr>
+    <tr><td><code>risk_per_trade_pct</code></td><td>Risk Per Trade (%)</td><td>Fraction of account to risk per trade. Only used in risk_pct and atr_adaptive modes.</td><td>0.02 (= 2%)</td></tr>
+    <tr><td><code>fixed_lots</code></td><td>Fixed Lots</td><td>Exact lot size. Only used in fixed mode.</td><td>0.05</td></tr>
+    <tr><td><code>atr_damping</code></td><td>ATR Damping</td><td>Only for atr_adaptive mode. How aggressively to reduce risk in high-ATR. 0 = no reduction, 1 = full inverse scaling.</td><td>0.7</td></tr>
+    <tr><td><code>max_positions</code></td><td>Max Positions</td><td>Maximum simultaneous open trades</td><td>1</td></tr>
+</table>
+
+<div class="note">
+<strong>Risk-based sizing (recommended):</strong> If your account is $10,000, risk is 2%, and your stop loss is $2.50 away from entry:<br>
+<code>lots = ($10,000 x 0.02) / ($2.50 x 100 oz) = 0.80 lots</code><br>
+If the stop gets hit, you lose exactly $200 (2% of account). Wider stops = smaller position. Tighter stops = larger position. Your risk stays constant regardless of volatility.
+</div>
+
+<div class="note">
+<strong>ATR-adaptive mode:</strong> Same as risk_pct but automatically reduces risk when ATR is above its recent median. In calm markets you get normal sizing; in volatile markets the position shrinks. Formula:<br>
+<code>effective_risk = risk_per_trade_pct x (median_atr / current_atr) ^ atr_damping</code>
+</div>
+
+<h3>RSI Entry</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>rsi_period</code></td><td>RSI Period</td><td>Number of candles for RSI calculation</td><td>14</td></tr>
+    <tr><td><code>rsi_buy</code></td><td>Buy Below RSI</td><td>Buy signal fires when RSI drops below this (fallback market order)</td><td>35</td></tr>
+    <tr><td><code>rsi_sell</code></td><td>Sell Above RSI</td><td>Sell signal fires when RSI rises above this (fallback market order)</td><td>65</td></tr>
+    <tr><td><code>sniper_rsi_offset</code></td><td>Limit Order Offset</td><td>How much deeper the limit order aims. Buy limit targets RSI = rsi_buy - offset. Larger offset = better price, fewer fills.</td><td>10</td></tr>
+</table>
+
+<div class="diagram">
+Example: rsi_buy=35, rsi_sell=65, sniper_rsi_offset=10
+
+  RSI 75 ──── Sell LIMIT order price (65 + 10 offset)
+  RSI 65 ──── Sell signal (fallback market order on candle close)
+  RSI 50 ──── Mean revert EXIT target
+  RSI 35 ──── Buy signal (fallback market order on candle close)
+  RSI 25 ──── Buy LIMIT order price (35 - 10 offset) &larr; best entry
+</div>
+
+<p>The limit order gives a better entry price (deeper into the wick) and pays no spread. The fallback market order ensures you never miss a valid signal if the limit didn't fill during the candle.</p>
+
+<h3>RSI Exit (Mean Revert)</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>exit_rsi</code></td><td>Exit RSI (target)</td><td>Close position when RSI reaches this level. 50 = classic mean reversion. Lower = exit earlier (less profit, safer). Higher = let it run longer.</td><td>50</td></tr>
+    <tr><td><code>adaptive_exit_enabled</code></td><td>Adaptive Exit</td><td>Dropdown: True/False. When enabled, shifts the exit target based on trend direction.</td><td>True</td></tr>
+    <tr><td><code>exit_rsi_trend_threshold</code></td><td>Trend Threshold (ATR)</td><td>How much EMA divergence (normalized by ATR) counts as "strong trend". Higher = less sensitive.</td><td>0.5</td></tr>
+    <tr><td><code>exit_rsi_trend_shift</code></td><td>Trend Shift (RSI pts)</td><td>How many RSI points to shift the exit when a strong trend is detected.</td><td>5.0</td></tr>
+</table>
+
+<div class="note">
+<strong>How adaptive exit works:</strong> The bot measures EMA fast/slow divergence normalized by ATR. If divergence exceeds the threshold:
+<ul>
+    <li>Long in uptrend: exit at 50 + 5 = RSI 55 (hold longer, trend is helping)</li>
+    <li>Long in downtrend: exit at 50 - 5 = RSI 45 (exit sooner, trend is against you)</li>
+    <li>Same logic mirrored for shorts</li>
+</ul>
+Set <code>adaptive_exit_enabled: False</code> to always exit at the fixed <code>exit_rsi</code> value.
+</div>
+
+<h3>Stop Loss</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>atr_multiplier</code></td><td>SL Distance (x ATR)</td><td>Stop loss placed this many ATR from entry. Higher = wider stop (more room, but larger loss if hit).</td><td>1.75</td></tr>
+    <tr><td><code>atr_high_volatility_multiplier</code></td><td>High-Vol SL Scale</td><td>In high-volatility regimes (ATR > 80th percentile), the SL multiplier is scaled by this factor.</td><td>1.5</td></tr>
+</table>
+
+<div class="warning">
+<strong>With risk-based sizing:</strong> wider stops automatically mean smaller positions. A 2x wider stop = half the lot size = same dollar risk. You're not risking more money, just giving the trade more room to breathe.
+</div>
+
+<h3>Trailing Stop</h3>
+
+<p>The trailing stop system protects profits in two stages:</p>
+
+<div class="diagram">
+Stage 1: BEFORE breakeven (position is young, not yet profitable enough)
+───────────────────────────────────────────────────────────────────────
+  Current Price ── $2,342.50
+  Entry ────────── $2,340.00
+  Stop Loss ────── $2,338.00  (trailing 1.5 ATR behind price, wide)
+
+  The SL trails upward as price rises, but stays 1.5 ATR away.
+  Wide trail avoids getting stopped out by normal noise.
+
+Stage 2: AFTER breakeven triggers (profit exceeded 0.7 ATR)
+───────────────────────────────────────────────────────────────────────
+  Current Price ── $2,343.80
+  Entry ────────── $2,340.00
+  SL moved to ──── $2,340.20  (breakeven + small offset for spread)
+  Now trailing ─── $2,342.30  (1.0 ATR behind price, tighter)
+
+  Once breakeven fires, the trail tightens. You can't lose money
+  on this trade anymore. The tighter trail locks in more profit.
+</div>
+
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>breakeven_atr_trigger</code></td><td>BE Trigger (x ATR)</td><td>Move SL to entry price after this many ATR of unrealized profit. Set 0 to disable breakeven entirely.</td><td>0.7</td></tr>
+    <tr><td><code>breakeven_offset</code></td><td>BE Offset (x ATR)</td><td>Small offset above entry when applying breakeven (covers the spread so you don't get stopped at exactly entry).</td><td>0.1</td></tr>
+    <tr><td><code>trail_atr_after_breakeven</code></td><td>Trail After BE (ATR)</td><td>Once breakeven is applied, trail the stop this many ATR behind current price. Tighter = locks more profit.</td><td>1.0</td></tr>
+    <tr><td><code>trail_atr_before_breakeven</code></td><td>Trail Before BE (ATR)</td><td>Before breakeven triggers, trail this many ATR behind. Wider = more room for the trade to develop.</td><td>1.5</td></tr>
+</table>
+
+<h3>Direction Control</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>enable_shorts</code></td><td>Enable Shorts</td><td>Dropdown: True/False. Allow short (sell) positions.</td><td>True</td></tr>
+    <tr><td><code>trading_mode</code></td><td>Trading Mode</td><td>Dropdown: "both", "long_only", "short_only"</td><td>"both"</td></tr>
+</table>
+
+<h3>Risk Management</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>max_drawdown_limit</code></td><td>Max Drawdown (%)</td><td>Pause all trading if account drawdown from peak exceeds this. 0.35 = 35%.</td><td>0.35</td></tr>
+    <tr><td><code>use_profit_protection</code></td><td>Profit Protection</td><td>Dropdown: True/False. Close positions that give back too much of their peak profit.</td><td>False</td></tr>
+</table>
+
+<h3>Trend Detection (EMA)</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>fast_ema</code></td><td>Fast EMA</td><td>Fast exponential moving average period. Used for adaptive exit trend detection.</td><td>9</td></tr>
+    <tr><td><code>slow_ema</code></td><td>Slow EMA</td><td>Slow exponential moving average period. EMA fast > slow = uptrend.</td><td>21</td></tr>
+</table>
+
+<div class="note">
+EMAs are used internally for two purposes: (1) the adaptive exit RSI shift (determining if you're with or against the trend), and (2) the optional <code>short_requires_downtrend</code> filter. They do NOT trigger entries.
+</div>
+
+<h3>Schedule</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>schedule</code></td><td>Schedule (JSON)</td><td>Time-based trading window. When outside the window, new entries are paused but existing positions are still managed (exits and trailing still work). Empty <code>{}</code> = always active.</td><td><code>{"active_hours": {"start": "08:00", "end": "22:00"}, "active_days": ["mon","tue","wed","thu","fri"]}</code></td></tr>
+</table>
+
+<h3>Volatility Guard</h3>
+<table>
+    <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Example</th></tr>
+    <tr><td><code>volatility_guard</code></td><td>Volatility Guard (JSON)</td><td>Pauses entries when ATR spikes above a multiple of its recent median. Prevents entering during breakouts. Empty <code>{}</code> = disabled.</td><td><code>{"enabled": true, "atr_spike_multiplier": 2.5, "cooldown_minutes": 15, "resume_below_multiplier": 1.5}</code></td></tr>
+</table>
+
+<div class="note">
+<strong>Volatility guard fields explained:</strong>
+<ul>
+    <li><code>atr_spike_multiplier</code>: Pause when ATR > median x this value (2.5 = pause at 2.5x normal)</li>
+    <li><code>cooldown_minutes</code>: Minimum time to stay paused before re-evaluating</li>
+    <li><code>resume_below_multiplier</code>: Resume when ATR drops below median x this value (1.5 = resume once calmed to 1.5x normal)</li>
+</ul>
+</div>
+
+<h2>When It Works Well</h2>
+<ul>
+    <li><strong>Trending markets with pullbacks</strong> &mdash; larger swings mean deeper RSI dips that bounce harder. The sniper catches pullbacks within the trend for significant profit per trade.</li>
+    <li><strong>Active hours (London + NY sessions)</strong> &mdash; enough volume and participation for clean mean reversion behavior.</li>
+    <li><strong>ATR > $1.50 on M5</strong> &mdash; enough movement per candle to cover the $0.30 spread + commission.</li>
+</ul>
+
+<h2>When It Struggles</h2>
+<ul>
+    <li><strong>Breakouts through key support/resistance</strong> &mdash; RSI fires "oversold" but price keeps going because a structural level broke. The volatility guard helps but can't catch every breakout.</li>
+    <li><strong>Dead/quiet markets (Asian session)</strong> &mdash; waves are too small, spread eats the profit. Use the schedule to avoid these hours.</li>
+    <li><strong>News events</strong> &mdash; unpredictable spikes that bypass normal mean reversion. Consider blackout dates around major announcements.</li>
+</ul>
+
+<div class="danger">
+<strong>The biggest risk</strong> is catching a falling knife during a breakout: RSI shows oversold, you buy, but price drops another $10 because a major level just broke. Protections: (1) the trailing stop limits the loss, (2) the volatility guard pauses during ATR spikes, (3) risk_pct sizing ensures each loss is bounded to X% of account.
+</div>
+
+<h2>Recommended Starting Config</h2>
+
+<pre><code>{
+  "config_name": "M5 Sniper Standard",
+  "bot_type": "sniper",
+  "timeframe": "M5",
+  "symbol": "XAUUSD.p",
+
+  "sizing_mode": "risk_pct",
+  "risk_per_trade_pct": 0.02,
+  "max_positions": 1,
+
+  "rsi_period": 14,
+  "rsi_buy": 35,
+  "rsi_sell": 65,
+  "sniper_rsi_offset": 10,
+
+  "exit_rsi": 50,
+  "adaptive_exit_enabled": true,
+  "exit_rsi_trend_threshold": 0.5,
+  "exit_rsi_trend_shift": 5.0,
+
+  "atr_multiplier": 1.75,
+  "breakeven_atr_trigger": 0.7,
+  "trail_atr_after_breakeven": 1.0,
+  "trail_atr_before_breakeven": 1.5,
+
+  "enable_shorts": true,
+  "trading_mode": "both",
+  "max_drawdown_limit": 0.35,
+
+  "schedule": {
+    "active_hours": {"start": "08:00", "end": "22:00"},
+    "active_days": ["mon", "tue", "wed", "thu", "fri"]
+  }
+}</code></pre>
+
+<h2>Tuning Tips</h2>
+
+<ul>
+    <li><strong>More trades, lower quality:</strong> Widen rsi_buy/rsi_sell (e.g., 40/60) and reduce sniper_rsi_offset (e.g., 5). Enters more often but on weaker signals.</li>
+    <li><strong>Fewer trades, higher quality:</strong> Tighten rsi_buy/rsi_sell (e.g., 30/70) and increase offset (e.g., 15). Only catches the deepest oversold/overbought extremes.</li>
+    <li><strong>Let winners run longer:</strong> Increase exit_rsi (e.g., 55 for longs means you hold until RSI rises further past neutral).</li>
+    <li><strong>Tighter risk:</strong> Reduce risk_per_trade_pct (e.g., 0.01 = 1%). Or reduce atr_multiplier for a tighter stop (but more frequent stops).</li>
+    <li><strong>M1 vs M5 vs M15:</strong> Faster timeframes = more trades, smaller moves, tighter offsets (7 for M1). Slower = fewer but larger trades, wider offsets (12 for M15).</li>
+</ul>
+
+</body>
+</html>

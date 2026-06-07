@@ -1,167 +1,153 @@
-# Gold Trading Bot
+# Egon - Gold Trading Bot
 
-Automated trading system for XAUUSD (Gold) using MetaTrader5 with dual-bot strategy (M5 and M1 timeframes).
+Automated XAUUSD scalping system for MetaTrader 5 with dual-timeframe strategy (M1 and M5).
 
 ## Quick Start
 
-1. **Install dependencies:**
+1. Install dependencies:
    ```bash
    uv sync
    ```
 
-2. **Configure MetaTrader5:**
+2. Configure MetaTrader 5:
    - Install MT5 on Windows
    - Login to your account
-   - Ensure XAUUSD is visible in Market Watch
+   - Ensure XAUUSD.p is visible in Market Watch
 
-3. **Start the bots:**
+3. Start a bot:
    ```bash
-   # M5 bot (5-minute timeframe)
-   start_bot.bat
+   # M5 bot (5-minute scalping)
+   start_egon_m5.bat
 
-   # M1 bot (1-minute timeframe)  
-   start_bot_m1.bat
+   # M1 bot (1-minute scalping)
+   start_egon_m1.bat
 
-   # Or run both simultaneously
+   # Dashboard GUI
+   start_egon_gui.bat
    ```
 
-See [QUICK_START.md](QUICK_START.md) for detailed setup instructions.
+## Architecture
 
-## Bot Overview
+```
+src/
+├── bot/
+│   ├── base.py              # BaseTradingBot: main loop, lifecycle, safety
+│   ├── m1_bot.py            # M1 factory (thin wiring)
+│   └── m5_bot.py            # M5 factory (thin wiring)
+├── core/
+│   ├── broker.py            # Broker Protocol (abstraction for live/sim)
+│   ├── config.py            # TradingConfig dataclass + JSON loader
+│   ├── indicators.py        # RSI, EMA, ATR (single source of truth)
+│   ├── mt5_broker.py        # Live MT5 Broker implementation
+│   ├── mt5_client.py        # Raw MT5 API wrapper
+│   ├── position.py          # Position tracking + profit protection
+│   ├── risk.py              # Safety: drawdown, daily loss, rapid loss, weekend
+│   └── timezone.py          # MT5 timestamp handling (EET/EEST)
+├── gui/
+│   ├── app.py               # Tkinter dashboard (reads bot.get_state())
+│   └── theme.py             # Dark mode constants
+├── services/
+│   ├── bot_manager.py       # Thread management, log capture
+│   ├── market_data.py       # Chart data for GUI
+│   └── trade_history.py     # Exit reason display
+└── strategy/
+    ├── base.py              # TradingStrategy Protocol
+    ├── m1_scalping.py       # M1: fast RSI-5, confirmation exits, smart cooldown
+    └── m5_scalping.py       # M5: wider RSI-14, simple exits, downtrend shorts
+```
 
-### M5 Bot (Safe Leveraged)
-- **Timeframe:** 5 minutes
-- **Strategy:** Mean reversion with bidirectional trading
-- **Position:** 15% @ 25x leverage (375% effective)
-- **Entry:** RSI 30 (buy) / 75 (sell)
-- **Exit:** RSI 85 (long) / 15 (short)
-- **Stop Loss:** 3.0x ATR
-- **Take Profit:** 4.0%
-- **Performance:** ~72% return over 50 days, 75% win rate
+## Strategies
 
-### M1 Bot (Aggressive Scalping)
-- **Timeframe:** 1 minute
-- **Strategy:** Mean reversion scalping with adaptive exits
-- **Position:** 15% @ 25x leverage (375% effective)
-- **Entry:** RSI 35 (buy) / 65 (sell)
-- **Exit:** RSI 75 (long) / 25 (short) with adaptive logic
-- **Stop Loss:** 4.0x ATR
-- **Take Profit:** 0.8%
-- **Performance:** ~237% return over 50 days (with adaptive exits), 66% win rate
-- **New:** Adaptive exits cut losses early and let winners run (+42% improvement)
+### M1 Bot (P4-Patient big SL)
+- Timeframe: 1 minute
+- Position: 15% at 25x leverage, single position
+- Entry: RSI-5 < 30 (buy) / > 70 (sell), symmetric (no trend requirement)
+- Exit: RSI > 78 (long) / < 22 (short) with 2-candle confirmation
+- Stop loss: 3.50x ATR (adaptive, reduces in high volatility)
+- Profit protection: auto-volatility (activates when ATR > 80th percentile)
+- Loss backoff: 2-candle cooldown after 2 consecutive SL exits
 
-See [M1_ADAPTIVE_EXITS.md](M1_ADAPTIVE_EXITS.md) for details on the adaptive exit system.
-
-See [STRATEGY_SUMMARY.md](STRATEGY_SUMMARY.md) for detailed strategy information.
+### M5 Bot (P1-Patient std)
+- Timeframe: 5 minutes
+- Position: 18% at 27x leverage, split across 2 positions (9% each)
+- Entry: RSI-14 < 35 (buy) / > 65 + downtrend (sell)
+- Exit: RSI > 65 (long) / < 35 (short)
+- Stop loss: 2.25x ATR (adaptive)
+- Profit protection: auto-volatility, time-based tightening
 
 ## Safety Features
 
-Both bots include comprehensive safety mechanisms:
+- **Drawdown limit**: pauses at 40% (M1) / 35% (M5)
+- **Daily loss limit**: pauses after 15% loss in 24 hours
+- **Rapid loss detection**: pauses after 10% loss in 1 hour
+- **Consecutive loss limit**: pauses after 12 losses in a row
+- **Emergency threshold**: closes all if equity drops 50%
+- **Weekend protection**: closes positions 30min before Friday 5pm EST
+- **Market gap detection**: warmup period after gaps > 15min
+- **Profit protection**: tracks peak profit, exits on drawdown from peak
+- **Loss backoff**: cooldown after consecutive stop-loss exits
 
-1. **Drawdown Limit** - Pauses at 35% (M5) / 40% (M1) drawdown
-2. **Daily Loss Limit** - Pauses if lose 15% in 24 hours
-3. **Rapid Loss Detection** - Pauses if lose 10% in 1 hour (flash crash protection)
-4. **Consecutive Loss Limit** - Pauses after 8 (M5) / 7 (M1) losses in a row
-5. **Emergency Threshold** - Closes all positions if equity drops 50%
+## GUI Controls
 
-See [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md) for details.
+- **PP button**: cycles Auto → ON → OFF → Auto (profit protection override)
+- **Mode button**: cycles Both → Long → Short → Both (trading direction)
+- **Position cards**: live P/L, peak profit, protection trigger level
 
-## Core Files
+## Backtesting
 
-### Trading Bots
-- `live_trading_bot.py` - M5 bot (5-minute timeframe)
-- `live_trading_bot_m1.py` - M1 bot (1-minute timeframe)
+The simulator runs the REAL bot code against historical data (no duplicated logic):
 
-### Configuration
-- `config/safe_leveraged_params.json` - M5 bot parameters
-- `config/m1_scalping_params.json` - M1 bot parameters
-
-### Analysis Tools
-- `evaluate_live_trades.py` - Analyze actual MT5 trade performance
-- `trade_report.py` - Generate detailed trade reports
-
-### Batch Files
-- `start_bot.bat` - Start M5 bot
-- `start_bot_m1.bat` - Start M1 bot
-- `start_bot_demo.bat` - M5 demo mode (no real trades)
-- `start_bot_m1_demo.bat` - M1 demo mode
-
-## Documentation
-
-- [QUICK_START.md](QUICK_START.md) - Setup and installation
-- [DUAL_BOT_GUIDE.md](DUAL_BOT_GUIDE.md) - Running both bots together
-- [SAFETY_MECHANISMS.md](SAFETY_MECHANISMS.md) - Safety features explained
-- [STRATEGY_SUMMARY.md](STRATEGY_SUMMARY.md) - Strategy details and performance
-
-## Monitoring
-
-### Check Live Performance
 ```bash
+# Single backtest
+python -m tests.run_backtest --days 30
+
+# Monte Carlo (random windows)
+python -m tests.run_monte_carlo --runs 50
+
+# A/B comparison with config overrides
+python -m tests.run_comparison --override-b rsi_buy=25 rsi_sell=75
+```
+
+Key infrastructure:
+- `tests/simulator_v2.py` — SimulatorV2 (runs BaseTradingBot against SimBroker)
+- `tests/sim_broker.py` — SimBroker (Broker Protocol for backtesting)
+- `tests/data_cache.py` — MT5 data fetching with disk caching
+
+## Analysis Tools
+
+```bash
+# Live performance analysis
 python evaluate_live_trades.py
+
+# Detailed trade report
+python trade_report.py --hours 48 --bot m1
+
+# 12-hour deep analysis (streaks, hourly performance)
+python -m analysis.analyze_12h
+
+# M5 signal check
+python -m analysis.check_m5_signals_24h
+
+# MT5 connection test
+python -m analysis.test_mt5_connection
 ```
 
-Shows:
-- Win rate and profit/loss
-- Average win/loss amounts
-- Stop loss rate
-- Risk/reward ratio
-- Recommendations
+## Configuration
 
-### View Trade History
-```bash
-python trade_report.py
-```
+All behavior is controlled via JSON configs in `config/`:
+- `m1_params.json` — M1 production config
+- `m5_params.json` — M5 production config
+- `*_previous.json` — rollback references
 
-Generates detailed report of all trades with entry/exit prices, SL/TP levels, and P/L.
-
-### Logs
-- `trading_bot.log` - All bot activity and trades
-
-## Project Structure
-
-```
-goldtrade/
-├── live_trading_bot.py          # M5 bot
-├── live_trading_bot_m1.py        # M1 bot
-├── evaluate_live_trades.py      # Performance analysis
-├── trade_report.py              # Trade reporting
-├── config/                      # Bot configurations
-│   ├── safe_leveraged_params.json
-│   └── m1_scalping_params.json
-├── src/                         # Core modules
-│   ├── mt5_connector.py
-│   ├── risk_management.py
-│   ├── strategies/
-│   └── backtesting/
-├── analysis/                    # Historical analysis scripts
-├── examples/                    # Example scripts
-└── docs/                        # Documentation
-```
+Config changes take effect on bot restart. No code changes needed to adjust parameters.
 
 ## Requirements
 
-- Windows (MetaTrader5 only runs on Windows)
+- Windows (MetaTrader 5 only runs on Windows)
 - Python 3.11+
-- MetaTrader5 terminal
-- Active trading account with XAUUSD access
+- MetaTrader 5 terminal with active account
+- XAUUSD.p symbol available in Market Watch
 
 ## Risk Warning
 
-⚠️ **Trading involves substantial risk of loss.**
-
-- These bots use 25x leverage (high risk)
-- Past performance does not guarantee future results
-- Only trade with money you can afford to lose
-- Test in demo mode first
-- Monitor regularly, especially during high volatility
-
-## Support
-
-For issues or questions:
-1. Check the documentation files
-2. Review `trading_bot.log` for errors
-3. Run `evaluate_live_trades.py` to diagnose performance issues
-
-## License
-
-This project is for educational purposes. Use at your own risk.
+Trading involves substantial risk of loss. These bots use high leverage. Past performance does not guarantee future results. Only trade with money you can afford to lose.
