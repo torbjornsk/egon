@@ -1114,6 +1114,15 @@ class EgonGUI:
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
         log_scroll.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 6), pady=4)
 
+        # Attach a handler to the root logger to capture ALL log output
+        import io
+        self._global_log_buffer = io.StringIO()
+        self._global_log_pos = 0
+        handler = logging.StreamHandler(self._global_log_buffer)
+        handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(handler)
+
     # ── Market dashboard ────────────────────────────────────────────
 
     def _build_market_tab(self, parent):
@@ -1250,18 +1259,24 @@ class EgonGUI:
             ), tags=(tag,))
 
     def _update_log(self):
-        """Collect logs from all running bots."""
-        all_logs = ""
-        for key, runner in self.bot_manager.runners.items():
-            if runner.running:
-                new = runner.get_recent_logs()
-                if new:
-                    all_logs += new
-        if all_logs:
-            self.log_text.insert(tk.END, all_logs)
+        """Read new log output from the global log buffer (captures all loggers)."""
+        content = self._global_log_buffer.getvalue()
+        new_content = content[self._global_log_pos:]
+        self._global_log_pos = len(content)
+
+        # Trim buffer if too large
+        if len(content) > 500_000:
+            trimmed = content[-100_000:]
+            self._global_log_buffer.truncate(0)
+            self._global_log_buffer.seek(0)
+            self._global_log_buffer.write(trimmed)
+            self._global_log_pos = len(trimmed)
+
+        if new_content:
+            self.log_text.insert(tk.END, new_content)
             line_count = int(self.log_text.index('end-1c').split('.')[0])
-            if line_count > 2000:
-                self.log_text.delete('1.0', f'{line_count - 1500}.0')
+            if line_count > 3000:
+                self.log_text.delete('1.0', f'{line_count - 2000}.0')
             self.log_text.see(tk.END)
 
     def _update_market(self):
