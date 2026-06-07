@@ -115,31 +115,64 @@ class BotInstancePanel:
         self._rebuild_list_widgets()
 
     def _rebuild_list_widgets(self):
-        """Rebuild the instance list UI."""
+        """Build the instance list UI. Called once on config load and on selection change."""
         for w in self.instance_widgets:
             w.destroy()
         self.instance_widgets.clear()
+        self._row_refs = []  # Store references to mutable labels per row
 
         for i, inst in enumerate(self.instances):
-            row = tk.Frame(self.list_inner, bg=BG_MEDIUM, padx=6, pady=4, cursor='hand2')
+            bg = BG_LIGHT if self.selected_index == i else BG_MEDIUM
+
+            row = tk.Frame(self.list_inner, bg=bg, padx=6, pady=4, cursor='hand2')
             row.pack(fill=tk.X, pady=(0, 2))
             row.bind('<Button-1>', lambda e, idx=i: self._select(idx))
 
-            # Status indicator
-            is_running = self.bot_manager.is_running(inst['instance_id'])
-            status_color = SUCCESS if is_running else NEUTRAL
-
-            # First line: name + status dot
-            top = tk.Frame(row, bg=BG_MEDIUM)
+            # First line: status dot + name
+            top = tk.Frame(row, bg=bg)
             top.pack(fill=tk.X)
             top.bind('<Button-1>', lambda e, idx=i: self._select(idx))
 
-            tk.Label(top, text="\u25cf", bg=BG_MEDIUM, fg=status_color,
-                     font=('Arial', 10)).pack(side=tk.LEFT, padx=(0, 4))
-            tk.Label(top, text=inst['config_name'], bg=BG_MEDIUM, fg=FG,
-                     font=('Arial', 9, 'bold'), anchor=tk.W).pack(side=tk.LEFT)
+            dot_lbl = tk.Label(top, text="\u25cf", bg=bg, fg=NEUTRAL,
+                               font=('Arial', 10))
+            dot_lbl.pack(side=tk.LEFT, padx=(0, 4))
+            dot_lbl.bind('<Button-1>', lambda e, idx=i: self._select(idx))
 
-            # Second line: type + timeframe + P/L
+            name_lbl = tk.Label(top, text=inst['config_name'], bg=bg, fg=FG,
+                                font=('Arial', 9, 'bold'), anchor=tk.W)
+            name_lbl.pack(side=tk.LEFT)
+            name_lbl.bind('<Button-1>', lambda e, idx=i: self._select(idx))
+
+            # Second line: detail (updated live)
+            bottom = tk.Frame(row, bg=bg)
+            bottom.pack(fill=tk.X)
+            bottom.bind('<Button-1>', lambda e, idx=i: self._select(idx))
+
+            detail_lbl = tk.Label(bottom, text=f"{inst['bot_type']} | {inst['timeframe']}",
+                                  bg=bg, fg=NEUTRAL, font=('Consolas', 8), anchor=tk.W)
+            detail_lbl.pack(side=tk.LEFT, padx=(16, 0))
+            detail_lbl.bind('<Button-1>', lambda e, idx=i: self._select(idx))
+
+            self.instance_widgets.append(row)
+            self._row_refs.append({
+                'row': row, 'top': top, 'bottom': bottom,
+                'dot': dot_lbl, 'name': name_lbl, 'detail': detail_lbl,
+            })
+
+        # Initial status update
+        self.update_status()
+
+    def update_status(self):
+        """Update status dots and detail text without rebuilding widgets."""
+        for i, inst in enumerate(self.instances):
+            if i >= len(self._row_refs):
+                break
+            refs = self._row_refs[i]
+
+            is_running = self.bot_manager.is_running(inst['instance_id'])
+            status_color = SUCCESS if is_running else NEUTRAL
+            refs['dot'].config(fg=status_color)
+
             if is_running:
                 state = self.bot_manager.get_state(inst['instance_id'])
                 positions = state.get('positions', [])
@@ -151,25 +184,19 @@ class BotInstancePanel:
                 detail = f"{inst['bot_type']} | {inst['timeframe']}"
                 pl_color = NEUTRAL
 
-            bottom = tk.Frame(row, bg=BG_MEDIUM)
-            bottom.pack(fill=tk.X)
-            bottom.bind('<Button-1>', lambda e, idx=i: self._select(idx))
-            tk.Label(bottom, text=detail, bg=BG_MEDIUM, fg=pl_color,
-                     font=('Consolas', 8), anchor=tk.W).pack(side=tk.LEFT, padx=(16, 0))
-
-            # Highlight selected
-            if self.selected_index == i:
-                row.config(bg=BG_LIGHT)
-                for child in row.winfo_children():
-                    child.config(bg=BG_LIGHT)
-                    for subchild in child.winfo_children():
-                        subchild.config(bg=BG_LIGHT)
-
-            self.instance_widgets.append(row)
+            refs['detail'].config(text=detail, fg=pl_color)
 
     def _select(self, index: int):
         self.selected_index = index
-        self._rebuild_list_widgets()
+        # Update highlight colors without full rebuild
+        for i, refs in enumerate(self._row_refs):
+            bg = BG_LIGHT if i == index else BG_MEDIUM
+            refs['row'].config(bg=bg)
+            refs['top'].config(bg=bg)
+            refs['bottom'].config(bg=bg)
+            refs['dot'].config(bg=bg)
+            refs['name'].config(bg=bg)
+            refs['detail'].config(bg=bg)
         if index < len(self.instances):
             self.on_select(self.instances[index])
 
@@ -598,7 +625,7 @@ class BotDetailPanel:
             config_overrides=overrides,
         )
         self._update_controls()
-        self.instance_panel._rebuild_list_widgets()
+        self.instance_panel.update_status()
 
     def _stop(self):
         if not self.current_instance:
@@ -606,7 +633,7 @@ class BotDetailPanel:
         iid = self.current_instance.get('instance_id', '')
         self.bot_manager.stop_bot(iid)
         self._update_controls()
-        self.instance_panel._rebuild_list_widgets()
+        self.instance_panel.update_status()
 
     def _toggle_mode(self):
         if not self.current_instance:
@@ -974,7 +1001,7 @@ class EgonGUI:
         try:
             self._update_account()
             self.detail_panel.update()
-            self.instance_panel._rebuild_list_widgets()
+            self.instance_panel.update_status()
 
             if HAS_MATPLOTLIB:
                 self._update_chart()
