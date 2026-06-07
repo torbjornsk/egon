@@ -780,21 +780,26 @@ class BotDetailPanel:
         # Build indicator text based on bot type
         bot_type = self.current_instance.get('bot_type', '')
 
-        if bot_type == 'breakout' and strat_state:
-            # Breakout-specific display
-            brk_high = strat_state.get('breakout_high', 0)
-            brk_low = strat_state.get('breakout_low', 0)
-            dist_high = strat_state.get('dist_to_high', 0)
-            dist_low = strat_state.get('dist_to_low', 0)
-            atr_ok = strat_state.get('atr_filter_ok', False)
-            bars_since = strat_state.get('bars_since_signal', 999)
+        if bot_type == 'breakout':
+            # Breakout-specific display (never show RSI)
+            if strat_state:
+                brk_high = strat_state.get('breakout_high', 0)
+                brk_low = strat_state.get('breakout_low', 0)
+                dist_high = strat_state.get('dist_to_high', 0)
+                dist_low = strat_state.get('dist_to_low', 0)
+                atr_ok = strat_state.get('atr_filter_ok', False)
 
-            ind_text = (
-                f"ATR: ${atr:.2f}  Trend: {trend}  ATR Filter: {'OK' if atr_ok else 'LOW'}\n"
-                f"Breakout High: ${brk_high:.2f} (${dist_high:.2f} away)\n"
-                f"Breakout Low:  ${brk_low:.2f} (${dist_low:.2f} away)\n"
-                f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
-            )
+                ind_text = (
+                    f"ATR: ${atr:.2f}  Trend: {trend}  ATR Filter: {'OK' if atr_ok else 'LOW'}\n"
+                    f"Breakout High: ${brk_high:.2f} (${dist_high:.2f} away)\n"
+                    f"Breakout Low:  ${brk_low:.2f} (${dist_low:.2f} away)\n"
+                    f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
+                )
+            else:
+                ind_text = (
+                    f"ATR: ${atr:.2f}  Trend: {trend}\n"
+                    f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
+                )
         else:
             # Default display (sniper, rsi_scalper, etc.)
             ind_text = (
