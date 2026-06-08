@@ -1,22 +1,36 @@
 """Market data service for GUI -- account, chart, trade history."""
+import glob
+import json
 import logging
 from datetime import datetime, timedelta
 import MetaTrader5 as mt5
 import pandas as pd
+from src.core.paths import resolve_path
 from src.core.timezone import MT5_TZ, LOCAL_TZ, mt5_to_local, mt5_series_to_local
 
 logger = logging.getLogger(__name__)
 SYMBOL = 'XAUUSD.p'
-M5_MAGIC = 234000
-M1_MAGIC = 234001
-M15_MAGIC = 234015
-LZ_MAGIC = 234100
-M1S_MAGIC = 234101
-M15S_MAGIC = 234115
-M5S_MAGIC = 234050
-TICK_MAGIC = 234200
-MOM_MAGIC = 234250
-BRK_MAGIC = 234300
+
+
+def _build_magic_map() -> dict[int, str]:
+    """Build magic_number -> bot_label map from all config files."""
+    magic_map = {}
+    config_dir = str(resolve_path('config'))
+    for path in glob.glob(config_dir + '/*.json'):
+        try:
+            with open(path, 'r') as f:
+                data = json.load(f)
+            magic = data.get('magic_number')
+            label = data.get('bot_label')
+            if magic and label:
+                magic_map[magic] = label
+        except Exception:
+            pass
+    return magic_map
+
+
+# Built once at import time; refresh by calling _build_magic_map() if needed
+MAGIC_MAP = _build_magic_map()
 
 
 class MarketDataService:
@@ -140,27 +154,8 @@ class MarketDataService:
                 continue
             entry_deal = pair['entry']
             exit_deal = pair['exit']
-            if entry_deal.magic == M1_MAGIC:
-                bot = 'M1'
-            elif entry_deal.magic == M5_MAGIC:
-                bot = 'M5'
-            elif entry_deal.magic == M15_MAGIC:
-                bot = 'M15'
-            elif entry_deal.magic == LZ_MAGIC:
-                bot = 'LZ'
-            elif entry_deal.magic == M5S_MAGIC:
-                bot = 'M5S'
-            elif entry_deal.magic == M1S_MAGIC:
-                bot = 'M1S'
-            elif entry_deal.magic == M15S_MAGIC:
-                bot = 'M15S'
-            elif entry_deal.magic == TICK_MAGIC:
-                bot = 'TICK'
-            elif entry_deal.magic == MOM_MAGIC:
-                bot = 'MOM'
-            elif entry_deal.magic == BRK_MAGIC:
-                bot = 'BRK'
-            else:
+            bot = MAGIC_MAP.get(entry_deal.magic)
+            if not bot:
                 continue
             direction = 'BUY' if entry_deal.type == mt5.DEAL_TYPE_BUY else 'SELL'
             # Infer exit reason from MT5 deal reason code
