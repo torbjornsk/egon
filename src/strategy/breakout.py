@@ -132,9 +132,10 @@ class BreakoutStrategy:
         self._buy_stop_price = self._breakout_high + buffer
         self._sell_stop_price = self._breakout_low - buffer
 
-        # SL at the breakout level itself (failed breakout)
-        buy_sl = self._breakout_high  # If price goes back below the high, breakout failed
-        sell_sl = self._breakout_low  # If price goes back above the low, breakout failed
+        # SL based on ATR distance from entry price
+        sl_distance = current_atr * self.config.breakout_sl_atr_mult
+        buy_sl = self._buy_stop_price - sl_distance   # Below entry for long
+        sell_sl = self._sell_stop_price + sl_distance  # Above entry for short
 
         self.logger.info(
             f"[BREAKOUT] Levels: high=${self._breakout_high:.2f}, low=${self._breakout_low:.2f}, "
