@@ -192,7 +192,7 @@ class TradingConfig:
 
     # ── Data refresh ────────────────────────────────────────────────
     # Seconds between indicator data refreshes (for GUI display between candles)
-    data_refresh_interval_seconds: int = 30
+    data_refresh_interval_seconds: int = 5
     # Milliseconds between trailing stop updates (lower = faster trailing)
     trail_interval_ms: int = 100
 

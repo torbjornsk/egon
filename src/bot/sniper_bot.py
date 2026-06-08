@@ -744,7 +744,13 @@ class SniperBot:
                         )
                         if rates is not None and len(rates) > 0:
                             candle_time = rates.iloc[0]['time']
-                            if self.last_processed_candle is None or candle_time > self.last_processed_candle:
+                            if self.last_processed_candle is None:
+                                # First candle: record baseline, skip trading
+                                self.last_processed_candle = candle_time
+                                self.logger.info(
+                                    f"[WARMUP] First candle recorded: {candle_time} -- skipping entry"
+                                )
+                            elif candle_time > self.last_processed_candle:
                                 self.last_processed_candle = candle_time
                                 self.trading_logic()
 

@@ -173,8 +173,12 @@ class BaseTradingBot:
         candle_time = rates.iloc[0]['time']
 
         if self.last_processed_candle is None:
+            # First call: record baseline but DON'T trigger trading_logic.
+            # This prevents immediate orders on startup when RSI happens to be
+            # in the entry zone mid-candle.
             self.last_processed_candle = candle_time
-            return True, candle_time
+            self.logger.info(f"[WARMUP] First candle recorded: {candle_time} -- skipping entry")
+            return False, candle_time
 
         if candle_time > self.last_processed_candle:
             self.last_processed_candle = candle_time
