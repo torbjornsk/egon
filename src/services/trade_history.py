@@ -1,25 +1,27 @@
 """
 Trade history service  --  exit reason loading for GUI display.
+
+Auto-discovers all exit_reasons_*.json files in the data/ directory
+so new bot types are included without code changes.
 """
 
+import glob
 import json
 import os
 from src.core.paths import resolve_path
 
 
 def load_exit_reasons() -> dict:
-    """Load exit reasons from all bot JSON files."""
+    """Load exit reasons from all bot JSON files in data/ directory."""
     reasons = {}
-    for rel_path in ['data/exit_reasons_m1.json', 'data/exit_reasons_m5.json',
-                 'data/exit_reasons_m15.json', 'data/exit_reasons_lz.json',
-                 'data/exit_reasons_m5s.json', 'data/exit_reasons_m1s.json',
-                 'data/exit_reasons_m15s.json', 'data/exit_reasons_tick.json',
-                 'data/exit_reasons_momentum.json', 'data/exit_reasons_brk.json']:
-        path = str(resolve_path(rel_path))
-        if os.path.exists(path):
-            try:
-                with open(path, 'r') as f:
-                    reasons.update(json.load(f))
-            except Exception:
-                pass
+    data_dir = str(resolve_path('data'))
+    pattern = os.path.join(data_dir, 'exit_reasons_*.json')
+
+    for path in glob.glob(pattern):
+        try:
+            with open(path, 'r') as f:
+                reasons.update(json.load(f))
+        except Exception:
+            pass
+
     return reasons
