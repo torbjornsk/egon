@@ -180,7 +180,7 @@ class SniperStrategy:
 
     def get_exit_rsi(self, df: pd.DataFrame, direction: str) -> float:
         """
-        Calculate the exit RSI target for the given direction.
+        Calculate the exit RSI target for the given direction (candle-based exit).
 
         Uses exit_rsi_long / exit_rsi_short as the base values.
         If adaptive_exit_enabled: shifts the base based on trend strength.
@@ -224,6 +224,30 @@ class SniperStrategy:
                 return base_exit - shift
             else:
                 return base_exit
+
+    def get_tp_rsi(self, df: pd.DataFrame, direction: str) -> float:
+        """
+        Calculate the RSI target for the MT5 TP order (spike catcher).
+
+        Uses tp_rsi_long / tp_rsi_short if configured (> 0).
+        Falls back to get_exit_rsi() if not set.
+
+        The TP RSI can be more ambitious than the candle exit RSI:
+        - For longs: tp_rsi_long > exit_rsi_long means TP is placed higher
+        - For shorts: tp_rsi_short < exit_rsi_short means TP is placed lower
+
+        This catches intra-candle spikes that would be missed by candle-close logic.
+        """
+        if direction == 'LONG':
+            tp_rsi = self.config.tp_rsi_long
+        else:
+            tp_rsi = self.config.tp_rsi_short
+
+        # If not configured, fall back to the candle exit RSI
+        if tp_rsi <= 0:
+            return self.get_exit_rsi(df, direction)
+
+        return tp_rsi
 
     def check_exit(
         self,

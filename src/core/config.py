@@ -151,6 +151,11 @@ class TradingConfig:
     # shorts close when RSI <= exit_rsi_short. Set both to 50 for true mean reversion.
     exit_rsi_long: float = 50.0
     exit_rsi_short: float = 50.0
+    # TP order RSI targets (placed as MT5 TP price -- catches intra-candle spikes).
+    # Set higher than exit_rsi_long / lower than exit_rsi_short for a more ambitious
+    # spike catcher. When 0, falls back to exit_rsi_long / exit_rsi_short.
+    tp_rsi_long: float = 0.0
+    tp_rsi_short: float = 0.0
     # Adaptive exit: shift exit_rsi based on trend strength
     adaptive_exit_enabled: bool = True
     # EMA divergence threshold (in ATR) to trigger the shift

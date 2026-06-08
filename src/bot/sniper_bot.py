@@ -220,27 +220,27 @@ class SniperBot:
         )
         stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
 
-        # Calculate TP using RSI level prediction
+        # Calculate TP using RSI level prediction (spike catcher)
         from src.core.rsi_levels import calculate_rsi_sell_price, calculate_rsi_buy_price
-        exit_rsi = self.strategy.get_exit_rsi(df, direction)
+        tp_rsi = self.strategy.get_tp_rsi(df, direction)
 
         if direction == 'LONG':
             fill_price = entry_price or current_price
             sl = fill_price - stop_distance
-            tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
+            tp = calculate_rsi_sell_price(df, tp_rsi, self.config.rsi_period)
             if tp is None or tp <= fill_price:
                 tp = fill_price + df.iloc[-1]['ATR'] * self.config.tp_fallback_atr_mult
             order_type = ORDER_TYPE_BUY
         else:
             fill_price = entry_price or current_price
             sl = fill_price + stop_distance
-            tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
+            tp = calculate_rsi_buy_price(df, tp_rsi, self.config.rsi_period)
             if tp is None or tp >= fill_price:
                 tp = fill_price - df.iloc[-1]['ATR'] * self.config.tp_fallback_atr_mult
             order_type = ORDER_TYPE_SELL
 
         self.logger.info(
-            f"[TP CALC] {direction}: exit RSI target={exit_rsi:.1f}, TP=${tp:.2f}"
+            f"[TP CALC] {direction}: TP RSI target={tp_rsi:.1f}, TP=${tp:.2f}"
         )
 
         info = self.mt5.get_account_info()
@@ -508,7 +508,7 @@ class SniperBot:
                 sl = entry - stop_distance
 
                 from src.core.rsi_levels import calculate_rsi_sell_price
-                exit_rsi = self.strategy.get_exit_rsi(df, 'LONG')
+                exit_rsi = self.strategy.get_tp_rsi(df, 'LONG')
                 tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
                 if tp is None or tp <= entry:
                     tp = entry + current_atr * self.config.tp_fallback_atr_mult
@@ -534,7 +534,7 @@ class SniperBot:
                 sl = entry + stop_distance
 
                 from src.core.rsi_levels import calculate_rsi_buy_price
-                exit_rsi = self.strategy.get_exit_rsi(df, 'SHORT')
+                exit_rsi = self.strategy.get_tp_rsi(df, 'SHORT')
                 tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
                 if tp is None or tp >= entry:
                     tp = entry - current_atr * self.config.tp_fallback_atr_mult
