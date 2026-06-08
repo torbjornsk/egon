@@ -95,6 +95,10 @@ class BaseTradingBot:
         # Consecutive stop-loss exits (for SL tightening)
         self.consecutive_sl_exits: int = 0
 
+        # Trailing stop state
+        self._breakeven_applied: set[int] = set()
+        self._last_df: pd.DataFrame | None = None
+
     # ── Connection ──────────────────────────────────────────────────────
 
     def is_profit_protection_active(self) -> bool:
@@ -187,10 +191,15 @@ class BaseTradingBot:
             return
 
         current_price = tick.bid if direction == 'LONG' else tick.ask
-        adaptive_mult = get_adaptive_atr_multiplier(
-            df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
-        )
-        stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
+
+        # Use breakout-specific SL multiplier if configured, else adaptive ATR
+        if self.config.breakout_sl_atr_mult > 0 and self.config.bot_type == "breakout":
+            stop_distance = df.iloc[-1]['ATR'] * self.config.breakout_sl_atr_mult
+        else:
+            adaptive_mult = get_adaptive_atr_multiplier(
+                df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
+            )
+            stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
 
         # Tighten stop loss after consecutive SL exits
         if self.consecutive_sl_exits > 0 and self.config.sl_tightening_factor < 1.0:
@@ -214,10 +223,17 @@ class BaseTradingBot:
         if not info:
             return
 
-        volume = self.mt5.calculate_lot_size(
-            info['balance'], self.config.per_position_size_pct,
-            self.config.leverage, current_price,
-        )
+        # Use risk-based sizing when configured
+        if self.config.sizing_mode == "risk_pct":
+            risk_amount = info['balance'] * self.config.risk_per_trade_pct
+            volume = self.mt5.calculate_lot_size_from_risk(risk_amount, stop_distance)
+        elif self.config.sizing_mode == "fixed":
+            volume = self.config.fixed_lots
+        else:
+            volume = self.mt5.calculate_lot_size(
+                info['balance'], self.config.per_position_size_pct,
+                self.config.leverage, current_price,
+            )
         if not volume:
             return
 
@@ -308,6 +324,17 @@ class BaseTradingBot:
 
         time_since_close = (get_local_now() - self.last_close_time).total_seconds()
         tf_seconds = self.strategy.timeframe_minutes * 60
+
+        # Simple reentry cooldown (independent of loss backoff, applies to all closes)
+        if self.config.reentry_cooldown_bars > 0:
+            cooldown = self.config.reentry_cooldown_bars * tf_seconds
+            if time_since_close < cooldown:
+                remaining = (cooldown - time_since_close) / 60
+                self.logger.info(
+                    f"Reentry cooldown: {remaining:.1f}min remaining "
+                    f"({self.config.reentry_cooldown_bars} bars)"
+                )
+                return False
 
         # Log backoff state for live debugging
         if self.config.use_loss_backoff:
@@ -420,6 +447,9 @@ class BaseTradingBot:
             df = compute_indicators(df, self.config)
         latest = df.iloc[-1]
 
+        # Store for trailing stop ATR lookups
+        self._last_df = df
+
         # Update volatility state for auto-PP
         self._update_volatility_state(df)
 
@@ -501,6 +531,98 @@ class BaseTradingBot:
                             self.logger.info("LONG signal blocked -- trading mode: short_only")
                         else:
                             self.open_position(signal['direction'], df)
+
+    # ── Trailing stop management (every second) ───────────────────────
+
+    def _manage_trailing(self, positions, current_atr: float, tick):
+        """
+        Update trailing stop using live tick data.
+
+        Supports two breakeven modes:
+        - "first_pip": move SL to BE as soon as price moves in your direction
+        - "atr_threshold": move SL to BE after profit > breakeven_atr_trigger * ATR
+
+        After breakeven, trail at trail_atr_after_breakeven * ATR.
+        Before breakeven, trail at trail_atr_before_breakeven * ATR (wider).
+        """
+        if current_atr < 0.5:
+            return
+
+        be_trigger = self.config.breakeven_atr_trigger
+        be_mode = self.config.breakeven_mode
+
+        for pos in positions:
+            ticket = pos.ticket
+            entry = pos.price_open
+            current = tick.bid if pos.type == ORDER_TYPE_BUY else tick.ask
+
+            if pos.type == ORDER_TYPE_BUY:
+                move_atr = (current - entry) / current_atr
+            else:
+                move_atr = (entry - current) / current_atr
+
+            # Stage 1: Move to breakeven
+            if ticket not in self._breakeven_applied:
+                should_apply_be = False
+
+                if be_mode == "first_pip":
+                    # Move to BE as soon as price is on the right side of entry
+                    should_apply_be = move_atr > 0
+                else:
+                    # Standard: wait for profit to exceed threshold
+                    should_apply_be = be_trigger > 0 and move_atr >= be_trigger
+
+                if should_apply_be:
+                    offset = current_atr * self.config.breakeven_offset
+                    new_sl = entry + offset if pos.type == ORDER_TYPE_BUY else entry - offset
+                    if hasattr(self.mt5, 'modify_sl'):
+                        if self.mt5.modify_sl(ticket, new_sl):
+                            self._breakeven_applied.add(ticket)
+                            self.logger.info(
+                                f"[BREAKEVEN] Ticket {ticket}: SL -> ${new_sl:.2f} "
+                                f"(mode={be_mode})"
+                            )
+
+            # Stage 2: Trail
+            if ticket in self._breakeven_applied:
+                trail_distance = current_atr * self.config.trail_atr_after_breakeven
+            else:
+                trail_distance = current_atr * self.config.trail_atr_before_breakeven
+
+            if pos.type == ORDER_TYPE_BUY:
+                new_sl = current - trail_distance
+                if new_sl > pos.sl:
+                    if hasattr(self.mt5, 'modify_sl'):
+                        self.mt5.modify_sl(ticket, new_sl)
+            else:
+                new_sl = current + trail_distance
+                if new_sl < pos.sl:
+                    if hasattr(self.mt5, 'modify_sl'):
+                        self.mt5.modify_sl(ticket, new_sl)
+
+    def manage_trailing_continuous(self):
+        """Update trailing stop every second using live tick data."""
+        # Only run if trailing is configured (breakeven_atr_trigger > 0 or first_pip mode)
+        if self.config.breakeven_mode != "first_pip" and self.config.breakeven_atr_trigger <= 0:
+            return
+
+        tick = self.mt5.get_tick()
+        if tick is None:
+            return
+
+        positions = self.mt5.get_open_positions(self.strategy.magic_number)
+        if not positions:
+            return
+
+        # Use last known ATR from candle data
+        current_atr = 0.0
+        if self._last_df is not None and 'ATR' in self._last_df.columns:
+            current_atr = float(self._last_df.iloc[-1]['ATR'])
+
+        if current_atr < 0.5:
+            return
+
+        self._manage_trailing(positions, current_atr, tick)
 
     # ── Continuous checks (every second) ────────────────────────────────
 
@@ -785,11 +907,14 @@ class BaseTradingBot:
 
         last_status_time = time.time()
         last_candle_check = 0.0
+        last_data_refresh = 0.0
+        data_refresh_interval = self.config.data_refresh_interval_seconds
 
         try:
             while not self._stop_requested:
                 try:
                     # Always run every second regardless of check_interval
+                    self.manage_trailing_continuous()
                     self.check_profit_protection_continuous()
                     self.check_mt5_closed_positions()
 
@@ -827,6 +952,18 @@ class BaseTradingBot:
                                     else:
                                         self.logger.info(f"[MONITORING] Price: {latest['close']:.2f}")
                                 last_status_time = now
+
+                    # Refresh indicator data periodically (for trailing ATR)
+                    if now - last_data_refresh >= data_refresh_interval:
+                        last_data_refresh = now
+                        df = self.mt5.get_historical_data(
+                            timeframe=self.strategy.mt5_timeframe, bars=500
+                        )
+                        if df is not None and len(df) >= 200:
+                            if 'RSI' not in df.columns:
+                                from src.core.indicators import compute_indicators
+                                df = compute_indicators(df, self.config)
+                            self._last_df = df
 
                     time.sleep(1)
 

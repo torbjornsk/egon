@@ -123,6 +123,11 @@ class TradingConfig:
     loss_backoff_sl_candles: int = 2
     sl_tightening_factor: float = 1.0
 
+    # Simple re-entry cooldown: wait N candles after ANY close before new entry.
+    # 0 = disabled (use standard cooldown logic instead).
+    # This is independent of loss_backoff and applies to wins too.
+    reentry_cooldown_bars: int = 0
+
     # Block 2nd position when existing position is underwater
     block_second_when_underwater: bool = True
 
@@ -154,7 +159,11 @@ class TradingConfig:
     exit_rsi_trend_shift: float = 5.0
 
     # ── Breakeven & trailing ────────────────────────────────────────
+    # Breakeven mode: "atr_threshold" (default, wait for profit > breakeven_atr_trigger * ATR)
+    #                 "first_pip" (move SL to BE as soon as price moves in your direction)
+    breakeven_mode: str = "atr_threshold"
     # Move SL to entry once profit exceeds this multiple of ATR (0 = disabled)
+    # Only used when breakeven_mode = "atr_threshold"
     breakeven_atr_trigger: float = 1.0
     # Small offset above entry (in ATR) to cover spread
     breakeven_offset: float = 0.1

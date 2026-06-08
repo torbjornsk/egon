@@ -1,1 +1,8 @@
-{}
+{
+  "12861331": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.1% from peak $20.40 to $12.21 (limit 40% after 9min)",
+    "exit_time": "2026-06-08T10:02:02.826408+02:00",
+    "bot": "BRK"
+  }
+}

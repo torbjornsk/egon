@@ -1,4 +1,214 @@
 {
+  "12842116": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T19:36:56.665139+02:00",
+    "bot": "TICK"
+  },
+  "12842060": {
+    "reason": "Exit score 0.59 (opposite_pres...",
+    "full_reason": "Exit score 0.59 (opposite_pressure: 1.00)",
+    "exit_time": "2026-06-05T19:32:36.379302+02:00",
+    "bot": "TICK"
+  },
+  "12841982": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T19:29:00.965154+02:00",
+    "bot": "TICK"
+  },
+  "12835241": {
+    "reason": "Exit score 0.72 (exhaustion: 1...",
+    "full_reason": "Exit score 0.72 (exhaustion: 1.00)",
+    "exit_time": "2026-06-05T16:23:37.576441+02:00",
+    "bot": "TICK"
+  },
+  "12835093": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:20:40.189468+02:00",
+    "bot": "TICK"
+  },
+  "12834968": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:15:12.670338+02:00",
+    "bot": "TICK"
+  },
+  "12834810": {
+    "reason": "Exit score 0.59 (structure_pre...",
+    "full_reason": "Exit score 0.59 (structure_pressure: 1.31)",
+    "exit_time": "2026-06-05T16:11:38.389234+02:00",
+    "bot": "TICK"
+  },
+  "12834570": {
+    "reason": "Exit score 0.67 (structure_pre...",
+    "full_reason": "Exit score 0.67 (structure_pressure: 1.11)",
+    "exit_time": "2026-06-05T16:07:01.922020+02:00",
+    "bot": "TICK"
+  },
+  "12834273": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:04:11.867700+02:00",
+    "bot": "TICK"
+  },
+  "12833537": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:56:08.181180+02:00",
+    "bot": "TICK"
+  },
+  "12833490": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:53:49.077287+02:00",
+    "bot": "TICK"
+  },
+  "12833414": {
+    "reason": "Exit score 0.59 (structure_pre...",
+    "full_reason": "Exit score 0.59 (structure_pressure: 1.35)",
+    "exit_time": "2026-06-05T15:52:08.495000+02:00",
+    "bot": "TICK"
+  },
+  "12833290": {
+    "reason": "Exit score 0.71 (opposite_pres...",
+    "full_reason": "Exit score 0.71 (opposite_pressure: 1.00)",
+    "exit_time": "2026-06-05T15:49:41.561240+02:00",
+    "bot": "TICK"
+  },
+  "12833123": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:47:45.944637+02:00",
+    "bot": "TICK"
+  },
+  "12832106": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:35:07.772133+02:00",
+    "bot": "TICK"
+  },
+  "12831921": {
+    "reason": "Exit score 0.72 (exhaustion: 1...",
+    "full_reason": "Exit score 0.72 (exhaustion: 1.00)",
+    "exit_time": "2026-06-05T15:33:18.338803+02:00",
+    "bot": "TICK"
+  },
+  "12831465": {
+    "reason": "Exit score 0.58 (profit_stall:...",
+    "full_reason": "Exit score 0.58 (profit_stall: 1.00)",
+    "exit_time": "2026-06-05T15:30:08.579906+02:00",
+    "bot": "TICK"
+  },
+  "12831378": {
+    "reason": "Exit score 0.67 (structure_pre...",
+    "full_reason": "Exit score 0.67 (structure_pressure: 1.07)",
+    "exit_time": "2026-06-05T15:26:45.133534+02:00",
+    "bot": "TICK"
+  },
+  "12831234": {
+    "reason": "Exit score 0.70 (exhaustion: 1...",
+    "full_reason": "Exit score 0.70 (exhaustion: 1.00)",
+    "exit_time": "2026-06-05T15:23:52.835442+02:00",
+    "bot": "TICK"
+  },
+  "12831098": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:21:15.818573+02:00",
+    "bot": "TICK"
+  },
+  "12831044": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:18:06.657097+02:00",
+    "bot": "TICK"
+  },
+  "12830855": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:16:03.935268+02:00",
+    "bot": "TICK"
+  },
+  "12830710": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:11:12.617568+02:00",
+    "bot": "TICK"
+  },
+  "12830534": {
+    "reason": "Exit score 0.56 (structure_pre...",
+    "full_reason": "Exit score 0.56 (structure_pressure: 1.28)",
+    "exit_time": "2026-06-05T15:07:59.462043+02:00",
+    "bot": "TICK"
+  },
+  "12830425": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:06:04.036460+02:00",
+    "bot": "TICK"
+  },
+  "12829993": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:02:59.064506+02:00",
+    "bot": "TICK"
+  },
+  "12829640": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:59:02.242685+02:00",
+    "bot": "TICK"
+  },
+  "12828386": {
+    "reason": "Exit score 0.61 (opposite_pres...",
+    "full_reason": "Exit score 0.61 (opposite_pressure: 1.00)",
+    "exit_time": "2026-06-05T14:50:54.608581+02:00",
+    "bot": "TICK"
+  },
+  "12828235": {
+    "reason": "Exit score 0.60 (structure_pre...",
+    "full_reason": "Exit score 0.60 (structure_pressure: 1.28)",
+    "exit_time": "2026-06-05T14:45:30.572395+02:00",
+    "bot": "TICK"
+  },
+  "12827969": {
+    "reason": "Exit score 0.58 (velocity_exha...",
+    "full_reason": "Exit score 0.58 (velocity_exhaustion: 1.00)",
+    "exit_time": "2026-06-05T14:41:26.040878+02:00",
+    "bot": "TICK"
+  },
+  "12827860": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:38:39.130693+02:00",
+    "bot": "TICK"
+  },
+  "12827418": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:36:34.665082+02:00",
+    "bot": "TICK"
+  },
+  "12827076": {
+    "reason": "Exit score 0.59 (profit_stall:...",
+    "full_reason": "Exit score 0.59 (profit_stall: 1.00)",
+    "exit_time": "2026-06-05T14:34:48.354762+02:00",
+    "bot": "TICK"
+  },
+  "12826283": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:30:04.316630+02:00",
+    "bot": "TICK"
+  },
+  "12825913": {
+    "reason": "Exit score 0.73 (structure_pre...",
+    "full_reason": "Exit score 0.73 (structure_pressure: 1.09)",
+    "exit_time": "2026-06-05T14:28:39.936135+02:00",
+    "bot": "TICK"
+  },
   "12825830": {
     "reason": "Exit score 0.59 (structure_pre...",
     "full_reason": "Exit score 0.59 (structure_pressure: 1.28)",
@@ -987,216 +1197,6 @@
     "reason": "Stop loss",
     "full_reason": "Stop loss",
     "exit_time": "2026-06-05T03:15:20.545414+02:00",
-    "bot": "TICK"
-  },
-  "12814739": {
-    "reason": "Exit score 0.58 (structure_pre...",
-    "full_reason": "Exit score 0.58 (structure_pressure: 1.22)",
-    "exit_time": "2026-06-05T03:11:06.109794+02:00",
-    "bot": "TICK"
-  },
-  "12814723": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T03:09:28.378759+02:00",
-    "bot": "TICK"
-  },
-  "12814697": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T03:07:31.330024+02:00",
-    "bot": "TICK"
-  },
-  "12814597": {
-    "reason": "Exit score 0.64 (structure_pre...",
-    "full_reason": "Exit score 0.64 (structure_pressure: 1.29)",
-    "exit_time": "2026-06-05T03:04:37.794923+02:00",
-    "bot": "TICK"
-  },
-  "12814538": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T03:01:44.823774+02:00",
-    "bot": "TICK"
-  },
-  "12814469": {
-    "reason": "Exit score 0.90 (structure_pre...",
-    "full_reason": "Exit score 0.90 (structure_pressure: 1.07)",
-    "exit_time": "2026-06-05T02:59:11.679381+02:00",
-    "bot": "TICK"
-  },
-  "12814453": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:57:20.256442+02:00",
-    "bot": "TICK"
-  },
-  "12814420": {
-    "reason": "Exit score 0.59 (structure_pre...",
-    "full_reason": "Exit score 0.59 (structure_pressure: 1.39)",
-    "exit_time": "2026-06-05T02:55:46.884060+02:00",
-    "bot": "TICK"
-  },
-  "12814415": {
-    "reason": "Exit score 0.56 (structure_pre...",
-    "full_reason": "Exit score 0.56 (structure_pressure: 1.06)",
-    "exit_time": "2026-06-05T02:53:05.239825+02:00",
-    "bot": "TICK"
-  },
-  "12814397": {
-    "reason": "Exit score 0.58 (structure_pre...",
-    "full_reason": "Exit score 0.58 (structure_pressure: 1.02)",
-    "exit_time": "2026-06-05T02:50:52.716295+02:00",
-    "bot": "TICK"
-  },
-  "12814370": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:47:16.679693+02:00",
-    "bot": "TICK"
-  },
-  "12814356": {
-    "reason": "Exit score 0.58 (structure_pre...",
-    "full_reason": "Exit score 0.58 (structure_pressure: 1.34)",
-    "exit_time": "2026-06-05T02:44:49.733384+02:00",
-    "bot": "TICK"
-  },
-  "12814346": {
-    "reason": "Exit score 0.68 (exhaustion: 1...",
-    "full_reason": "Exit score 0.68 (exhaustion: 1.00)",
-    "exit_time": "2026-06-05T02:42:20.684823+02:00",
-    "bot": "TICK"
-  },
-  "12814323": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:40:21.186867+02:00",
-    "bot": "TICK"
-  },
-  "12814313": {
-    "reason": "Exit score 0.56 (structure_pre...",
-    "full_reason": "Exit score 0.56 (structure_pressure: 1.04)",
-    "exit_time": "2026-06-05T02:38:20.716634+02:00",
-    "bot": "TICK"
-  },
-  "12814259": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:36:31.204670+02:00",
-    "bot": "TICK"
-  },
-  "12814229": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:34:40.747389+02:00",
-    "bot": "TICK"
-  },
-  "12814203": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:32:40.109967+02:00",
-    "bot": "TICK"
-  },
-  "12814093": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:28:45.496853+02:00",
-    "bot": "TICK"
-  },
-  "12814065": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:26:05.673226+02:00",
-    "bot": "TICK"
-  },
-  "12814019": {
-    "reason": "Exit score 0.56 (structure_pre...",
-    "full_reason": "Exit score 0.56 (structure_pressure: 1.01)",
-    "exit_time": "2026-06-05T02:22:59.941214+02:00",
-    "bot": "TICK"
-  },
-  "12813961": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:20:38.246309+02:00",
-    "bot": "TICK"
-  },
-  "12813858": {
-    "reason": "Exit score 0.70 (exhaustion: 1...",
-    "full_reason": "Exit score 0.70 (exhaustion: 1.00)",
-    "exit_time": "2026-06-05T02:18:03.355667+02:00",
-    "bot": "TICK"
-  },
-  "12813683": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:11:11.334220+02:00",
-    "bot": "TICK"
-  },
-  "12813660": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:09:04.391950+02:00",
-    "bot": "TICK"
-  },
-  "12813647": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:05:07.750645+02:00",
-    "bot": "TICK"
-  },
-  "12813629": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T02:02:41.056476+02:00",
-    "bot": "TICK"
-  },
-  "12813575": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:59:02.691027+02:00",
-    "bot": "TICK"
-  },
-  "12813547": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:56:11.996631+02:00",
-    "bot": "TICK"
-  },
-  "12813521": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:51:58.138801+02:00",
-    "bot": "TICK"
-  },
-  "12813490": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:48:05.677011+02:00",
-    "bot": "TICK"
-  },
-  "12813448": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:45:04.820900+02:00",
-    "bot": "TICK"
-  },
-  "12813420": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-06-05T01:42:46.025164+02:00",
-    "bot": "TICK"
-  },
-  "12813383": {
-    "reason": "Exit score 0.70 (exhaustion: 1...",
-    "full_reason": "Exit score 0.70 (exhaustion: 1.00)",
-    "exit_time": "2026-06-05T01:38:25.820171+02:00",
-    "bot": "TICK"
-  },
-  "12813363": {
-    "reason": "Exit score 0.62 (exhaustion: 1...",
-    "full_reason": "Exit score 0.62 (exhaustion: 1.00)",
-    "exit_time": "2026-06-05T01:36:12.709467+02:00",
     "bot": "TICK"
   }
 }

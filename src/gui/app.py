@@ -31,6 +31,7 @@ DROPDOWN_FIELDS: dict[str, list[str]] = {
     'timeframe': ['M1', 'M5', 'M15', 'H1'],
     'trend_filter': ['none', 'ema_cross', 'ema_200'],
     'bot_type': ['sniper', 'rsi_scalper', 'liquidity_zones', 'tick_scalper', 'momentum', 'breakout'],
+    'breakeven_mode': ['first_pip', 'atr_threshold'],
 }
 
 # Human-readable labels for config fields
@@ -91,6 +92,8 @@ FIELD_LABELS: dict[str, str] = {
     'breakout_max_daily_loss_pct': 'Max Daily Loss (%)',
     'breakout_max_daily_trades': 'Max Daily Trades',
     'breakout_max_drawdown_pct': 'Max Total Drawdown (%)',
+    'breakeven_mode': 'Breakeven Mode',
+    'reentry_cooldown_bars': 'Reentry Pause (bars)',
 }
 
 try:
@@ -603,8 +606,12 @@ class BotDetailPanel:
                                     'max_positions'],
                 'Breakout Entry': breakout_fields,
                 'Trend Filter (EMA)': ['fast_ema', 'slow_ema'],
-                'Trailing Stop': ['breakeven_atr_trigger', 'breakeven_offset',
-                                  'trail_atr_after_breakeven', 'trail_atr_before_breakeven'],
+                'Trailing Stop': ['breakeven_mode', 'breakeven_atr_trigger',
+                                  'breakeven_offset', 'trail_atr_after_breakeven',
+                                  'trail_atr_before_breakeven'],
+                'Cooldown': ['reentry_cooldown_bars', 'use_loss_backoff',
+                             'loss_backoff_sl_only', 'loss_backoff_sl_threshold',
+                             'loss_backoff_sl_candles'],
                 'Direction': ['enable_shorts', 'short_requires_downtrend', 'trading_mode'],
                 'Risk Management': breakout_risk,
             }

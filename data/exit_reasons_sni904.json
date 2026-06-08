@@ -1,0 +1,32 @@
+{
+  "12849418": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T02:20:27.607790+02:00",
+    "bot": "SNI904"
+  },
+  "12850999": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:18:40.844964+02:00",
+    "bot": "SNI904"
+  },
+  "12851494": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 45.5% from peak $31.85 to $17.35 (limit 40% after 4min)",
+    "exit_time": "2026-06-08T03:23:37.251794+02:00",
+    "bot": "SNI904"
+  },
+  "12851751": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:28:32.306805+02:00",
+    "bot": "SNI904"
+  },
+  "12851964": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:30:33.683119+02:00",
+    "bot": "SNI904"
+  }
+}

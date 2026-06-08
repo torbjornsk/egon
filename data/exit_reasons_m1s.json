@@ -70,5 +70,251 @@
     "full_reason": "Mean revert exit (RSI 48.5 <= 50)",
     "exit_time": "2026-06-05T14:21:01.051523+02:00",
     "bot": "M1S"
+  },
+  "12825813": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:27:06.153229+02:00",
+    "bot": "M1S"
+  },
+  "12826061": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:30:04.538243+02:00",
+    "bot": "M1S"
+  },
+  "12826940": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:31:29.579677+02:00",
+    "bot": "M1S"
+  },
+  "12827057": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:35:22.315186+02:00",
+    "bot": "M1S"
+  },
+  "12827424": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:36:37.522792+02:00",
+    "bot": "M1S"
+  },
+  "12827689": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:49:07.517799+02:00",
+    "bot": "M1S"
+  },
+  "12828881": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:52:40.984014+02:00",
+    "bot": "M1S"
+  },
+  "12829103": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:55:03.325149+02:00",
+    "bot": "M1S"
+  },
+  "12829480": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:59:10.955502+02:00",
+    "bot": "M1S"
+  },
+  "12829812": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:03:41.172116+02:00",
+    "bot": "M1S"
+  },
+  "12830366": {
+    "reason": "Mean revert exit (RSI 48.3 >= ...",
+    "full_reason": "Mean revert exit (RSI 48.3 >= 45)",
+    "exit_time": "2026-06-05T15:08:00.933952+02:00",
+    "bot": "M1S"
+  },
+  "12830824": {
+    "reason": "Mean revert exit (RSI 49.8 <= ...",
+    "full_reason": "Mean revert exit (RSI 49.8 <= 50)",
+    "exit_time": "2026-06-05T15:21:00.149272+02:00",
+    "bot": "M1S"
+  },
+  "12831348": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:27:08.197955+02:00",
+    "bot": "M1S"
+  },
+  "12831452": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:29:35.599625+02:00",
+    "bot": "M1S"
+  },
+  "12831575": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:30:35.813236+02:00",
+    "bot": "M1S"
+  },
+  "12831760": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:31:44.999044+02:00",
+    "bot": "M1S"
+  },
+  "12831901": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:33:24.385397+02:00",
+    "bot": "M1S"
+  },
+  "12832110": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:37:04.017395+02:00",
+    "bot": "M1S"
+  },
+  "12832484": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:42:01.879455+02:00",
+    "bot": "M1S"
+  },
+  "12833017": {
+    "reason": "Mean revert exit (RSI 49.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 49.1 >= 45)",
+    "exit_time": "2026-06-05T15:52:00.509058+02:00",
+    "bot": "M1S"
+  },
+  "12833512": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:59:25.707402+02:00",
+    "bot": "M1S"
+  },
+  "12833960": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:04:18.780456+02:00",
+    "bot": "M1S"
+  },
+  "12834469": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:05:38.010577+02:00",
+    "bot": "M1S"
+  },
+  "12834530": {
+    "reason": "Mean revert exit (RSI 45.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 45.1 >= 45)",
+    "exit_time": "2026-06-05T16:10:00.645518+02:00",
+    "bot": "M1S"
+  },
+  "12835039": {
+    "reason": "Mean revert exit (RSI 52.9 >= ...",
+    "full_reason": "Mean revert exit (RSI 52.9 >= 45)",
+    "exit_time": "2026-06-05T16:20:00.993147+02:00",
+    "bot": "M1S"
+  },
+  "12835246": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:22:31.362608+02:00",
+    "bot": "M1S"
+  },
+  "12835494": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:24:01.651247+02:00",
+    "bot": "M1S"
+  },
+  "12835606": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:31:43.654490+02:00",
+    "bot": "M1S"
+  },
+  "12842005": {
+    "reason": "Take profit",
+    "full_reason": "Take profit",
+    "exit_time": "2026-06-05T19:29:41.133815+02:00",
+    "bot": "M1S"
+  },
+  "12842108": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T19:37:26.319686+02:00",
+    "bot": "M1S"
+  },
+  "12848501": {
+    "reason": "Mean revert exit (RSI 52.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 52.1 >= 50)",
+    "exit_time": "2026-06-08T01:02:00.867771+02:00",
+    "bot": "M1S"
+  },
+  "12849254": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T01:46:59.201005+02:00",
+    "bot": "M1S"
+  },
+  "12849464": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T01:57:14.193702+02:00",
+    "bot": "M1S"
+  },
+  "12850304": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T02:58:20.428896+02:00",
+    "bot": "M1S"
+  },
+  "12851162": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:19:03.673827+02:00",
+    "bot": "M1S"
+  },
+  "12851497": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:21:18.163498+02:00",
+    "bot": "M1S"
+  },
+  "12851651": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:25:14.392186+02:00",
+    "bot": "M1S"
+  },
+  "12851944": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T03:30:23.385592+02:00",
+    "bot": "M1S"
+  },
+  "12861113": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T09:49:51.310707+02:00",
+    "bot": "M1S"
+  },
+  "12861279": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T09:56:52.621790+02:00",
+    "bot": "M1S"
+  },
+  "12861693": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T10:10:10.509208+02:00",
+    "bot": "M1S"
   }
 }

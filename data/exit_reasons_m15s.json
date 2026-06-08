@@ -1,1 +1,50 @@
-{}
+{
+  "12826955": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:50:16.621455+02:00",
+    "bot": "M15S"
+  },
+  "12828257": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T14:51:17.790580+02:00",
+    "bot": "M15S"
+  },
+  "12829811": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:29:29.885859+02:00",
+    "bot": "M15S"
+  },
+  "12830924": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:30:54.085907+02:00",
+    "bot": "M15S"
+  },
+  "12831579": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:38:25.591072+02:00",
+    "bot": "M15S"
+  },
+  "12833018": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T15:59:50.135732+02:00",
+    "bot": "M15S"
+  },
+  "12833962": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T16:04:24.896590+02:00",
+    "bot": "M15S"
+  },
+  "12835007": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-05T17:37:59.936545+02:00",
+    "bot": "M15S"
+  }
+}
