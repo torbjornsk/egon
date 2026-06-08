@@ -547,7 +547,7 @@ class BotDetailPanel:
                 'Stop Loss': ['atr_multiplier', 'atr_high_volatility_multiplier'],
                 'Trailing Stop': ['breakeven_atr_trigger', 'breakeven_offset',
                                   'trail_atr_after_breakeven', 'trail_atr_before_breakeven'],
-                'Direction': ['enable_shorts', 'trading_mode'],
+                'Direction': ['enable_shorts', 'short_requires_downtrend', 'trading_mode'],
                 'Risk Management': ['max_drawdown_limit', 'use_profit_protection'],
                 'Trend Detection (EMA)': ['fast_ema', 'slow_ema'],
                 'Schedule & Guards': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
