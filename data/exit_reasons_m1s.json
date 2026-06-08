@@ -316,5 +316,11 @@
     "full_reason": "Stop loss",
     "exit_time": "2026-06-08T10:10:10.509208+02:00",
     "bot": "M1S"
+  },
+  "12866589": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T13:16:49.093081+02:00",
+    "bot": "M1S"
   }
 }

@@ -56,6 +56,20 @@ class MT5Broker:
         """Modify stop loss of an open position via MT5."""
         return self._client.modify_sl(ticket, new_sl)
 
+    def place_stop_order(self, order_type: int, price: float, volume: float,
+                         sl: float, tp: float, magic_number: int,
+                         comment: str = "egon_stop"):
+        """Place a pending BUY STOP or SELL STOP order."""
+        return self._client.place_stop_order(order_type, price, volume, sl, tp, magic_number, comment)
+
+    def cancel_order(self, order_ticket: int) -> bool:
+        """Cancel a pending order by ticket."""
+        return self._client.cancel_order(order_ticket)
+
+    def get_pending_orders(self, magic_number: int) -> list:
+        """Get all pending orders for a given magic number."""
+        return self._client.get_pending_orders(magic_number)
+
     def partial_close(self, position, close_volume: float, magic_number: int, comment: str) -> OrderResult | None:
         """Partially close a position by closing a portion of the volume."""
         result = self._client.partial_close(position, close_volume, magic_number, comment)

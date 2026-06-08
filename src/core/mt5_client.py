@@ -217,6 +217,91 @@ class MT5Client:
 
         return result
 
+    def place_stop_order(
+        self,
+        order_type: int,
+        price: float,
+        volume: float,
+        sl: float,
+        tp: float,
+        magic_number: int,
+        comment: str = "egon_stop",
+    ) -> mt5.OrderSendResult | None:
+        """Place a pending BUY STOP or SELL STOP order.
+
+        BUY STOP: triggers when ask rises to price (breakout above)
+        SELL STOP: triggers when bid drops to price (breakout below)
+
+        Args:
+            order_type: ORDER_TYPE_BUY for BUY STOP, ORDER_TYPE_SELL for SELL STOP
+            price: trigger price for the stop order
+            volume: lot size
+            sl: stop loss price
+            tp: take profit price (0 for none)
+            magic_number: bot identifier
+            comment: order comment
+        """
+        # MT5 stop order types
+        if order_type == ORDER_TYPE_BUY:
+            mt5_type = mt5.ORDER_TYPE_BUY_STOP
+        else:
+            mt5_type = mt5.ORDER_TYPE_SELL_STOP
+
+        request = {
+            "action": mt5.TRADE_ACTION_PENDING,
+            "symbol": self.symbol,
+            "volume": volume,
+            "type": mt5_type,
+            "price": price,
+            "sl": sl,
+            "deviation": 20,
+            "magic": magic_number,
+            "comment": comment,
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+
+        if tp and tp > 0:
+            request["tp"] = tp
+
+        result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"place_stop_order returned None: {mt5.last_error()}")
+            return None
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            logger.error(f"Stop order failed: {result.retcode} - {result.comment}")
+            return None
+
+        logger.info(
+            f"[STOP ORDER] {'BUY' if order_type == ORDER_TYPE_BUY else 'SELL'} STOP "
+            f"placed @ ${price:.2f}, SL=${sl:.2f}, Vol={volume}"
+        )
+        return result
+
+    def cancel_order(self, order_ticket: int) -> bool:
+        """Cancel a pending order by ticket."""
+        request = {
+            "action": mt5.TRADE_ACTION_REMOVE,
+            "order": order_ticket,
+        }
+
+        result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"cancel_order returned None: {mt5.last_error()}")
+            return False
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            logger.error(f"Cancel order failed: {result.retcode} - {result.comment}")
+            return False
+
+        return True
+
+    def get_pending_orders(self, magic_number: int) -> list:
+        """Get all pending orders for a given magic number."""
+        orders = mt5.orders_get(symbol=self.symbol)
+        if orders is None:
+            return []
+        return [o for o in orders if o.magic == magic_number]
+
     def modify_sl(self, ticket: int, new_sl: float) -> bool:
         """Modify the stop loss of an open position."""
         # Get the position to find its current TP

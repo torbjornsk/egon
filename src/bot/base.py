@@ -452,7 +452,9 @@ class BaseTradingBot:
 
         # Update breakout levels if strategy supports tick-based entry
         if hasattr(self.strategy, 'update_levels'):
-            self.strategy.update_levels(df)
+            order_info = self.strategy.update_levels(df)
+            if order_info is not None:
+                self._manage_breakout_orders(order_info, df)
 
         # Update volatility state for auto-PP
         self._update_volatility_state(df)
@@ -536,17 +538,25 @@ class BaseTradingBot:
                         else:
                             self.open_position(signal['direction'], df)
 
-    # ── Trailing stop management (every second) ───────────────────────
+    # ── Breakout stop order management ─────────────────────────────────
 
-    def check_breakout_fills(self):
-        """Check if live price has crossed a breakout level (runs every second)."""
-        if not hasattr(self.strategy, 'check_tick_entry'):
+    def _manage_breakout_orders(self, order_info: dict, df: pd.DataFrame):
+        """Cancel old pending orders and place new stop orders at breakout levels."""
+        if not hasattr(self.mt5, 'place_stop_order'):
             return
 
-        tick = self.mt5.get_tick()
-        if tick is None:
-            return
+        # Cancel existing pending orders
+        if hasattr(self.strategy, '_pending_buy_ticket') and self.strategy._pending_buy_ticket:
+            if hasattr(self.mt5, 'cancel_order'):
+                self.mt5.cancel_order(self.strategy._pending_buy_ticket)
+            self.strategy._pending_buy_ticket = None
 
+        if hasattr(self.strategy, '_pending_sell_ticket') and self.strategy._pending_sell_ticket:
+            if hasattr(self.mt5, 'cancel_order'):
+                self.mt5.cancel_order(self.strategy._pending_sell_ticket)
+            self.strategy._pending_sell_ticket = None
+
+        # Check if we already have a position
         positions = self.mt5.get_open_positions(self.strategy.magic_number)
         if len(positions) >= self.config.max_positions:
             return
@@ -555,20 +565,106 @@ class BaseTradingBot:
         if not self.can_enter_new_position():
             return
 
-        has_long = any(p.type == ORDER_TYPE_BUY for p in positions)
-        has_short = any(p.type == ORDER_TYPE_SELL for p in positions)
+        # Calculate volume
+        info = self.mt5.get_account_info()
+        if not info:
+            return
 
-        # Check trading mode
-        mode = self.effective_trading_mode
+        atr = order_info['atr']
+        stop_distance = atr * self.config.breakout_sl_atr_mult
 
-        signal = self.strategy.check_tick_entry(tick.bid, tick.ask, has_long, has_short)
-        if signal and self._last_df is not None:
-            direction = signal['direction']
-            if mode == "long_only" and direction == "SHORT":
-                return
-            if mode == "short_only" and direction == "LONG":
-                return
-            self.open_position(direction, self._last_df)
+        if self.config.sizing_mode == "risk_pct":
+            risk_amount = info['balance'] * self.config.risk_per_trade_pct
+            volume = self.mt5.calculate_lot_size_from_risk(risk_amount, stop_distance)
+        elif self.config.sizing_mode == "fixed":
+            volume = self.config.fixed_lots
+        else:
+            tick = self.mt5.get_tick()
+            price = tick.bid if tick else 0
+            volume = self.mt5.calculate_lot_size(
+                info['balance'], self.config.per_position_size_pct,
+                self.config.leverage, price,
+            )
+
+        if not volume:
+            return
+
+        # Place BUY STOP
+        if order_info.get('buy_stop_price'):
+            mode = self.effective_trading_mode
+            if mode != "short_only":
+                buy_price = order_info['buy_stop_price']
+                buy_sl = order_info['buy_sl']
+                result = self.mt5.place_stop_order(
+                    ORDER_TYPE_BUY, buy_price, volume, buy_sl, 0,
+                    self.strategy.magic_number, self.strategy.order_comment,
+                )
+                if result:
+                    self.strategy._pending_buy_ticket = result.order
+                    self.logger.info(
+                        f"[STOP ORDER] BUY STOP @ ${buy_price:.2f}, "
+                        f"SL=${buy_sl:.2f}, Vol={volume}"
+                    )
+
+        # Place SELL STOP
+        if order_info.get('sell_stop_price') and self.config.enable_shorts:
+            mode = self.effective_trading_mode
+            if mode != "long_only":
+                sell_price = order_info['sell_stop_price']
+                sell_sl = order_info['sell_sl']
+                result = self.mt5.place_stop_order(
+                    ORDER_TYPE_SELL, sell_price, volume, sell_sl, 0,
+                    self.strategy.magic_number, self.strategy.order_comment,
+                )
+                if result:
+                    self.strategy._pending_sell_ticket = result.order
+                    self.logger.info(
+                        f"[STOP ORDER] SELL STOP @ ${sell_price:.2f}, "
+                        f"SL=${sell_sl:.2f}, Vol={volume}"
+                    )
+
+    # ── Trailing stop management (every second) ───────────────────────
+
+    def check_breakout_fills(self):
+        """Detect when MT5 stop orders have been filled (position appeared)."""
+        if not hasattr(self.strategy, '_pending_buy_ticket'):
+            return
+
+        positions = self.mt5.get_open_positions(self.strategy.magic_number)
+        if not positions:
+            return
+
+        # Check if any pending orders were filled (they become positions)
+        for pos in positions:
+            if pos.ticket not in self.positions.tracked_positions:
+                # New position appeared -- a stop order was filled
+                self.positions.register_open(pos.ticket)
+                self.trades_today += 1
+
+                direction = "LONG" if pos.type == ORDER_TYPE_BUY else "SHORT"
+                self.logger.info(
+                    f">>> STOP ORDER FILLED [{direction}] @ ${pos.price_open:.2f}, "
+                    f"SL=${pos.sl:.2f}, Vol={pos.volume}, Ticket={pos.ticket}"
+                )
+
+                # Record fill for re-entry cooldown
+                if hasattr(self.strategy, 'record_fill'):
+                    self.strategy.record_fill()
+
+                # Clear the pending ticket
+                if pos.type == ORDER_TYPE_BUY:
+                    self.strategy._pending_buy_ticket = None
+                    # Cancel the opposite side
+                    if self.strategy._pending_sell_ticket:
+                        if hasattr(self.mt5, 'cancel_order'):
+                            self.mt5.cancel_order(self.strategy._pending_sell_ticket)
+                        self.strategy._pending_sell_ticket = None
+                else:
+                    self.strategy._pending_sell_ticket = None
+                    if self.strategy._pending_buy_ticket:
+                        if hasattr(self.mt5, 'cancel_order'):
+                            self.mt5.cancel_order(self.strategy._pending_buy_ticket)
+                        self.strategy._pending_buy_ticket = None
 
     def _manage_trailing(self, positions, current_atr: float, tick):
         """
@@ -1002,7 +1098,7 @@ class BaseTradingBot:
                                 df = compute_indicators(df, self.config)
                             self._last_df = df
 
-                    time.sleep(1)
+                    time.sleep(self.config.trail_interval_ms / 1000.0)
 
                 except KeyboardInterrupt:
                     raise

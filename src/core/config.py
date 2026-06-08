@@ -193,6 +193,8 @@ class TradingConfig:
     # ── Data refresh ────────────────────────────────────────────────
     # Seconds between indicator data refreshes (for GUI display between candles)
     data_refresh_interval_seconds: int = 30
+    # Milliseconds between trailing stop updates (lower = faster trailing)
+    trail_interval_ms: int = 100
 
     # ── Schedule ────────────────────────────────────────────────────
     # Per-day trading hours ("HH:MM-HH:MM" or "" for closed)
@@ -247,6 +249,9 @@ class TradingConfig:
     # ── Breakout strategy settings ──────────────────────────────────
     # Number of candles to look back for high/low breakout level
     breakout_bars: int = 5
+    # Buffer above/below breakout level for stop order placement (in ATR multiples)
+    # E.g. 0.1 means order placed 0.1*ATR above the high (catches momentum, avoids noise)
+    breakout_entry_buffer_atr: float = 0.1
     # Minimum ATR value to avoid trading in dead markets (in price units, e.g. $2.0 for gold)
     breakout_min_atr: float = 2.0
     # Bars to wait after a breakout signal before allowing re-entry

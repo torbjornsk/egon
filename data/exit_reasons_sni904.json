@@ -28,5 +28,11 @@
     "full_reason": "Stop loss",
     "exit_time": "2026-06-08T03:30:33.683119+02:00",
     "bot": "SNI904"
+  },
+  "12868009": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.1% from peak $37.76 to $22.60 (limit 40% after 21min)",
+    "exit_time": "2026-06-08T14:18:02.951654+02:00",
+    "bot": "SNI904"
   }
 }

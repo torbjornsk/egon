@@ -1,4 +1,10 @@
 {
+  "12866904": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T14:22:46.806346+02:00",
+    "bot": "M5S"
+  },
   "12863702": {
     "reason": "Take profit",
     "full_reason": "Take profit",
@@ -1191,12 +1197,6 @@
     "reason": "Stop loss",
     "full_reason": "Stop loss",
     "exit_time": "2026-05-27T04:07:22.623693+02:00",
-    "bot": "M5S"
-  },
-  "12500029": {
-    "reason": "Stop loss",
-    "full_reason": "Stop loss",
-    "exit_time": "2026-05-27T03:43:31.735032+02:00",
     "bot": "M5S"
   }
 }

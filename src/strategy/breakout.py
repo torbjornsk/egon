@@ -1,14 +1,14 @@
 """
-Breakout Strategy -- price breakout of N-candle high/low with EMA trend filter.
+Breakout Strategy -- MT5 stop orders for instant breakout entry.
 
-Entry: tick-based. Breakout levels are recalculated each candle. Between candles,
-live price is checked every second -- the moment it crosses the level, entry fires.
+On each candle close:
+- Compute breakout high/low from last N candles
+- Place BUY STOP above the high and SELL STOP below the low
+- SL placed at/near the breakout level (failed breakout = small loss)
+- Cancel and replace orders each candle as levels shift
 
-Exit: trailing stop only (no RSI exit). Positions are managed entirely by SL/TP
-and the trailing mechanism in the bot layer.
-
-Inspired by "Pip Scalper" concept: high-frequency breakout entries with tight
-trailing stops, capturing momentum moves while cutting losers quickly.
+MT5 fills the stop order server-side the instant price touches it -- zero latency.
+Trailing stop runs at configurable interval (default 100ms) for fast profit locking.
 """
 
 import logging
@@ -26,23 +26,22 @@ logger = logging.getLogger(__name__)
 
 class BreakoutStrategy:
     """
-    N-candle breakout with EMA trend filter and tick-based entry.
+    N-candle breakout with EMA trend filter and MT5 stop order entry.
 
     On each candle close:
-    - Compute breakout high/low from last N candles
-    - Check trend direction (EMA 9/21)
-    - Arm levels if conditions are met
-
-    Every second (tick check):
-    - If bid crosses breakout high -> LONG entry
-    - If ask crosses breakout low -> SHORT entry
+    - Compute breakout levels from last N candles
+    - Cancel previous pending orders
+    - Place new BUY STOP / SELL STOP at breakout level + buffer
+    - SL at the breakout level itself (if it goes back through, breakout failed)
 
     Config fields:
     - breakout_bars: N candles for high/low lookback
-    - breakout_min_atr: minimum ATR filter to avoid dead markets
+    - breakout_entry_buffer_atr: offset above/below level (in ATR multiples)
+    - breakout_min_atr: minimum ATR filter
+    - breakout_sl_atr_mult: SL distance from entry (in ATR multiples)
     - fast_ema, slow_ema: trend filter (9/21 default)
     - enable_shorts: direction control
-    - breakout_re_entry_bars: cooldown bars after signal before allowing re-entry
+    - breakout_re_entry_bars: cooldown bars after signal
     """
 
     def __init__(self, config: TradingConfig):
@@ -53,12 +52,18 @@ class BreakoutStrategy:
         self._last_breakout_bar: int = -999
         self._bars_processed: int = 0
 
-        # Armed breakout levels (recalculated each candle)
+        # Current pending order tickets (managed by the bot)
+        self._pending_buy_ticket: int | None = None
+        self._pending_sell_ticket: int | None = None
+
+        # Current armed levels (for GUI display)
         self._breakout_high: float | None = None
         self._breakout_low: float | None = None
+        self._buy_stop_price: float | None = None
+        self._sell_stop_price: float | None = None
         self._trend_up: bool = False
         self._trend_down: bool = False
-        self._levels_armed: bool = False
+        self._current_atr: float = 0.0
 
     @property
     def timeframe_minutes(self) -> int:
@@ -80,136 +85,93 @@ class BreakoutStrategy:
     def order_comment(self) -> str:
         return self.config.order_comment
 
-    # -- Candle-based: recalculate levels each candle -------------------------
+    # -- Candle-based: recalculate levels and place stop orders ----------------
 
-    def update_levels(self, df: pd.DataFrame):
+    def update_levels(self, df: pd.DataFrame) -> dict | None:
         """
         Recalculate breakout levels on each new candle.
 
-        Called by the bot's trading_logic() on candle close.
-        Sets _breakout_high/_breakout_low for tick-based fill checks.
+        Returns a dict with order placement info for the bot to execute,
+        or None if no orders should be placed.
         """
         self._bars_processed += 1
 
         n = self.config.breakout_bars
         if len(df) < n + 3:
-            self._levels_armed = False
-            return
+            return None
 
-        # Use last closed candle for trend/ATR, lookback is N candles before it
+        # Use last closed candle for trend/ATR
         signal_candle = df.iloc[-2]
         lookback = df.iloc[-(n + 2):-2]
 
         # ATR filter
-        current_atr = signal_candle.get('ATR', 0)
+        current_atr = float(signal_candle.get('ATR', 0))
+        self._current_atr = current_atr
         if current_atr < self.config.breakout_min_atr:
-            self._levels_armed = False
             self.logger.info(
-                f"[BREAKOUT] Levels disarmed: ATR ${current_atr:.2f} "
+                f"[BREAKOUT] No orders: ATR ${current_atr:.2f} "
                 f"< min ${self.config.breakout_min_atr:.2f}"
             )
-            return
+            self._breakout_high = None
+            self._breakout_low = None
+            return None
 
         # Re-entry cooldown
         bars_since_last = self._bars_processed - self._last_breakout_bar
         if bars_since_last <= self.config.breakout_re_entry_bars:
-            self._levels_armed = False
-            return
+            return None
 
         # Calculate levels
         self._breakout_high = float(lookback['high'].max())
         self._breakout_low = float(lookback['low'].min())
         self._trend_up = bool(signal_candle.get('uptrend', False))
         self._trend_down = bool(signal_candle.get('downtrend', False))
-        self._levels_armed = True
+
+        # Calculate stop order prices (level + buffer)
+        buffer = current_atr * self.config.breakout_entry_buffer_atr
+        self._buy_stop_price = self._breakout_high + buffer
+        self._sell_stop_price = self._breakout_low - buffer
+
+        # SL at the breakout level itself (failed breakout)
+        buy_sl = self._breakout_high  # If price goes back below the high, breakout failed
+        sell_sl = self._breakout_low  # If price goes back above the low, breakout failed
 
         self.logger.info(
-            f"[BREAKOUT] Levels armed: high=${self._breakout_high:.2f}, "
-            f"low=${self._breakout_low:.2f}, "
+            f"[BREAKOUT] Levels: high=${self._breakout_high:.2f}, low=${self._breakout_low:.2f}, "
+            f"ATR=${current_atr:.2f}, "
             f"trend={'UP' if self._trend_up else 'DOWN' if self._trend_down else 'FLAT'}, "
-            f"lookback={n} bars (iloc[-{n+2}:-2])"
+            f"buy_stop=${self._buy_stop_price:.2f}, sell_stop=${self._sell_stop_price:.2f}, "
+            f"lookback={n} bars"
         )
 
-    # -- Tick-based: check live price against armed levels --------------------
+        return {
+            'buy_stop_price': self._buy_stop_price if self._trend_up else None,
+            'sell_stop_price': self._sell_stop_price if self._trend_down else None,
+            'buy_sl': buy_sl,
+            'sell_sl': sell_sl,
+            'atr': current_atr,
+        }
+
+    def record_fill(self):
+        """Record that a stop order was filled (for re-entry cooldown)."""
+        self._last_breakout_bar = self._bars_processed
+
+    # -- Tick-based entry (kept as fallback for non-stop-order mode) -----------
 
     def check_tick_entry(self, bid: float, ask: float, has_long: bool, has_short: bool) -> dict | None:
-        """
-        Check if live price has crossed a breakout level.
-
-        Called every second by the bot's main loop.
-        Returns {'direction': 'LONG'/'SHORT'} or None.
-
-        For longs: bid must cross above breakout_high (in an uptrend)
-        For shorts: ask must cross below breakout_low (in a downtrend)
-        """
-        if not self._levels_armed:
-            return None
-
-        # Long breakout: price crosses above N-bar high
-        if (self._breakout_high is not None
-                and bid > self._breakout_high
-                and self._trend_up
-                and not has_long):
-            self._last_breakout_bar = self._bars_processed
-            self._levels_armed = False  # One signal per level set
-            self.logger.info(
-                f"[BREAKOUT FILL] LONG: bid ${bid:.2f} > "
-                f"{self.config.breakout_bars}-bar high ${self._breakout_high:.2f}"
-            )
-            return {'direction': 'LONG'}
-
-        # Short breakout: price crosses below N-bar low
-        if (self.config.enable_shorts
-                and self._breakout_low is not None
-                and ask < self._breakout_low
-                and self._trend_down
-                and not has_short):
-            self._last_breakout_bar = self._bars_processed
-            self._levels_armed = False  # One signal per level set
-            self.logger.info(
-                f"[BREAKOUT FILL] SHORT: ask ${ask:.2f} < "
-                f"{self.config.breakout_bars}-bar low ${self._breakout_low:.2f}"
-            )
-            return {'direction': 'SHORT'}
-
+        """Fallback tick-based check (not used when stop orders are active)."""
         return None
 
-    # -- Candle-based entry (kept as fallback, but no longer primary) ----------
+    # -- Candle-based entry (disabled -- stop orders handle entry) -------------
 
-    def check_entry(
-        self,
-        df: pd.DataFrame,
-        open_positions: list,
-        context: dict,
-    ) -> dict | None:
-        """
-        Candle-close fallback entry -- only fires if tick-based didn't trigger.
-
-        This handles the case where the breakout happened during the candle
-        but check_tick_entry wasn't called (e.g., bot just started).
-        """
-        # If levels are still armed, the tick check hasn't fired yet
-        # Don't double-enter from candle logic
-        if self._levels_armed:
-            return None
-
-        # This is intentionally a no-op now -- tick-based is primary.
-        # The candle logic only recalculates levels via update_levels().
+    def check_entry(self, df, open_positions, context) -> dict | None:
+        """Disabled -- MT5 stop orders handle entry."""
         return None
 
     # -- Exit logic -----------------------------------------------------------
 
-    def check_exit(
-        self,
-        df: pd.DataFrame,
-        position,
-        context: dict,
-    ) -> tuple[bool, str]:
-        """
-        Breakout strategy has NO candle-based exit logic.
-
-        All exits are handled by trailing stop + SL/TP in the bot layer.
-        """
+    def check_exit(self, df, position, context) -> tuple[bool, str]:
+        """No candle-based exit. Trailing stop + SL handle everything."""
         return False, ""
 
     # -- State for GUI --------------------------------------------------------
@@ -220,12 +182,12 @@ class BreakoutStrategy:
         if df is None or len(df) < n + 3:
             return {}
 
-        signal_candle = df.iloc[-2]
         current_close = float(df.iloc[-1]['close'])
-        current_atr = float(signal_candle.get('ATR', 0))
 
         breakout_high = self._breakout_high or 0
         breakout_low = self._breakout_low or 0
+        buy_stop = self._buy_stop_price or 0
+        sell_stop = self._sell_stop_price or 0
 
         dist_to_high = breakout_high - current_close if breakout_high else 0
         dist_to_low = current_close - breakout_low if breakout_low else 0
@@ -233,13 +195,16 @@ class BreakoutStrategy:
         return {
             'breakout_high': breakout_high,
             'breakout_low': breakout_low,
+            'buy_stop_price': buy_stop,
+            'sell_stop_price': sell_stop,
             'close': current_close,
-            'atr': current_atr,
+            'atr': self._current_atr,
             'uptrend': self._trend_up,
             'downtrend': self._trend_down,
             'dist_to_high': dist_to_high,
             'dist_to_low': dist_to_low,
-            'atr_filter_ok': current_atr >= self.config.breakout_min_atr,
+            'atr_filter_ok': self._current_atr >= self.config.breakout_min_atr,
             'bars_since_signal': self._bars_processed - self._last_breakout_bar,
-            'levels_armed': self._levels_armed,
+            'pending_buy': self._pending_buy_ticket is not None,
+            'pending_sell': self._pending_sell_ticket is not None,
         }
