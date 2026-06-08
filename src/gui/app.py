@@ -1256,17 +1256,18 @@ class EgonGUI:
         hist_frame = tk.Frame(notebook, bg=BG_DARK)
         notebook.add(hist_frame, text=" Trades ")
 
-        cols = ('Time', 'Bot', 'Type', 'Entry', 'Exit', 'Profit', 'Reason')
+        cols = ('Time', 'Bot', 'Type', 'Vol', 'Entry', 'Exit', 'Profit', 'Reason')
         tree = ttk.Treeview(hist_frame, columns=cols, show='headings', height=10)
         for c in cols:
             tree.heading(c, text=c)
         tree.column('Time', width=100)
         tree.column('Bot', width=50)
         tree.column('Type', width=45)
+        tree.column('Vol', width=40)
         tree.column('Entry', width=70)
         tree.column('Exit', width=70)
         tree.column('Profit', width=65)
-        tree.column('Reason', width=200)
+        tree.column('Reason', width=180)
         tree_scroll = ttk.Scrollbar(hist_frame, orient=tk.VERTICAL, command=tree.yview)
         tree.configure(yscrollcommand=tree_scroll.set)
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=4)
@@ -1473,6 +1474,7 @@ class EgonGUI:
                 tree.insert('', tk.END, values=(
                     pos['exit_time'].strftime('%m-%d %H:%M'),
                     pos['bot'], pos['type'],
+                    f"{pos.get('volume', 0):.2f}",
                     f"${pos['entry_price']:.2f}", f"${pos['exit_price']:.2f}",
                     f"${pos['profit']:.2f}", reason,
                 ), tags=(tag,))
