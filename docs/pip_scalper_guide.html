@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egon Pip Scalper - User Guide</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg2: #16213e;
+            --bg3: #0f3460;
+            --text: #e0e0e0;
+            --accent: #00adb5;
+            --success: #4ec9b0;
+            --warning: #dcdcaa;
+            --error: #f48771;
+            --muted: #808080;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 3rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 { color: var(--accent); margin-bottom: 0.5rem; font-size: 2rem; }
+        h2 { color: var(--accent); margin: 2rem 0 0.8rem; border-bottom: 1px solid var(--bg3); padding-bottom: 0.3rem; }
+        h3 { color: var(--success); margin: 1.5rem 0 0.5rem; }
+        p { margin-bottom: 1rem; }
+        code { background: var(--bg2); padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; font-size: 0.9em; }
+        pre { background: var(--bg2); padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+        pre code { padding: 0; }
+        .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { padding: 0.6rem 1rem; text-align: left; border: 1px solid var(--bg3); }
+        th { background: var(--bg2); color: var(--accent); }
+        tr:nth-child(even) { background: var(--bg2); }
+        .note { background: var(--bg3); border-left: 4px solid var(--accent); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .warning { background: #2d1f00; border-left: 4px solid var(--warning); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .danger { background: #2d0f0f; border-left: 4px solid var(--error); padding: 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+        .diagram { background: var(--bg2); padding: 1.5rem; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.85em; line-height: 1.4; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+        a { color: var(--accent); }
+        ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.3rem; }
+    </style>
+</head>
+<body>
+
+<h1>Egon Pip Scalper</h1>
+<p class="subtitle">Breakout entry with instant profit-locking and tight ATR trailing</p>
+
+<h2>How It Works</h2>
+
+<p>The Pip Scalper captures momentum breakouts and immediately protects profit. The philosophy is simple: <strong>never give back gains</strong>. The moment a trade goes positive, the stop loss moves to breakeven. From there, a tight trailing stop follows price every second, locking in more profit as the move continues.</p>
+
+<div class="diagram">
+Pip Scalper Trade Lifecycle:
+
+    Entry: Price breaks above 5-bar high (EMA9 &gt; EMA21 confirms uptrend)
+    |
+    |  SL placed at entry - 1.0 x ATR
+    |
+    v
+    Price moves 1 pip in your direction
+    |
+    |  SL instantly moves to entry + 0.03 x ATR (breakeven + spread cover)
+    |
+    v
+    Price continues up
+    |
+    |  SL trails at: current_price - 0.5 x ATR (updates every second)
+    |  Trail only moves UP, never back down
+    |
+    v
+    Price reverses, hits trailing SL
+    |
+    |  Exit with locked profit
+    |
+    v
+    3-bar cooldown, then ready for next signal
+</div>
+
+<h3>Entry Logic</h3>
+
+<p>The bot watches for <strong>N-bar breakouts</strong> with trend confirmation:</p>
+
+<ul>
+    <li><strong>Long:</strong> Current close breaks above the highest high of the last N candles, AND EMA 9 &gt; EMA 21 (uptrend)</li>
+    <li><strong>Short:</strong> Current close breaks below the lowest low of the last N candles, AND EMA 9 &lt; EMA 21 (downtrend)</li>
+</ul>
+
+<p>Additional filters prevent low-quality entries:</p>
+<ul>
+    <li><strong>ATR filter:</strong> Requires minimum ATR to avoid dead/choppy markets</li>
+    <li><strong>Re-entry cooldown:</strong> Waits N bars after the last breakout signal before allowing another</li>
+    <li><strong>Reentry pause:</strong> After any trade closes (win or loss), waits N candles before entering again</li>
+</ul>
+
+<h3>Exit Logic</h3>
+
+<p>The Pip Scalper has <strong>no candle-based exit signals</strong>. All exits are mechanical:</p>
+
+<ol>
+    <li><strong>Stop loss</strong> (initial or trailing) hit by MT5</li>
+    <li><strong>Take profit</strong> hit (if configured, acts as max-profit cap)</li>
+    <li><strong>Profit protection</strong> (optional, time-based tightening)</li>
+</ol>
+
+<p>This means the trailing stop IS the exit strategy. The tighter the trail, the smaller and more frequent your wins. The wider the trail, the larger but less frequent your wins.</p>
+
+<h2>Breakeven Modes</h2>
+
+<table>
+    <tr><th>Mode</th><th>When SL moves to BE</th><th>Best for</th></tr>
+    <tr>
+        <td><code>first_pip</code></td>
+        <td>As soon as price moves in your direction (any amount)</td>
+        <td>Pip scalping, never give back gains</td>
+    </tr>
+    <tr>
+        <td><code>atr_threshold</code></td>
+        <td>After profit exceeds <code>breakeven_atr_trigger</code> x ATR</td>
+        <td>Swing trades, giving room to breathe</td>
+    </tr>
+</table>
+
+<div class="note">
+    <strong>Tip:</strong> For XAUUSD on M1, <code>first_pip</code> mode with <code>trail_atr_after_breakeven: 0.5</code> is recommended. Gold moves fast enough that waiting for a threshold often means giving back $2-4 of unrealized profit.
+</div>
+
+<h2>Key Parameters</h2>
+
+<h3>Entry</h3>
+<table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>breakout_bars</code></td><td>5</td><td>N candles to look back for high/low levels</td></tr>
+    <tr><td><code>breakout_min_atr</code></td><td>1.5</td><td>Minimum ATR to allow entries (filters dead markets)</td></tr>
+    <tr><td><code>breakout_re_entry_bars</code></td><td>3</td><td>Bars to wait after a breakout signal before allowing another</td></tr>
+    <tr><td><code>fast_ema / slow_ema</code></td><td>9 / 21</td><td>EMA trend filter (fast above slow = uptrend)</td></tr>
+</table>
+
+<h3>Stop Loss &amp; Trailing</h3>
+<table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>breakeven_mode</code></td><td>first_pip</td><td>When to move SL to breakeven</td></tr>
+    <tr><td><code>breakeven_offset</code></td><td>0.03</td><td>Small ATR offset above entry to cover spread (in ATR multiples)</td></tr>
+    <tr><td><code>breakout_sl_atr_mult</code></td><td>1.0</td><td>Initial SL distance (in ATR multiples)</td></tr>
+    <tr><td><code>trail_atr_after_breakeven</code></td><td>0.5</td><td>Trail distance after BE (tighter = locks profit faster)</td></tr>
+    <tr><td><code>trail_atr_before_breakeven</code></td><td>1.0</td><td>Trail distance before BE (wider = more room to reach BE)</td></tr>
+</table>
+
+<h3>Risk &amp; Sizing</h3>
+<table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>sizing_mode</code></td><td>risk_pct</td><td>Lot size based on risk % of account per trade</td></tr>
+    <tr><td><code>risk_per_trade_pct</code></td><td>0.01</td><td>Risk 1% of account balance per trade</td></tr>
+    <tr><td><code>max_positions</code></td><td>1</td><td>Only one position at a time</td></tr>
+    <tr><td><code>reentry_cooldown_bars</code></td><td>3</td><td>Bars to wait after any trade closes before new entry</td></tr>
+    <tr><td><code>breakout_max_daily_trades</code></td><td>100</td><td>Hard cap on trades per day</td></tr>
+    <tr><td><code>breakout_max_daily_loss_pct</code></td><td>0.05</td><td>Stop trading after 5% daily loss</td></tr>
+</table>
+
+<h2>How Trailing Works (Tick by Tick)</h2>
+
+<div class="diagram">
+Example: LONG entry at $2,340.00, ATR = $5.00
+
+Second 0:  Entry @ $2,340.00    SL = $2,335.00 (entry - 1.0 x ATR)
+Second 1:  Price = $2,340.10    SL -> $2,340.15 (BE + 0.03 x ATR)  [LOCKED]
+Second 2:  Price = $2,341.00    SL -> $2,338.50 (price - 0.5 x ATR)
+           Wait... SL only moves UP. $2,338.50 &lt; $2,340.15, so SL stays at $2,340.15
+Second 5:  Price = $2,343.00    SL -> $2,340.50 (price - 0.5 x ATR)  [NEW HIGH]
+Second 8:  Price = $2,345.00    SL -> $2,342.50
+Second 12: Price = $2,344.00    SL stays at $2,342.50 (never moves down)
+Second 15: Price = $2,342.40    SL $2,342.50 HIT -> EXIT with +$2.50 profit
+</div>
+
+<div class="warning">
+    <strong>Important:</strong> The trail distance is relative to ATR. On volatile days (ATR = $8), the trail will be $4.00 wide. On quiet days (ATR = $3), it will be $1.50. This automatically adapts to market conditions.
+</div>
+
+<h2>Comparison with Sniper Bot</h2>
+
+<table>
+    <tr><th>Aspect</th><th>Sniper</th><th>Pip Scalper</th></tr>
+    <tr><td>Entry trigger</td><td>RSI at extreme levels</td><td>Price breakout of N-bar range</td></tr>
+    <tr><td>Entry style</td><td>Limit orders (pre-placed)</td><td>Market orders (on candle close)</td></tr>
+    <tr><td>Exit logic</td><td>RSI mean-reversion + trailing</td><td>Trailing stop only (no indicators)</td></tr>
+    <tr><td>Breakeven</td><td>After 0.9 ATR profit</td><td>Immediately on first pip</td></tr>
+    <tr><td>Trade frequency</td><td>Low (waits for RSI extremes)</td><td>Higher (breakouts happen often)</td></tr>
+    <tr><td>Best market</td><td>Ranging / mean-reverting</td><td>Trending / momentum</td></tr>
+    <tr><td>Profit style</td><td>Larger wins, fewer trades</td><td>Many small wins, tight risk</td></tr>
+</table>
+
+<h2>Running the Bot</h2>
+
+<h3>Standalone</h3>
+<pre><code>.venv\Scripts\python.exe run_breakout.py --config config/breakout_params.json</code></pre>
+
+<h3>From GUI</h3>
+<p>The bot appears in the instance list as <strong>BRK</strong>. Start it from there and configure via the config editor panel.</p>
+
+<h3>Custom Config</h3>
+<p>Copy <code>config/breakout_params.json</code>, change the <code>magic_number</code> and <code>bot_label</code>, adjust parameters. The GUI will auto-discover it.</p>
+
+<h2>Tuning Guide</h2>
+
+<h3>Too many stop losses?</h3>
+<ul>
+    <li>Increase <code>breakout_bars</code> (e.g., 7-10) for stronger breakouts</li>
+    <li>Increase <code>breakout_min_atr</code> to filter weak signals in quiet markets</li>
+    <li>Increase <code>breakout_sl_atr_mult</code> for more initial room</li>
+    <li>Enable schedule to avoid volatile news windows</li>
+</ul>
+
+<h3>Winning trades are too small?</h3>
+<ul>
+    <li>Increase <code>trail_atr_after_breakeven</code> (e.g., 0.8-1.0) to let winners run longer</li>
+    <li>Switch to <code>breakeven_mode: atr_threshold</code> with <code>breakeven_atr_trigger: 0.5</code> to avoid getting stopped at BE on noise</li>
+</ul>
+
+<h3>Too few trades?</h3>
+<ul>
+    <li>Decrease <code>breakout_bars</code> (e.g., 3) for more frequent breakouts</li>
+    <li>Decrease <code>reentry_cooldown_bars</code> to 1-2</li>
+    <li>Decrease <code>breakout_re_entry_bars</code> to 1</li>
+</ul>
+
+<h3>Getting chopped in ranging markets?</h3>
+<ul>
+    <li>Enable volatility guard (<code>vg_enabled: true</code>) to pause during ATR spikes</li>
+    <li>Enable schedule to only trade active sessions</li>
+    <li>Increase <code>breakout_min_atr</code> to skip dead market periods</li>
+</ul>
+
+<div class="danger">
+    <strong>Risk Warning:</strong> The pip scalper on M1 can generate many trades per day. At 1% risk per trade with 100 max daily trades, the theoretical maximum daily loss is significant. In practice, the loss backoff and daily loss cap prevent this, but always monitor the bot during its first live sessions.
+</div>
+
+<h2>Config File Reference</h2>
+
+<pre><code>{
+  "config_name": "Pip Scalper (Breakout)",
+  "bot_type": "breakout",
+  "timeframe": "M1",
+  "symbol": "XAUUSD.p",
+  "magic_number": 234300,
+  "bot_label": "BRK",
+  "breakeven_mode": "first_pip",
+  "breakout_bars": 5,
+  "breakout_min_atr": 1.5,
+  "breakout_re_entry_bars": 3,
+  "breakout_sl_atr_mult": 1.0,
+  "trail_atr_after_breakeven": 0.5,
+  "trail_atr_before_breakeven": 1.0,
+  "reentry_cooldown_bars": 3,
+  "sizing_mode": "risk_pct",
+  "risk_per_trade_pct": 0.01,
+  "max_positions": 1
+}</code></pre>
+
+<p style="color: var(--muted); margin-top: 3rem; font-size: 0.85em;">Egon Trading System &mdash; Pip Scalper Guide &mdash; v2.2026</p>
+
+</body>
+</html>
