@@ -14,7 +14,7 @@ def load_exit_reasons() -> dict:
                  'data/exit_reasons_m15.json', 'data/exit_reasons_lz.json',
                  'data/exit_reasons_m5s.json', 'data/exit_reasons_m1s.json',
                  'data/exit_reasons_m15s.json', 'data/exit_reasons_tick.json',
-                 'data/exit_reasons_momentum.json']:
+                 'data/exit_reasons_momentum.json', 'data/exit_reasons_brk.json']:
         path = str(resolve_path(rel_path))
         if os.path.exists(path):
             try:

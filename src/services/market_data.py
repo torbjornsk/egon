@@ -15,7 +15,8 @@ M1S_MAGIC = 234101
 M15S_MAGIC = 234115
 M5S_MAGIC = 234050
 TICK_MAGIC = 234200
-MOM_MAGIC = 234300
+MOM_MAGIC = 234250
+BRK_MAGIC = 234300
 
 
 class MarketDataService:
@@ -157,6 +158,8 @@ class MarketDataService:
                 bot = 'TICK'
             elif entry_deal.magic == MOM_MAGIC:
                 bot = 'MOM'
+            elif entry_deal.magic == BRK_MAGIC:
+                bot = 'BRK'
             else:
                 continue
             direction = 'BUY' if entry_deal.type == mt5.DEAL_TYPE_BUY else 'SELL'

@@ -532,7 +532,7 @@ class BotDetailPanel:
         if bot_type == 'sniper':
             return {
                 'Identity': ['config_name', 'bot_type', 'timeframe', 'symbol',
-                             'magic_number', 'bot_label'],
+                             'magic_number', 'bot_label', 'order_comment'],
                 'Position Sizing': ['sizing_mode', 'risk_per_trade_pct', 'fixed_lots',
                                     'atr_damping', 'max_positions'],
                 'RSI Entry': ['rsi_period', 'rsi_buy', 'rsi_sell', 'sniper_rsi_offset'],
@@ -598,7 +598,7 @@ class BotDetailPanel:
                              'breakout_max_daily_trades', 'breakout_max_drawdown_pct']
             return {
                 'Identity': ['config_name', 'bot_type', 'timeframe', 'symbol',
-                             'magic_number', 'bot_label'],
+                             'magic_number', 'bot_label', 'order_comment'],
                 'Position Sizing': ['sizing_mode', 'risk_per_trade_pct', 'fixed_lots',
                                     'max_positions'],
                 'Breakout Entry': breakout_fields,

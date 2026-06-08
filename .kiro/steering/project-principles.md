@@ -45,7 +45,7 @@
 - Position sizing: `per_position_size_pct = position_size_pct / max_positions`
 - Profit protection threshold = percentage of INVESTED amount (balance × per_position_size_pct)
 - Exit logic should run BEFORE entry logic so the same candle can trigger exit + re-entry
-- All magic numbers must be unique per bot type (M5=234000, M1=234001, M15=234015, M5S=234050, LZ=234100, TICK=234200, BRK=234300)
+- All magic numbers must be unique per bot type (M5=234000, M1=234001, M15=234015, M5S=234050, LZ=234100, TICK=234200, MOM=234250, BRK=234300)
 
 ## When Making Changes
 
