@@ -800,14 +800,28 @@ class BotDetailPanel:
             if strat_state:
                 brk_high = strat_state.get('breakout_high', 0)
                 brk_low = strat_state.get('breakout_low', 0)
+                buy_stop = strat_state.get('buy_stop_price', 0)
+                sell_stop = strat_state.get('sell_stop_price', 0)
                 dist_high = strat_state.get('dist_to_high', 0)
                 dist_low = strat_state.get('dist_to_low', 0)
                 atr_ok = strat_state.get('atr_filter_ok', False)
+                pending_buy = strat_state.get('pending_buy', False)
+                pending_sell = strat_state.get('pending_sell', False)
+
+                # Build order status line
+                orders_line = ""
+                if buy_stop:
+                    status = "ACTIVE" if pending_buy else "armed"
+                    orders_line += f"  Buy Stop: ${buy_stop:.2f} [{status}]\n"
+                if sell_stop:
+                    status = "ACTIVE" if pending_sell else "armed"
+                    orders_line += f"  Sell Stop: ${sell_stop:.2f} [{status}]\n"
 
                 ind_text = (
                     f"ATR: ${atr:.2f}  Trend: {trend}  ATR Filter: {'OK' if atr_ok else 'LOW'}\n"
                     f"Breakout High: ${brk_high:.2f} (${dist_high:.2f} away)\n"
                     f"Breakout Low:  ${brk_low:.2f} (${dist_low:.2f} away)\n"
+                    f"{orders_line}"
                     f"DD: {dd:.1f}%  Trades: {trades}  Losses: {losses}"
                 )
             else:
@@ -1409,6 +1423,15 @@ class EgonGUI:
                             ax.axhline(strat_state['breakout_low'], color=ERROR,
                                        linestyle='--', alpha=0.7, linewidth=1.2,
                                        label=f"Low ${strat_state['breakout_low']:.2f}")
+                        # Show stop order levels (solid, slightly different color)
+                        if strat_state.get('buy_stop_price'):
+                            ax.axhline(strat_state['buy_stop_price'], color='#00ff88',
+                                       linestyle='-', alpha=0.9, linewidth=1.5,
+                                       label=f"Buy Stop ${strat_state['buy_stop_price']:.2f}")
+                        if strat_state.get('sell_stop_price'):
+                            ax.axhline(strat_state['sell_stop_price'], color='#ff6644',
+                                       linestyle='-', alpha=0.9, linewidth=1.5,
+                                       label=f"Sell Stop ${strat_state['sell_stop_price']:.2f}")
                     else:
                         # Show sniper levels for RSI-based bots
                         sniper = state.get('sniper', {})
