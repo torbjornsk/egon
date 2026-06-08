@@ -87,6 +87,7 @@ FIELD_LABELS: dict[str, str] = {
     'vg_cooldown_minutes': 'Cooldown (min)',
     'vg_resume_below_multiplier': 'Resume Below (x)',
     'breakout_bars': 'Breakout Bars (N)',
+    'breakout_entry_buffer_atr': 'Entry Buffer (x ATR)',
     'breakout_min_atr': 'Min ATR ($)',
     'breakout_re_entry_bars': 'Re-entry Cooldown (bars)',
     'breakout_sl_atr_mult': 'SL Distance (x ATR)',
@@ -96,6 +97,7 @@ FIELD_LABELS: dict[str, str] = {
     'breakout_max_drawdown_pct': 'Max Total Drawdown (%)',
     'breakeven_mode': 'Breakeven Mode',
     'reentry_cooldown_bars': 'Reentry Pause (bars)',
+    'trail_interval_ms': 'Trail Update (ms)',
 }
 
 try:
@@ -597,7 +599,8 @@ class BotDetailPanel:
                 'Risk Management': risk,
             }
         elif bot_type == 'breakout':
-            breakout_fields = ['breakout_bars', 'breakout_min_atr',
+            breakout_fields = ['breakout_bars', 'breakout_entry_buffer_atr',
+                               'breakout_min_atr',
                                'breakout_re_entry_bars', 'breakout_sl_atr_mult',
                                'breakout_trail_atr_mult']
             breakout_risk = ['max_drawdown_limit', 'breakout_max_daily_loss_pct',
@@ -611,7 +614,7 @@ class BotDetailPanel:
                 'Trend Filter (EMA)': ['fast_ema', 'slow_ema'],
                 'Trailing Stop': ['breakeven_mode', 'breakeven_atr_trigger',
                                   'breakeven_offset', 'trail_atr_after_breakeven',
-                                  'trail_atr_before_breakeven'],
+                                  'trail_atr_before_breakeven', 'trail_interval_ms'],
                 'Cooldown': ['reentry_cooldown_bars', 'use_loss_backoff',
                              'loss_backoff_sl_only', 'loss_backoff_sl_threshold',
                              'loss_backoff_sl_candles'],

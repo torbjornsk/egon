@@ -59,20 +59,21 @@
 <div class="diagram">
 Pip Scalper Trade Lifecycle:
 
-    Entry: Price breaks above 5-bar high (EMA9 &gt; EMA21 confirms uptrend)
+    Each candle close: calculate breakout levels from last N candles
     |
-    |  SL placed at entry - 1.0 x ATR
-    |
-    v
-    Price moves 1 pip in your direction
-    |
-    |  SL instantly moves to entry + 0.03 x ATR (breakeven + spread cover)
+    |  Place BUY STOP at breakout_high + 0.1*ATR (with SL at breakout_high)
+    |  Place SELL STOP at breakout_low - 0.1*ATR (with SL at breakout_low)
     |
     v
-    Price continues up
+    Price touches BUY STOP level &rarr; MT5 fills instantly (zero latency)
     |
-    |  SL trails at: current_price - 0.5 x ATR (updates every second)
-    |  Trail only moves UP, never back down
+    |  Position open, SL at breakout level (failed breakout = small loss)
+    |
+    v
+    Price moves in your direction
+    |
+    |  Trailing stop updates every 100ms (configurable)
+    |  SL follows: current_price - 0.4*ATR (tight trail after BE)
     |
     v
     Price reverses, hits trailing SL
@@ -80,24 +81,33 @@ Pip Scalper Trade Lifecycle:
     |  Exit with locked profit
     |
     v
-    3-bar cooldown, then ready for next signal
+    3-bar cooldown, then new stop orders placed on next candle
 </div>
 
 <h3>Entry Logic</h3>
 
-<p>The bot watches for <strong>N-bar breakouts</strong> with trend confirmation:</p>
+<p>The bot uses <strong>MT5 pending stop orders</strong> for instant breakout fills:</p>
 
+<ol>
+    <li>Each candle close: compute the N-bar high and low</li>
+    <li>Place a BUY STOP slightly above the high (buffer = 0.1 x ATR)</li>
+    <li>Place a SELL STOP slightly below the low (buffer = 0.1 x ATR)</li>
+    <li>MT5 fills the order server-side the instant price touches it</li>
+    <li>When one fills, the opposite side is cancelled</li>
+    <li>Orders are cancelled and replaced each candle as levels shift</li>
+</ol>
+
+<p>Trend filter: BUY STOP only placed when EMA 9 &gt; EMA 21 (uptrend). SELL STOP only when EMA 9 &lt; EMA 21 (downtrend).</p>
+
+<p>Additional filters:</p>
 <ul>
-    <li><strong>Long:</strong> Current close breaks above the highest high of the last N candles, AND EMA 9 &gt; EMA 21 (uptrend)</li>
-    <li><strong>Short:</strong> Current close breaks below the lowest low of the last N candles, AND EMA 9 &lt; EMA 21 (downtrend)</li>
+    <li><strong>ATR filter:</strong> No orders placed when ATR is below minimum (dead market)</li>
+    <li><strong>Re-entry cooldown:</strong> After a fill, waits N bars before placing new orders</li>
 </ul>
 
-<p>Additional filters prevent low-quality entries:</p>
-<ul>
-    <li><strong>ATR filter:</strong> Requires minimum ATR to avoid dead/choppy markets</li>
-    <li><strong>Re-entry cooldown:</strong> Waits N bars after the last breakout signal before allowing another</li>
-    <li><strong>Reentry pause:</strong> After any trade closes (win or loss), waits N candles before entering again</li>
-</ul>
+<h3>Why Stop Orders?</h3>
+
+<p>With Python polling (even at 1-second intervals), price can move $4+ between detection and order execution on XAUUSD M1. MT5 stop orders execute at the broker with zero latency &mdash; the moment price touches the level, you're in. The entry price equals the stop price exactly (minus any slippage).</p>
 
 <h3>Exit Logic</h3>
 
@@ -136,20 +146,22 @@ Pip Scalper Trade Lifecycle:
 <h3>Entry</h3>
 <table>
     <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-    <tr><td><code>breakout_bars</code></td><td>5</td><td>N candles to look back for high/low levels</td></tr>
-    <tr><td><code>breakout_min_atr</code></td><td>1.5</td><td>Minimum ATR to allow entries (filters dead markets)</td></tr>
-    <tr><td><code>breakout_re_entry_bars</code></td><td>3</td><td>Bars to wait after a breakout signal before allowing another</td></tr>
+    <tr><td><code>breakout_bars</code></td><td>30</td><td>N candles to look back for high/low levels</td></tr>
+    <tr><td><code>breakout_entry_buffer_atr</code></td><td>0.1</td><td>Buffer above/below the level (in ATR multiples). Stop order placed at level + buffer.</td></tr>
+    <tr><td><code>breakout_min_atr</code></td><td>1.5</td><td>Minimum ATR to place orders (filters dead markets)</td></tr>
+    <tr><td><code>breakout_re_entry_bars</code></td><td>3</td><td>Bars to wait after a fill before placing new orders</td></tr>
     <tr><td><code>fast_ema / slow_ema</code></td><td>9 / 21</td><td>EMA trend filter (fast above slow = uptrend)</td></tr>
 </table>
 
 <h3>Stop Loss &amp; Trailing</h3>
 <table>
     <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>breakout_sl_atr_mult</code></td><td>0.5</td><td>Initial SL distance from entry (in ATR multiples). With stop orders, SL is at the breakout level itself.</td></tr>
     <tr><td><code>breakeven_mode</code></td><td>first_pip</td><td>When to move SL to breakeven</td></tr>
-    <tr><td><code>breakeven_offset</code></td><td>0.03</td><td>Small ATR offset above entry to cover spread (in ATR multiples)</td></tr>
-    <tr><td><code>breakout_sl_atr_mult</code></td><td>1.0</td><td>Initial SL distance (in ATR multiples)</td></tr>
-    <tr><td><code>trail_atr_after_breakeven</code></td><td>0.5</td><td>Trail distance after BE (tighter = locks profit faster)</td></tr>
-    <tr><td><code>trail_atr_before_breakeven</code></td><td>1.0</td><td>Trail distance before BE (wider = more room to reach BE)</td></tr>
+    <tr><td><code>breakeven_offset</code></td><td>0.15</td><td>ATR offset above entry for BE (covers spread)</td></tr>
+    <tr><td><code>trail_atr_after_breakeven</code></td><td>0.4</td><td>Trail distance after BE (tighter = locks profit faster)</td></tr>
+    <tr><td><code>trail_atr_before_breakeven</code></td><td>0.8</td><td>Trail distance before BE (wider = more room to reach BE)</td></tr>
+    <tr><td><code>trail_interval_ms</code></td><td>100</td><td>Milliseconds between trailing stop updates. Lower = faster trailing. 100ms = 10 updates/sec.</td></tr>
 </table>
 
 <h3>Risk &amp; Sizing</h3>
@@ -166,16 +178,17 @@ Pip Scalper Trade Lifecycle:
 <h2>How Trailing Works (Tick by Tick)</h2>
 
 <div class="diagram">
-Example: LONG entry at $2,340.00, ATR = $5.00
+Example: BUY STOP filled at $2,340.00 (breakout high was $2,339.50), ATR = $5.00
 
-Second 0:  Entry @ $2,340.00    SL = $2,335.00 (entry - 1.0 x ATR)
-Second 1:  Price = $2,340.10    SL -> $2,340.15 (BE + 0.03 x ATR)  [LOCKED]
-Second 2:  Price = $2,341.00    SL -> $2,338.50 (price - 0.5 x ATR)
-           Wait... SL only moves UP. $2,338.50 &lt; $2,340.15, so SL stays at $2,340.15
-Second 5:  Price = $2,343.00    SL -> $2,340.50 (price - 0.5 x ATR)  [NEW HIGH]
-Second 8:  Price = $2,345.00    SL -> $2,342.50
-Second 12: Price = $2,344.00    SL stays at $2,342.50 (never moves down)
-Second 15: Price = $2,342.40    SL $2,342.50 HIT -> EXIT with +$2.50 profit
+Tick 0:    Fill @ $2,340.00    SL = $2,339.50 (at breakout level)
+100ms:     Price = $2,340.20   SL -> $2,340.75 (BE + 0.15*ATR offset)  [LOCKED]
+200ms:     Price = $2,340.80   Trail = $2,340.80 - 0.4*ATR = $2,338.80
+           But $2,338.80 &lt; $2,340.75, so SL stays at $2,340.75
+500ms:     Price = $2,342.00   Trail = $2,342.00 - 2.00 = $2,340.00 &lt; BE, stays
+1.0s:      Price = $2,343.50   Trail = $2,343.50 - 2.00 = $2,341.50 [NEW HIGH]
+2.0s:      Price = $2,345.00   Trail = $2,345.00 - 2.00 = $2,343.00
+3.0s:      Price = $2,344.00   SL stays at $2,343.00 (never moves down)
+3.5s:      Price = $2,342.90   SL $2,343.00 HIT -> EXIT with +$3.00 profit
 </div>
 
 <div class="warning">
@@ -249,13 +262,16 @@ Second 15: Price = $2,342.40    SL $2,342.50 HIT -> EXIT with +$2.50 profit
   "symbol": "XAUUSD.p",
   "magic_number": 234300,
   "bot_label": "BRK",
-  "breakeven_mode": "first_pip",
-  "breakout_bars": 5,
+  "breakout_bars": 30,
+  "breakout_entry_buffer_atr": 0.1,
   "breakout_min_atr": 1.5,
   "breakout_re_entry_bars": 3,
-  "breakout_sl_atr_mult": 1.0,
-  "trail_atr_after_breakeven": 0.5,
-  "trail_atr_before_breakeven": 1.0,
+  "breakout_sl_atr_mult": 0.5,
+  "breakeven_mode": "first_pip",
+  "breakeven_offset": 0.15,
+  "trail_atr_after_breakeven": 0.4,
+  "trail_atr_before_breakeven": 0.8,
+  "trail_interval_ms": 100,
   "reentry_cooldown_bars": 3,
   "sizing_mode": "risk_pct",
   "risk_per_trade_pct": 0.01,
