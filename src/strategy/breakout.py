@@ -77,20 +77,25 @@ class BreakoutStrategy:
         """
         Check for breakout entry signals.
 
-        Long: close breaks above highest high of last N candles, EMA fast > slow
-        Short: close breaks below lowest low of last N candles, EMA fast < slow
+        Long: last closed candle breaks above highest high of N candles before it
+        Short: last closed candle breaks below lowest low of N candles before it
+
+        Uses df.iloc[-2] (last closed candle) as the signal candle, since
+        df.iloc[-1] is the current forming candle at evaluation time.
         """
         self._bars_processed += 1
 
         n = self.config.breakout_bars
-        if len(df) < n + 2:
+        if len(df) < n + 3:
             return None
 
-        latest = df.iloc[-1]
-        lookback = df.iloc[-(n + 1):-1]  # Last N candles BEFORE current
+        # Signal candle = last CLOSED candle (iloc[-2])
+        # Current forming candle is iloc[-1] and not reliable for close-based signals
+        signal_candle = df.iloc[-2]
+        lookback = df.iloc[-(n + 2):-2]  # N candles BEFORE the signal candle
 
-        # ATR filter: skip dead markets
-        current_atr = latest.get('ATR', 0)
+        # ATR filter: skip dead markets (use signal candle's ATR)
+        current_atr = signal_candle.get('ATR', 0)
         if current_atr < self.config.breakout_min_atr:
             return None
 
@@ -105,11 +110,11 @@ class BreakoutStrategy:
         highest_high = lookback['high'].max()
         lowest_low = lookback['low'].min()
 
-        close = latest['close']
-        is_uptrend = latest.get('uptrend', False)
-        is_downtrend = latest.get('downtrend', False)
+        close = signal_candle['close']
+        is_uptrend = signal_candle.get('uptrend', False)
+        is_downtrend = signal_candle.get('downtrend', False)
 
-        # Long breakout: price closes above N-bar high, with uptrend
+        # Long breakout: signal candle closed above N-bar high, with uptrend
         if close > highest_high and is_uptrend and not has_long:
             self._last_breakout_bar = self._bars_processed
             self.logger.info(
@@ -118,7 +123,7 @@ class BreakoutStrategy:
             )
             return {'direction': 'LONG'}
 
-        # Short breakout: price closes below N-bar low, with downtrend
+        # Short breakout: signal candle closed below N-bar low, with downtrend
         if self.config.enable_shorts and close < lowest_low and is_downtrend and not has_short:
             self._last_breakout_bar = self._bars_processed
             self.logger.info(
@@ -160,27 +165,29 @@ class BreakoutStrategy:
         and whether conditions are met for entry.
         """
         n = self.config.breakout_bars
-        if df is None or len(df) < n + 2:
+        if df is None or len(df) < n + 3:
             return {}
 
-        latest = df.iloc[-1]
-        lookback = df.iloc[-(n + 1):-1]
+        # Use last closed candle as reference (same as check_entry)
+        signal_candle = df.iloc[-2]
+        lookback = df.iloc[-(n + 2):-2]
 
         highest_high = float(lookback['high'].max())
         lowest_low = float(lookback['low'].min())
-        current_atr = float(latest.get('ATR', 0))
-        close = float(latest['close'])
-        is_uptrend = bool(latest.get('uptrend', False))
-        is_downtrend = bool(latest.get('downtrend', False))
+        current_atr = float(signal_candle.get('ATR', 0))
+        close = float(signal_candle['close'])
+        is_uptrend = bool(signal_candle.get('uptrend', False))
+        is_downtrend = bool(signal_candle.get('downtrend', False))
 
-        # Distance to breakout levels
-        dist_to_high = highest_high - close
-        dist_to_low = close - lowest_low
+        # Distance to breakout levels (from current forming candle's close)
+        current_close = float(df.iloc[-1]['close'])
+        dist_to_high = highest_high - current_close
+        dist_to_low = current_close - lowest_low
 
         return {
             'breakout_high': highest_high,
             'breakout_low': lowest_low,
-            'close': close,
+            'close': current_close,
             'atr': current_atr,
             'uptrend': is_uptrend,
             'downtrend': is_downtrend,
