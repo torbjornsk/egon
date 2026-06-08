@@ -450,6 +450,10 @@ class BaseTradingBot:
         # Store for trailing stop ATR lookups
         self._last_df = df
 
+        # Update breakout levels if strategy supports tick-based entry
+        if hasattr(self.strategy, 'update_levels'):
+            self.strategy.update_levels(df)
+
         # Update volatility state for auto-PP
         self._update_volatility_state(df)
 
@@ -533,6 +537,38 @@ class BaseTradingBot:
                             self.open_position(signal['direction'], df)
 
     # ── Trailing stop management (every second) ───────────────────────
+
+    def check_breakout_fills(self):
+        """Check if live price has crossed a breakout level (runs every second)."""
+        if not hasattr(self.strategy, 'check_tick_entry'):
+            return
+
+        tick = self.mt5.get_tick()
+        if tick is None:
+            return
+
+        positions = self.mt5.get_open_positions(self.strategy.magic_number)
+        if len(positions) >= self.config.max_positions:
+            return
+
+        # Check cooldown
+        if not self.can_enter_new_position():
+            return
+
+        has_long = any(p.type == ORDER_TYPE_BUY for p in positions)
+        has_short = any(p.type == ORDER_TYPE_SELL for p in positions)
+
+        # Check trading mode
+        mode = self.effective_trading_mode
+
+        signal = self.strategy.check_tick_entry(tick.bid, tick.ask, has_long, has_short)
+        if signal and self._last_df is not None:
+            direction = signal['direction']
+            if mode == "long_only" and direction == "SHORT":
+                return
+            if mode == "short_only" and direction == "LONG":
+                return
+            self.open_position(direction, self._last_df)
 
     def _manage_trailing(self, positions, current_atr: float, tick):
         """
@@ -914,6 +950,7 @@ class BaseTradingBot:
             while not self._stop_requested:
                 try:
                     # Always run every second regardless of check_interval
+                    self.check_breakout_fills()
                     self.manage_trailing_continuous()
                     self.check_profit_protection_continuous()
                     self.check_mt5_closed_positions()
