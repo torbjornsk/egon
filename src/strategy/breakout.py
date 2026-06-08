@@ -102,7 +102,7 @@ class BreakoutStrategy:
 
         # Use last closed candle for trend/ATR
         signal_candle = df.iloc[-2]
-        lookback = df.iloc[-(n + 2):-2]
+        lookback = df.iloc[-(n + 1):-1]  # Last N CLOSED candles (excludes forming candle)
 
         # ATR filter
         current_atr = float(signal_candle.get('ATR', 0))
