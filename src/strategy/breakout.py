@@ -125,7 +125,9 @@ class BreakoutStrategy:
 
         self.logger.info(
             f"[BREAKOUT] Levels armed: high=${self._breakout_high:.2f}, "
-            f"low=${self._breakout_low:.2f}, trend={'UP' if self._trend_up else 'DOWN' if self._trend_down else 'FLAT'}"
+            f"low=${self._breakout_low:.2f}, "
+            f"trend={'UP' if self._trend_up else 'DOWN' if self._trend_down else 'FLAT'}, "
+            f"lookback={n} bars (iloc[-{n+2}:-2])"
         )
 
     # -- Tick-based: check live price against armed levels --------------------
