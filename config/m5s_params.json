@@ -45,10 +45,6 @@
   "schedule_sat": "",
   "schedule_sun": "",
   "schedule_closed": {},
-  "vg_enabled": true,
-  "vg_atr_spike_multiplier": 2.5,
-  "vg_cooldown_minutes": 15,
-  "vg_resume_below_multiplier": 1.5,
 
   "_comment_rhythm": "Market rhythm analyzer -- detects if RSI swings are tradeable",
   "rhythm_enabled": true,

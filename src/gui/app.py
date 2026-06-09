@@ -85,10 +85,6 @@ FIELD_LABELS: dict[str, str] = {
     'schedule_sat': 'Saturday Hours',
     'schedule_sun': 'Sunday Hours',
     'schedule_closed': 'Closed Windows',
-    'vg_enabled': 'Vol Guard Enabled',
-    'vg_atr_spike_multiplier': 'Spike Threshold (x)',
-    'vg_cooldown_minutes': 'Cooldown (min)',
-    'vg_resume_below_multiplier': 'Resume Below (x)',
     'breakout_bars': 'Breakout Bars (N)',
     'breakout_entry_buffer_atr': 'Entry Buffer (x ATR)',
     'breakout_min_atr': 'Min ATR ($)',
@@ -572,11 +568,9 @@ class BotDetailPanel:
                                   'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
                                   'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
                 'Breakout Shield': ['shield_enabled', 'shield_rapid_sl_candles'],
-                'Schedule & Guards': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
+                'Schedule': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
-                                    'schedule_sat', 'schedule_sun', 'schedule_closed',
-                                    'vg_enabled', 'vg_atr_spike_multiplier',
-                                    'vg_cooldown_minutes', 'vg_resume_below_multiplier'],
+                                    'schedule_sat', 'schedule_sun', 'schedule_closed'],
             }
         elif bot_type == 'rsi_scalper':
             return {
@@ -865,17 +859,6 @@ class BotDetailPanel:
                 ind_text += f"\nSchedule: PAUSED - {sched.get('next_resume', '')}"
             else:
                 ind_text += "\nSchedule: Active"
-
-        # Volatility guard info
-        vg = state.get('volatility_guard', {})
-        if vg.get('enabled'):
-            if vg.get('paused'):
-                ratio = vg.get('ratio', 0)
-                ind_text += f"\nVol Guard: PAUSED (ATR {ratio:.1f}x median)"
-            else:
-                ratio = vg.get('ratio', 0)
-                if ratio > 0:
-                    ind_text += f"\nVol Guard: OK (ATR {ratio:.1f}x median)"
 
         # Rhythm info
         rhythm = state.get('rhythm', {})

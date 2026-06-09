@@ -26,7 +26,6 @@ from src.core.position import PositionManager
 from src.core.risk import RiskManager
 from src.core.timezone import get_local_now, LOCAL_TZ, MT5_TZ
 from src.core.scheduler import Scheduler
-from src.core.volatility_guard import VolatilityGuard
 from src.core.rhythm import MarketRhythm
 from src.core.breakout_shield import BreakoutShield
 from src.strategy.sniper import SniperStrategy, SniperOrder
@@ -96,12 +95,6 @@ class SniperBot:
 
         # Scheduler (time-based pause)
         self.scheduler = Scheduler(
-            config=config,
-            bot_label=strategy.bot_label,
-        )
-
-        # Volatility guard (ATR spike pause)
-        self.volatility_guard = VolatilityGuard(
             config=config,
             bot_label=strategy.bot_label,
         )
@@ -556,12 +549,6 @@ class SniperBot:
             self.strategy.cancel_pending()
             return
 
-        # ── Volatility guard (blocks new entries only) ──────────────
-        if 'ATR' in df.columns:
-            if not self.volatility_guard.check(df['ATR'].values):
-                self.strategy.cancel_pending()
-                return
-
         # ── Refresh HTF data (for rhythm and shield) ────────────────
         self._refresh_htf_data()
 
@@ -845,7 +832,6 @@ class SniperBot:
                 'reason': self.scheduler.pause_reason,
                 'next_resume': self.scheduler.get_next_resume(),
             },
-            'volatility_guard': self.volatility_guard.get_status(),
             'rhythm': self.rhythm.get_status(),
             'shield': self.shield.get_status(),
         }
@@ -869,12 +855,6 @@ class SniperBot:
             self.logger.info(
                 f"  Schedule: Mon={self.config.schedule_mon}, Tue={self.config.schedule_tue}, "
                 f"Fri={self.config.schedule_fri}"
-            )
-        if self.volatility_guard.is_enabled:
-            self.logger.info(
-                f"  Volatility Guard: spike={self.config.vg_atr_spike_multiplier}x, "
-                f"resume={self.config.vg_resume_below_multiplier}x, "
-                f"cooldown={self.config.vg_cooldown_minutes}min"
             )
         if self.rhythm.is_enabled:
             self.logger.info(

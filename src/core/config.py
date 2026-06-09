@@ -209,8 +209,9 @@ class TradingConfig:
     # Closed windows for news events: list of "YYYY-MM-DD HH:MM-HH:MM" strings
     schedule_closed: list = field(default_factory=list)
 
-    # ── Volatility Guard ────────────────────────────────────────────
-    # Halts entries during ATR spikes
+    # ── Volatility Guard (DEPRECATED -- replaced by Market Rhythm) ──
+    # Kept for backward compat: old configs with these fields still load.
+    # No longer used by the sniper bot.
     vg_enabled: bool = False
     vg_atr_spike_multiplier: float = 2.5
     vg_cooldown_minutes: int = 15
