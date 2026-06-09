@@ -152,8 +152,10 @@ class TradingConfig:
     exit_rsi_long: float = 50.0
     exit_rsi_short: float = 50.0
     # TP order RSI targets (placed as MT5 TP price -- catches intra-candle spikes).
-    # Set higher than exit_rsi_long / lower than exit_rsi_short for a more ambitious
-    # spike catcher. When 0, falls back to exit_rsi_long / exit_rsi_short.
+    # These are OFFSETS beyond the adaptive exit RSI:
+    # - For longs: TP placed at (exit_rsi_long + tp_rsi_long) e.g. 55 + 5 = RSI 60
+    # - For shorts: TP placed at (exit_rsi_short - tp_rsi_short) e.g. 45 - 5 = RSI 40
+    # Set to 0 for TP at same level as candle exit (no extra spike catching).
     tp_rsi_long: float = 0.0
     tp_rsi_short: float = 0.0
     # Adaptive exit: shift exit_rsi based on trend strength

@@ -229,25 +229,25 @@ class SniperStrategy:
         """
         Calculate the RSI target for the MT5 TP order (spike catcher).
 
-        Uses tp_rsi_long / tp_rsi_short if configured (> 0).
-        Falls back to get_exit_rsi() if not set.
+        tp_rsi_long / tp_rsi_short is an OFFSET beyond the adaptive exit RSI.
+        The TP catches intra-candle spikes that go further than the candle-close exit.
 
-        The TP RSI can be more ambitious than the candle exit RSI:
-        - For longs: tp_rsi_long > exit_rsi_long means TP is placed higher
-        - For shorts: tp_rsi_short < exit_rsi_short means TP is placed lower
+        Example: adaptive exit RSI = 55 (long), tp_rsi_long = 5 -> TP at RSI 60
+        Example: adaptive exit RSI = 45 (short), tp_rsi_short = 5 -> TP at RSI 40
 
-        This catches intra-candle spikes that would be missed by candle-close logic.
+        If offset is 0: TP = same as candle exit (no extra spike catching).
         """
+        # Get the adaptive exit RSI (already accounts for trend shifts)
+        exit_rsi = self.get_exit_rsi(df, direction)
+
         if direction == 'LONG':
-            tp_rsi = self.config.tp_rsi_long
+            offset = self.config.tp_rsi_long
+            # For longs: TP is ABOVE exit RSI (more ambitious)
+            return exit_rsi + offset
         else:
-            tp_rsi = self.config.tp_rsi_short
-
-        # If not configured, fall back to the candle exit RSI
-        if tp_rsi <= 0:
-            return self.get_exit_rsi(df, direction)
-
-        return tp_rsi
+            offset = self.config.tp_rsi_short
+            # For shorts: TP is BELOW exit RSI (more ambitious)
+            return exit_rsi - offset
 
     def check_exit(
         self,
