@@ -412,10 +412,12 @@ class MarketRhythm:
                     self._htf_trend_direction = "up" if htf_ema_fast > htf_ema_slow else "down"
 
                 # Check 2: Price displacement (breakout detection)
-                # If HTF price has moved > 3 ATR from recent high/low in last 20 bars,
-                # that's a breakout regardless of EMA state
-                htf_highs = htf_df['high'].values[-20:]
-                htf_lows = htf_df['low'].values[-20:]
+                # If HTF price has moved > 3 ATR from its RECENT high/low,
+                # that's an active breakout. Use last 5 bars (not 20) so we only
+                # catch current moves, not displacements from hours ago.
+                disp_lookback = min(5, len(htf_df) - 1)
+                htf_highs = htf_df['high'].values[-disp_lookback:]
+                htf_lows = htf_df['low'].values[-disp_lookback:]
                 htf_close = float(htf_df.iloc[-1]['close'])
                 recent_high = float(np.max(htf_highs))
                 recent_low = float(np.min(htf_lows))
