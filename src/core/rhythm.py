@@ -459,19 +459,12 @@ class MarketRhythm:
                 self._state.reason = "Extended half-cycle (borderline)"
                 return
 
-        # Chaotic: cycle too short or unstable
+        # Chaotic: cycle too short
         if self._state.half_cycle_bars < self._min_cycle_bars:
             self._state.regime = MarketRegime.CHAOTIC
             self._state.reason = (
                 f"Cycle too fast: {self._state.half_cycle_bars:.0f} bars "
                 f"(min {self._min_cycle_bars})"
-            )
-            return
-
-        if self._state.cycle_stability < 0.25:
-            self._state.regime = MarketRegime.CHAOTIC
-            self._state.reason = (
-                f"Unstable cycles: stability={self._state.cycle_stability:.2f}"
             )
             return
 
