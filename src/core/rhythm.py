@@ -377,126 +377,54 @@ class MarketRhythm:
         n = len(df)
         current_atr = float(df.iloc[-1]['ATR'])
 
-        # Check for trending: RSI stuck on one side
-        # Look at last 40 bars - if RSI never crosses 50, it's trending
-        lookback = min(40, n - 1)
-        recent_rsi = rsi[-lookback:]
-        valid_rsi = recent_rsi[~np.isnan(recent_rsi)]
-
-        if len(valid_rsi) < 10:
-            self._state.regime = MarketRegime.CHAOTIC
-            self._state.reason = "Insufficient RSI data"
-            return
-
-        all_above_50 = np.all(valid_rsi > 45)  # Slight tolerance
-        all_below_50 = np.all(valid_rsi < 55)
-
-        # Also check bars since last crossing
-        bars_since_crossing = n - self._crossings[-1]['bar_idx'] if self._crossings else lookback
-        trending_threshold = self._max_cycle_bars  # If no crossing for > max_cycle, it's trending
-
-        # HTF confirmation of trend
-        htf_trend_confirmed = False
-        if htf_df is not None and len(htf_df) > 20 and 'RSI' in htf_df.columns:
-            htf_rsi = float(htf_df.iloc[-1]['RSI'])
-            htf_ema_fast = htf_df.iloc[-1].get('ema_fast', 0)
-            htf_ema_slow = htf_df.iloc[-1].get('ema_slow', 0)
-            htf_atr = float(htf_df.iloc[-1].get('ATR', 1))
-
-            if htf_atr > 0:
-                # Check 1: EMA divergence (trend strength)
-                htf_divergence = abs(htf_ema_fast - htf_ema_slow) / htf_atr
-                if htf_divergence > 1.5:
-                    htf_trend_confirmed = True
-                    self._htf_trending = True
-                    self._htf_trend_direction = "up" if htf_ema_fast > htf_ema_slow else "down"
-
-                # Check 2: Price displacement (breakout detection)
-                # If HTF price has moved > 3 ATR from its RECENT high/low,
-                # that's an active breakout. Use last 5 bars (not 20) so we only
-                # catch current moves, not displacements from hours ago.
-                disp_lookback = min(5, len(htf_df) - 1)
-                htf_highs = htf_df['high'].values[-disp_lookback:]
-                htf_lows = htf_df['low'].values[-disp_lookback:]
-                htf_close = float(htf_df.iloc[-1]['close'])
-                recent_high = float(np.max(htf_highs))
-                recent_low = float(np.min(htf_lows))
-
-                drop_from_high = (recent_high - htf_close) / htf_atr
-                rise_from_low = (htf_close - recent_low) / htf_atr
-
-                if drop_from_high > 3.0:
-                    htf_trend_confirmed = True
-                    self._htf_trending = True
-                    self._htf_trend_direction = "down"
-                elif rise_from_low > 3.0:
-                    htf_trend_confirmed = True
-                    self._htf_trending = True
-                    self._htf_trend_direction = "up"
-
-                if not htf_trend_confirmed:
-                    self._htf_trending = False
-                    self._htf_trend_direction = ""
-
-        # If HTF confirms trending (breakout/displacement), classify immediately
-        # regardless of what M1 RSI crossings show
-        if htf_trend_confirmed:
-            self._state.regime = MarketRegime.TRENDING
-            self._state.reason = (
-                f"HTF breakout detected ({self._htf_trend_direction})"
-            )
-            return
-
-        # Dead market: ATR too low relative to historical or amplitude too small
+        # Dead market: ATR too low (absolute floor only)
+        # The relative check (current < median * factor) causes false positives
+        # after volatile periods when the market calms down but is still tradeable.
         atr_values = df['ATR'].values[-100:]
         valid_atr = atr_values[~np.isnan(atr_values)]
         if len(valid_atr) >= 20:
-            median_atr = float(np.median(valid_atr))
-            if median_atr > 0 and current_atr < median_atr * self._dead_atr_factor:
+            # Dead if ATR is absolutely tiny (for gold, < $0.50 per candle)
+            if current_atr < 0.5:
                 self._state.regime = MarketRegime.DEAD
                 self._state.reason = (
-                    f"ATR ${current_atr:.2f} < {self._dead_atr_factor:.0%} of "
-                    f"median ${median_atr:.2f}"
+                    f"Market dead: ATR ${current_atr:.2f} (too low for trading)"
                 )
                 return
 
-            # Also dead if median ATR itself is tiny (consistently flat market)
-            # Use absolute threshold: if ATR < 0.5 (for gold, $0.50 range per candle)
-            if median_atr < 0.5:
+        # Check amplitude (is it worth trading?)
+        if self._state.amplitude_dollars > 0 and current_atr > 0:
+            if self._state.amplitude_dollars < current_atr * self._min_amplitude_atr:
                 self._state.regime = MarketRegime.DEAD
                 self._state.reason = (
-                    f"Market dead: median ATR ${median_atr:.2f} (too low for trading)"
+                    f"Swing amplitude ${self._state.amplitude_dollars:.2f} too small "
+                    f"(need ${current_atr * self._min_amplitude_atr:.2f})"
                 )
                 return
 
-        # Trending: RSI hasn't crossed 50 for a long time, or stuck on one side
-        if bars_since_crossing > trending_threshold or (all_above_50 or all_below_50):
-            if bars_since_crossing > trending_threshold:
-                # Clear case: no RSI crossing for longer than max cycle
-                self._state.regime = MarketRegime.TRENDING
-                self._state.reason = (
-                    f"RSI hasn't crossed 50 for {bars_since_crossing} bars "
-                    f"(max cycle {trending_threshold})"
-                )
-                return
-            elif htf_trend_confirmed:
-                self._state.regime = MarketRegime.TRENDING
-                self._state.reason = (
-                    f"RSI one-sided for {lookback} bars, "
-                    f"HTF confirms {self._htf_trend_direction} trend"
-                )
-                return
-            else:
-                # RSI one-sided but no HTF confirmation and recent crossings exist
-                # Could be just a strong half-cycle
-                self._state.regime = MarketRegime.SWINGING
-                self._state.reason = "Extended half-cycle (borderline)"
-                return
+        # All checks passed: market is swinging
+        # The breakout shield handles actual breakout protection reactively.
+        # No more proactive trending/HTF blocks — they caused too many false positives.
+        self._state.regime = MarketRegime.SWINGING
 
-        # Chaotic: REMOVED — fast oscillations are actually good for RSI trading.
-        # Only trending (RSI one-sided) and dead (ATR too low) should block.
-        # The min_cycle_bars check was causing false blocks on M1 where RSI(14)
-        # naturally crosses 50 every 2-3 candles in normal swinging conditions.
+        # Store HTF info for logging/GUI only (not blocking)
+        if htf_df is not None and len(htf_df) > 20:
+            if 'ema_fast' in htf_df.columns and 'ema_slow' in htf_df.columns:
+                htf_ema_fast = float(htf_df.iloc[-1].get('ema_fast', 0))
+                htf_ema_slow = float(htf_df.iloc[-1].get('ema_slow', 0))
+                htf_atr = float(htf_df.iloc[-1].get('ATR', 1))
+                if htf_atr > 0:
+                    htf_divergence = abs(htf_ema_fast - htf_ema_slow) / htf_atr
+                    self._htf_trending = htf_divergence > 1.5
+                    self._htf_trend_direction = "up" if htf_ema_fast > htf_ema_slow else "down"
+                else:
+                    self._htf_trending = False
+                    self._htf_trend_direction = ""
+
+        self._state.reason = (
+            f"Cycle={self._state.full_cycle_bars:.0f} bars, "
+            f"amplitude=${self._state.amplitude_dollars:.2f}, "
+            f"stability={self._state.cycle_stability:.2f}"
+        )
 
         # Cycle too long for this timeframe
         if self._state.half_cycle_bars > self._max_cycle_bars:

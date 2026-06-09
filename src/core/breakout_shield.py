@@ -36,9 +36,11 @@ class ShieldState:
     active: bool = False
     severity: str = ""
     direction_blocked: str = ""     # "LONG" or "SHORT"
-    # For 1st SL: count recovery candles
+    # For 1st SL: count recovery candles AFTER shield activation
     recovery_candles_seen: int = 0
     recovery_candles_needed: int = 2
+    # Track candles since activation (only count new ones)
+    candles_since_activation: int = 0
     # For 2nd/3rd SL: RSI threshold that must be reached
     rsi_threshold: float = 0.0
     # Tracking
