@@ -243,6 +243,13 @@ class TradingConfig:
     shield_enabled: bool = True
     # Position lasted fewer than this many candles = "rapid SL" (higher severity)
     shield_rapid_sl_candles: int = 3
+    # RSI must move this many points past 50 to count as "normalized"
+    # Higher = stricter (shield stays longer). M1 may need 8-10, M5 needs 5.
+    shield_rsi_margin: float = 5.0
+    # Number of consecutive small-body candles needed for "momentum stall" signal
+    shield_stall_candles: int = 5
+    # Body size threshold for stall detection (fraction of ATR)
+    shield_stall_atr_fraction: float = 0.4
     # Legacy fields (kept for backward compat, no longer used)
     shield_reduced_size_factor: float = 0.5
     shield_reduced_size_trades: int = 2

@@ -86,6 +86,9 @@ class BreakoutShield:
 
         self._enabled = config.shield_enabled
         self._rapid_sl_candles = config.shield_rapid_sl_candles
+        self._rsi_margin = getattr(config, 'shield_rsi_margin', 5.0)
+        self._stall_candles = getattr(config, 'shield_stall_candles', 5)
+        self._stall_atr_fraction = getattr(config, 'shield_stall_atr_fraction', 0.4)
 
         # Shield states (one per direction)
         self._long_shield = ShieldState()
@@ -410,7 +413,7 @@ class BreakoutShield:
 
         Not just touching 50 -- needs to move past it by a margin to confirm
         the momentum in the breakout direction has actually exhausted.
-        Uses a 5-point margin: RSI must reach 55+ (for stopped longs) or 45- (for stopped shorts).
+        Margin is configurable via shield_rsi_margin (default 5).
         """
         signal_name = "rsi_normalize"
         if signal_name in shield.signals_collected:
@@ -419,8 +422,7 @@ class BreakoutShield:
         if np.isnan(rsi):
             return
 
-        # Require RSI to move meaningfully past 50 (not just touch it)
-        margin = 5.0
+        margin = self._rsi_margin
 
         if event.direction == "LONG":
             # Long was stopped (price went down). RSI going well above 50 = selling exhausted.
@@ -434,25 +436,25 @@ class BreakoutShield:
                 shield.signals_needed -= 1
 
     def _check_momentum_stall(self, shield: ShieldState, event: SLEvent, df: pd.DataFrame):
-        """Check if momentum has stalled (5 small-body candles in a row)."""
+        """Check if momentum has stalled (N consecutive small-body candles)."""
         signal_name = "momentum_stall"
         if signal_name in shield.signals_collected:
             return
 
-        if df is None or len(df) < 7 or 'ATR' not in df.columns:
+        n = self._stall_candles
+        if df is None or len(df) < n + 2 or 'ATR' not in df.columns:
             return
 
         current_atr = float(df.iloc[-1]['ATR'])
         if current_atr <= 0:
             return
 
-        # Check last 5 candles: all have small bodies relative to ATR
-        # 5 candles ensures genuine consolidation, not just a brief pause
-        last_n = df.iloc[-5:]
+        # Check last N candles: all have small bodies relative to ATR
+        last_n = df.iloc[-n:]
         bodies = (last_n['close'] - last_n['open']).abs().values
 
-        # All bodies < 0.4 ATR = momentum truly stalled
-        if np.all(bodies < current_atr * 0.4):
+        # All bodies < threshold fraction of ATR = momentum stalled
+        if np.all(bodies < current_atr * self._stall_atr_fraction):
             shield.signals_collected.append(signal_name)
             shield.signals_needed -= 1
 

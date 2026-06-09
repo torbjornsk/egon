@@ -487,13 +487,17 @@ Shield lifts after breakout:
 <table>
     <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Default</th></tr>
     <tr><td><code>shield_enabled</code></td><td>Shield Enabled</td><td>Master toggle. False = no shield (old behavior).</td><td>True</td></tr>
-    <tr><td><code>shield_rapid_sl_candles</code></td><td>Rapid SL Threshold</td><td>Position shorter than this many candles = "rapid SL" (higher severity).</td><td>3 (M5), 6 (M1), 2 (M15)</td></tr>
-    <tr><td><code>shield_reduced_size_factor</code></td><td>Reduced Size Factor</td><td>Position size multiplier after shield events. 0.5 = half size.</td><td>0.5</td></tr>
-    <tr><td><code>shield_reduced_size_trades</code></td><td>Reduced Size Trades</td><td>How many trades after shield use reduced sizing.</td><td>2</td></tr>
+    <tr><td><code>shield_rapid_sl_candles</code></td><td>Rapid SL Threshold</td><td>Position shorter than this many candles = "rapid SL" (higher severity, needs 2 signals to lift).</td><td>3 (M5), 6 (M1), 2 (M15)</td></tr>
+    <tr><td><code>shield_rsi_margin</code></td><td>RSI Normalize Margin</td><td>RSI must move this many points past 50 to count as "normalized". Higher = shield stays longer. M1 needs 8-10 because RSI crosses 50 frequently.</td><td>5.0</td></tr>
+    <tr><td><code>shield_stall_candles</code></td><td>Stall Candles</td><td>How many consecutive small-body candles needed to declare "momentum stalled". More = stricter.</td><td>5</td></tr>
+    <tr><td><code>shield_stall_atr_fraction</code></td><td>Stall Body / ATR</td><td>A candle body must be smaller than this fraction of ATR to count as "small". Lower = stricter.</td><td>0.4</td></tr>
 </table>
 
 <div class="warning">
-<strong>Tuning the rapid SL threshold:</strong> On M1, a 3-candle position is only 3 minutes &mdash; almost everything would be "rapid". Use 6-8 for M1. On M15, 3 candles is 45 minutes which is a long time for a sniper trade, so 2 is appropriate. The default of 3 is optimized for M5.
+<strong>Tuning for M1:</strong> On M1, RSI crosses 50 constantly and candle bodies are naturally small. Use tighter values:<br>
+<code>shield_rsi_margin: 8.0</code> (RSI must reach 58+ or 42- to lift)<br>
+<code>shield_stall_candles: 8</code> (need 8 minutes of consolidation, not just 5)<br>
+<code>shield_stall_atr_fraction: 0.35</code> (bodies must be really small)
 </div>
 
 <h2>Recommended Starting Config</h2>
@@ -547,8 +551,9 @@ Shield lifts after breakout:
 
   "shield_enabled": true,
   "shield_rapid_sl_candles": 3,
-  "shield_reduced_size_factor": 0.5,
-  "shield_reduced_size_trades": 2
+  "shield_rsi_margin": 5.0,
+  "shield_stall_candles": 5,
+  "shield_stall_atr_fraction": 0.4
 }</code></pre>
 
 <h2>Tuning Tips</h2>
