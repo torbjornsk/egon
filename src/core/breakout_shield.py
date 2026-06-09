@@ -405,7 +405,13 @@ class BreakoutShield:
                 shield.signals_needed -= 1
 
     def _check_rsi_normalize(self, shield: ShieldState, event: SLEvent, rsi: float):
-        """Check if RSI has crossed back through 50 (momentum exhausted)."""
+        """
+        Check if RSI has meaningfully crossed back through 50.
+
+        Not just touching 50 -- needs to move past it by a margin to confirm
+        the momentum in the breakout direction has actually exhausted.
+        Uses a 5-point margin: RSI must reach 55+ (for stopped longs) or 45- (for stopped shorts).
+        """
         signal_name = "rsi_normalize"
         if signal_name in shield.signals_collected:
             return
@@ -413,36 +419,40 @@ class BreakoutShield:
         if np.isnan(rsi):
             return
 
+        # Require RSI to move meaningfully past 50 (not just touch it)
+        margin = 5.0
+
         if event.direction == "LONG":
-            # Long was stopped (price went down). RSI going back above 50 = selling exhausted.
-            if rsi >= 50:
+            # Long was stopped (price went down). RSI going well above 50 = selling exhausted.
+            if rsi >= 50 + margin:
                 shield.signals_collected.append(signal_name)
                 shield.signals_needed -= 1
         else:
-            # Short was stopped (price went up). RSI going back below 50 = buying exhausted.
-            if rsi <= 50:
+            # Short was stopped (price went up). RSI going well below 50 = buying exhausted.
+            if rsi <= 50 - margin:
                 shield.signals_collected.append(signal_name)
                 shield.signals_needed -= 1
 
     def _check_momentum_stall(self, shield: ShieldState, event: SLEvent, df: pd.DataFrame):
-        """Check if momentum has stalled (3 small-body candles)."""
+        """Check if momentum has stalled (5 small-body candles in a row)."""
         signal_name = "momentum_stall"
         if signal_name in shield.signals_collected:
             return
 
-        if df is None or len(df) < 5 or 'ATR' not in df.columns:
+        if df is None or len(df) < 7 or 'ATR' not in df.columns:
             return
 
         current_atr = float(df.iloc[-1]['ATR'])
         if current_atr <= 0:
             return
 
-        # Check last 3 candles: all have small bodies relative to ATR
-        last_3 = df.iloc[-3:]
-        bodies = (last_3['close'] - last_3['open']).abs().values
+        # Check last 5 candles: all have small bodies relative to ATR
+        # 5 candles ensures genuine consolidation, not just a brief pause
+        last_n = df.iloc[-5:]
+        bodies = (last_n['close'] - last_n['open']).abs().values
 
-        # All bodies < 0.5 ATR = momentum stalled
-        if np.all(bodies < current_atr * 0.5):
+        # All bodies < 0.4 ATR = momentum truly stalled
+        if np.all(bodies < current_atr * 0.4):
             shield.signals_collected.append(signal_name)
             shield.signals_needed -= 1
 

@@ -362,29 +362,32 @@ class SniperBot:
 
             if exit_deal.reason == DEAL_REASON_SL:
                 self.consecutive_sl_exits += 1
-                # Notify breakout shield of the SL exit
-                direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
-                # Estimate duration in bars (time from entry to exit)
-                entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
-                duration_bars = 0
-                entry_price = 0.0
-                if entry_deal:
-                    entry_price = entry_deal.price
-                    # Approximate duration: time difference / timeframe minutes
-                    tf_minutes = self.strategy.timeframe_minutes
-                    if tf_minutes > 0:
-                        duration_seconds = exit_deal.time - entry_deal.time
-                        duration_bars = max(1, int(duration_seconds / (tf_minutes * 60)))
+                # Only activate shield on LOSING stop-losses
+                # A SL at breakeven or profit is fine, no protection needed
+                if profit < 0:
+                    # Notify breakout shield of the SL exit
+                    direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
+                    # Estimate duration in bars (time from entry to exit)
+                    entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
+                    duration_bars = 0
+                    entry_price = 0.0
+                    if entry_deal:
+                        entry_price = entry_deal.price
+                        # Approximate duration: time difference / timeframe minutes
+                        tf_minutes = self.strategy.timeframe_minutes
+                        if tf_minutes > 0:
+                            duration_seconds = exit_deal.time - entry_deal.time
+                            duration_bars = max(1, int(duration_seconds / (tf_minutes * 60)))
 
-                self.shield.record_sl_exit(
-                    direction=direction,
-                    duration_bars=duration_bars,
-                    entry_price=entry_price,
-                    sl_price=exit_deal.price,
-                    df=self._last_df,
-                    htf_df=self._htf_df,
-                    h1_df=self._h1_df,
-                )
+                    self.shield.record_sl_exit(
+                        direction=direction,
+                        duration_bars=duration_bars,
+                        entry_price=entry_price,
+                        sl_price=exit_deal.price,
+                        df=self._last_df,
+                        htf_df=self._htf_df,
+                        h1_df=self._h1_df,
+                    )
             else:
                 self.consecutive_sl_exits = 0
                 # Profitable exit resets consecutive SL counter in shield
