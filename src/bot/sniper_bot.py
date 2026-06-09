@@ -767,6 +767,31 @@ class SniperBot:
                 )
                 filled.cancelled = True
                 return
+
+            # RSI validation: verify RSI actually supports entry at this moment.
+            # The sniper price was calculated on a previous candle's RSI state.
+            # If RSI has changed since then, the fill may no longer be valid.
+            latest = self._last_df.iloc[-1]
+            current_rsi = float(latest['RSI'])
+            if filled.direction == "LONG":
+                # For a buy fill: RSI should still be below the buy threshold
+                if current_rsi > self.config.rsi_buy + 5:
+                    self.logger.info(
+                        f"[SNIPER] Rejected LONG fill: RSI {current_rsi:.1f} "
+                        f"> {self.config.rsi_buy + 5:.0f} (no longer oversold)"
+                    )
+                    filled.cancelled = True
+                    return
+            else:
+                # For a sell fill: RSI should still be above the sell threshold
+                if current_rsi < self.config.rsi_sell - 5:
+                    self.logger.info(
+                        f"[SNIPER] Rejected SHORT fill: RSI {current_rsi:.1f} "
+                        f"< {self.config.rsi_sell - 5:.0f} (no longer overbought)"
+                    )
+                    filled.cancelled = True
+                    return
+
             self.open_position(filled.direction, self._last_df, entry_price=filled.entry_price)
 
     # ── State for GUI ───────────────────────────────────────────────
