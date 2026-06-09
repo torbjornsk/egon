@@ -362,9 +362,11 @@ class SniperBot:
 
             if exit_deal.reason == DEAL_REASON_SL:
                 self.consecutive_sl_exits += 1
-                # Only activate shield on LOSING stop-losses
-                # A SL at breakeven or profit is fine, no protection needed
-                if profit < 0:
+                # Only activate shield on SLs that haven't been moved to breakeven.
+                # A trailing stop at/past breakeven means the trade was protected --
+                # not a "caught by breakout" scenario.
+                was_at_breakeven = ticket in self._breakeven_applied
+                if profit < 0 and not was_at_breakeven:
                     # Notify breakout shield of the SL exit
                     direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
                     # Estimate duration in bars (time from entry to exit)
