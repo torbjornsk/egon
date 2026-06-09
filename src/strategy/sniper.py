@@ -87,6 +87,9 @@ class SniperStrategy:
 
         Uses sniper_rsi_offset to place orders deeper than the standard
         entry threshold, catching intra-candle wicks.
+
+        Enforces minimum distance from current price (1 ATR) to avoid
+        placing orders that fill on noise when RSI is already at extremes.
         """
         offset = self.config.sniper_rsi_offset
         # Clamp to valid RSI range (0-100)
@@ -95,6 +98,16 @@ class SniperStrategy:
 
         buy_price = calculate_rsi_buy_price(df, sniper_buy_rsi, self.config.rsi_period)
         sell_price = calculate_rsi_sell_price(df, sniper_sell_rsi, self.config.rsi_period)
+
+        # Enforce minimum distance from current price (1 ATR)
+        current_price = float(df.iloc[-1]['close'])
+        current_atr = float(df.iloc[-1]['ATR']) if 'ATR' in df.columns else 0
+
+        if current_atr > 0:
+            if buy_price is not None and (current_price - buy_price) < current_atr:
+                buy_price = None  # Too close, don't place
+            if sell_price is not None and (sell_price - current_price) < current_atr:
+                sell_price = None  # Too close, don't place
 
         return {
             'buy_price': buy_price,
