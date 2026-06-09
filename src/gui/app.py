@@ -32,6 +32,8 @@ DROPDOWN_FIELDS: dict[str, list[str]] = {
     'trend_filter': ['none', 'ema_cross', 'ema_200'],
     'bot_type': ['sniper', 'rsi_scalper', 'liquidity_zones', 'tick_scalper', 'momentum', 'breakout'],
     'breakeven_mode': ['first_pip', 'atr_threshold'],
+    'rhythm_mode': ['manual', 'gated', 'dynamic'],
+    'rhythm_htf_timeframe': ['M5', 'M15', 'H1', 'H4'],
 }
 
 # Human-readable labels for config fields
@@ -98,6 +100,18 @@ FIELD_LABELS: dict[str, str] = {
     'breakeven_mode': 'Breakeven Mode',
     'reentry_cooldown_bars': 'Reentry Pause (bars)',
     'trail_interval_ms': 'Trail Update (ms)',
+    'rhythm_enabled': 'Rhythm Enabled',
+    'rhythm_mode': 'Rhythm Mode',
+    'rhythm_min_amplitude_atr': 'Min Amplitude (x ATR)',
+    'rhythm_max_cycle_bars': 'Max Cycle (bars)',
+    'rhythm_min_cycle_bars': 'Min Cycle (bars)',
+    'rhythm_dead_atr_factor': 'Dead ATR Factor',
+    'rhythm_htf_timeframe': 'HTF Timeframe',
+    'rhythm_support_aware_sniper': 'Support-Aware Sniper',
+    'shield_enabled': 'Shield Enabled',
+    'shield_rapid_sl_candles': 'Rapid SL Threshold (bars)',
+    'shield_reduced_size_factor': 'Post-Shield Size Factor',
+    'shield_reduced_size_trades': 'Reduced Size Trades',
 }
 
 try:
@@ -552,6 +566,12 @@ class BotDetailPanel:
                 'Direction': ['enable_shorts', 'short_requires_downtrend', 'trading_mode'],
                 'Risk Management': ['max_drawdown_limit', 'use_profit_protection'],
                 'Trend Detection (EMA)': ['fast_ema', 'slow_ema'],
+                'Market Rhythm': ['rhythm_enabled', 'rhythm_mode',
+                                  'rhythm_min_amplitude_atr', 'rhythm_max_cycle_bars',
+                                  'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
+                                  'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
+                'Breakout Shield': ['shield_enabled', 'shield_rapid_sl_candles',
+                                    'shield_reduced_size_factor', 'shield_reduced_size_trades'],
                 'Schedule & Guards': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
                                     'schedule_sat', 'schedule_sun', 'schedule_closed',
@@ -856,6 +876,44 @@ class BotDetailPanel:
                 ratio = vg.get('ratio', 0)
                 if ratio > 0:
                     ind_text += f"\nVol Guard: OK (ATR {ratio:.1f}x median)"
+
+        # Rhythm info
+        rhythm = state.get('rhythm', {})
+        if rhythm.get('enabled'):
+            regime = rhythm.get('regime', '?')
+            tradeable = rhythm.get('tradeable', True)
+            if not tradeable:
+                ind_text += f"\nRhythm: BLOCKED ({regime})"
+            else:
+                mode = rhythm.get('mode', 'gated')
+                if mode == 'dynamic':
+                    sz = rhythm.get('sizing_scale', 1.0)
+                    sl = rhythm.get('sl_scale', 1.0)
+                    ind_text += f"\nRhythm: {regime} (sz:{sz:.0%} sl:{sl:.0%})"
+                else:
+                    ind_text += f"\nRhythm: {regime}"
+
+        # Shield info
+        shield = state.get('shield', {})
+        if shield.get('enabled'):
+            long_sh = shield.get('long_shield', {})
+            short_sh = shield.get('short_shield', {})
+            reduced = shield.get('reduced_size_remaining', 0)
+            parts = []
+            if long_sh.get('active'):
+                sev = long_sh.get('severity', '?')
+                needed_signals = long_sh.get('signals_needed', 0)
+                got = long_sh.get('signals_collected', [])
+                parts.append(f"L:{sev}({len(got)}/{len(got)+needed_signals})")
+            if short_sh.get('active'):
+                sev = short_sh.get('severity', '?')
+                needed_signals = short_sh.get('signals_needed', 0)
+                got = short_sh.get('signals_collected', [])
+                parts.append(f"S:{sev}({len(got)}/{len(got)+needed_signals})")
+            if parts:
+                ind_text += f"\nShield: {' '.join(parts)}"
+            elif reduced > 0:
+                ind_text += f"\nShield: reduced size ({reduced} trades left)"
 
         self.ind_lbl.config(text=ind_text)
 
