@@ -221,32 +221,24 @@ class BreakoutShield:
 
     def _check_recovery_candles(self, shield: ShieldState, df: pd.DataFrame):
         """
-        For 1st SL: count candles that closed in the recovery direction.
+        For 1st SL: count candles that closed in the recovery direction
+        AFTER the shield was activated.
 
         Stopped long: count green candles (close > open)
         Stopped short: count red candles (close < open)
-        Not consecutive required -- just total count.
+        Not consecutive required -- just total count since activation.
         """
         if df is None or len(df) < 2:
             return
 
-        # Check the latest closed candle
-        latest = df.iloc[-1]
-        candle_close = float(latest['close'])
-        candle_open = float(latest['open'])
+        # Only look at candles that arrived AFTER shield activation.
+        # candles_since_activation tracks how many update() calls happened.
+        # We increment it here and only count that many candles from the end.
+        shield.candles_since_activation += 1
 
-        is_green = candle_close > candle_open
-        is_red = candle_close < candle_open
-
-        # We track using the latest candle each update.
-        # To avoid counting the same candle twice, we use df length as a proxy.
-        # Actually simpler: just count from recent candles in the df since shield activated.
-        # Reset and recount from recent data each update.
-        recent_n = shield.recovery_candles_needed + 5  # Look at last few candles
-        if len(df) < recent_n:
-            recent_n = len(df)
-
-        recent = df.iloc[-recent_n:]
+        # Count recovery candles in the window since activation
+        n = min(shield.candles_since_activation, len(df))
+        recent = df.iloc[-n:]
         closes = recent['close'].values
         opens = recent['open'].values
 
@@ -310,6 +302,7 @@ class BreakoutShield:
         shield.severity = ""
         shield.direction_blocked = ""
         shield.recovery_candles_seen = 0
+        shield.candles_since_activation = 0
         shield.rsi_threshold = 0
         shield.entry_price = 0
         shield.reason = ""
