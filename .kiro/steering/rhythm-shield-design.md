@@ -78,10 +78,26 @@ After shield lifts, next N trades use reduced size (`shield_reduced_size_factor`
 | Param | M1 | M5 | M15 |
 |---|---|---|---|
 | `shield_rapid_sl_candles` | 6 | 3 | 2 |
-| `rhythm_min_cycle_bars` | 8 | 6 | 5 |
+| `rhythm_min_cycle_bars` | 3 | 6 | 5 |
 | `rhythm_max_cycle_bars` | 50 | 35 | 30 |
 | `rhythm_min_amplitude_atr` | 1.0 | 0.8 | 0.6 |
 | `rhythm_htf_timeframe` | M5 | M15 | H1 |
+
+## Key Learnings
+
+### M1 Rhythm: "Chaotic" was a bad classification
+On M1, RSI(14) crosses 50 every 2-4 candles in normal swinging markets. This is NOT chaotic —
+it's fast oscillations that are ideal for RSI scalping. The "chaotic" regime classification
+(based on min_cycle_bars and stability) was removed entirely. Only trending (RSI one-sided)
+and dead (ATR too low) block entries now.
+
+### Shield normalization signals on M1
+On M1, RSI crosses 50 constantly. The `rsi_normalize` signal must require a larger margin
+(8+ RSI points past 50) to avoid premature shield lifting. Use `shield_rsi_margin: 8` on M1.
+
+### Config changes
+Config file changes should be communicated to the user and they will apply them manually.
+Only add new fields with sensible defaults. Do not modify existing config values.
 
 ## Integration points in SniperBot
 1. `trading_logic()`: rhythm check after volatility guard, shield check before entry

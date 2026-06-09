@@ -459,14 +459,10 @@ class MarketRhythm:
                 self._state.reason = "Extended half-cycle (borderline)"
                 return
 
-        # Chaotic: cycle too short
-        if self._state.half_cycle_bars < self._min_cycle_bars:
-            self._state.regime = MarketRegime.CHAOTIC
-            self._state.reason = (
-                f"Cycle too fast: {self._state.half_cycle_bars:.0f} bars "
-                f"(min {self._min_cycle_bars})"
-            )
-            return
+        # Chaotic: REMOVED — fast oscillations are actually good for RSI trading.
+        # Only trending (RSI one-sided) and dead (ATR too low) should block.
+        # The min_cycle_bars check was causing false blocks on M1 where RSI(14)
+        # naturally crosses 50 every 2-3 candles in normal swinging conditions.
 
         # Cycle too long for this timeframe
         if self._state.half_cycle_bars > self._max_cycle_bars:
