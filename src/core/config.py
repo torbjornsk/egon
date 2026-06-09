@@ -217,6 +217,36 @@ class TradingConfig:
     vg_resume_below_multiplier: float = 1.5
     vg_lookback_bars: int = 100
 
+    # ── Market Rhythm Analyzer ──────────────────────────────────────
+    # Determines if current market conditions suit RSI-based swing trading.
+    # Modes: "manual" (logging only), "gated" (blocks bad regimes),
+    #        "dynamic" (adjusts params: offset, sizing, SL/trail)
+    rhythm_enabled: bool = True
+    rhythm_mode: str = "gated"
+    # Minimum swing amplitude (in ATR multiples) to consider tradeable
+    rhythm_min_amplitude_atr: float = 0.8
+    # Max half-cycle length in bars (beyond this = trending, not swinging)
+    rhythm_max_cycle_bars: int = 35
+    # Min half-cycle length in bars (below this = chaotic/noise)
+    rhythm_min_cycle_bars: int = 6
+    # ATR factor below which market is considered dead
+    rhythm_dead_atr_factor: float = 0.5
+    # Higher timeframe for regime confirmation ("M5", "M15", "H1")
+    rhythm_htf_timeframe: str = "M15"
+    # Cap sniper levels at support/resistance (don't place below demand zones)
+    rhythm_support_aware_sniper: bool = True
+
+    # ── Breakout Shield ─────────────────────────────────────────────
+    # Market-aware re-entry protection after stop-loss exits.
+    # Blocks re-entry until analysis confirms breakout is over.
+    shield_enabled: bool = True
+    # Position lasted fewer than this many candles = "rapid SL" (higher severity)
+    shield_rapid_sl_candles: int = 3
+    # Position size multiplier for trades after a shield event
+    shield_reduced_size_factor: float = 0.5
+    # How many trades after shield use reduced size
+    shield_reduced_size_trades: int = 2
+
     # ── Liquidity zone strategy settings ────────────────────────────
     zone_lookback: int = 100
     max_active_zones: int = 6

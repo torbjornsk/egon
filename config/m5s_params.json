@@ -48,5 +48,21 @@
   "vg_enabled": true,
   "vg_atr_spike_multiplier": 2.5,
   "vg_cooldown_minutes": 15,
-  "vg_resume_below_multiplier": 1.5
+  "vg_resume_below_multiplier": 1.5,
+
+  "_comment_rhythm": "Market rhythm analyzer -- detects if RSI swings are tradeable",
+  "rhythm_enabled": true,
+  "rhythm_mode": "gated",
+  "rhythm_min_amplitude_atr": 0.8,
+  "rhythm_max_cycle_bars": 35,
+  "rhythm_min_cycle_bars": 6,
+  "rhythm_dead_atr_factor": 0.5,
+  "rhythm_htf_timeframe": "M15",
+  "rhythm_support_aware_sniper": true,
+
+  "_comment_shield": "Breakout shield -- blocks re-entry after SL until market stabilizes",
+  "shield_enabled": true,
+  "shield_rapid_sl_candles": 3,
+  "shield_reduced_size_factor": 0.5,
+  "shield_reduced_size_trades": 2
 }

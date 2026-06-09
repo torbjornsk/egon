@@ -21,12 +21,14 @@ import pandas as pd
 
 from src.core.config import TradingConfig
 from src.core.indicators import compute_indicators, get_adaptive_atr_multiplier
-from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL
+from src.core.broker import ORDER_TYPE_BUY, ORDER_TYPE_SELL, TIMEFRAME_MAP
 from src.core.position import PositionManager
 from src.core.risk import RiskManager
 from src.core.timezone import get_local_now, LOCAL_TZ, MT5_TZ
 from src.core.scheduler import Scheduler
 from src.core.volatility_guard import VolatilityGuard
+from src.core.rhythm import MarketRhythm
+from src.core.breakout_shield import BreakoutShield
 from src.strategy.sniper import SniperStrategy, SniperOrder
 
 logger = logging.getLogger(__name__)
@@ -103,6 +105,24 @@ class SniperBot:
             config=config,
             bot_label=strategy.bot_label,
         )
+
+        # Market rhythm analyzer (cycle/amplitude/regime detection)
+        self.rhythm = MarketRhythm(
+            config=config,
+            bot_label=strategy.bot_label,
+        )
+
+        # Breakout shield (post-SL re-entry protection)
+        self.shield = BreakoutShield(
+            config=config,
+            bot_label=strategy.bot_label,
+        )
+
+        # HTF data cache (for rhythm and shield)
+        self._htf_df: pd.DataFrame | None = None
+        self._h1_df: pd.DataFrame | None = None
+        self._htf_timeframe: str = config.rhythm_htf_timeframe
+        self._last_htf_refresh: float = 0.0
 
     # ── Properties ──────────────────────────────────────────────────
 
@@ -214,11 +234,17 @@ class SniperBot:
         if tick is None:
             return
 
+        # Get dynamic adjustments from rhythm and shield
+        rhythm_params = self.rhythm.get_dynamic_params()
+        sl_scale = rhythm_params['sl_scale'] * self.shield.get_sl_adjustment()
+        sizing_scale = rhythm_params['sizing_scale'] * self.shield.get_sizing_adjustment()
+        be_trigger_scale = rhythm_params['breakeven_trigger_scale']
+
         current_price = tick.bid if direction == 'LONG' else tick.ask
         adaptive_mult = get_adaptive_atr_multiplier(
             df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
         )
-        stop_distance = df.iloc[-1]['ATR'] * adaptive_mult
+        stop_distance = df.iloc[-1]['ATR'] * adaptive_mult * sl_scale
 
         # Calculate TP using RSI level prediction (spike catcher)
         from src.core.rsi_levels import calculate_rsi_sell_price, calculate_rsi_buy_price
@@ -251,6 +277,13 @@ class SniperBot:
         if not volume:
             return
 
+        # Apply dynamic sizing scale (rhythm + shield adjustments)
+        if sizing_scale < 1.0:
+            volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
+            self.logger.info(
+                f"[SIZING] Dynamic scale applied: {sizing_scale:.2f} -> vol {volume}"
+            )
+
         # Use limit fill if we have a specific entry price and broker supports it
         if entry_price and hasattr(self.mt5, 'place_limit_order'):
             result = self.mt5.place_limit_order(
@@ -267,10 +300,12 @@ class SniperBot:
             ticket = result.order
             self.positions.register_open(ticket)
             self.trades_today += 1
+            self.shield.record_entry(direction)
             entry_type = "SNIPER" if entry_price else "MARKET"
             self.logger.info(
                 f">>> [{entry_type}] {direction} @ ${fill_price:.2f} "
-                f"(SL ${sl:.2f}, TP ${tp:.2f}, Vol {volume})"
+                f"(SL ${sl:.2f}, TP ${tp:.2f}, Vol {volume}, "
+                f"SL scale {sl_scale:.2f}, Size scale {sizing_scale:.2f})"
             )
 
     def close_position(self, position, reason: str, emergency: bool = False):
@@ -300,7 +335,7 @@ class SniperBot:
 
     def check_mt5_closed_positions(self):
         """Detect SL/TP closes."""
-        from src.core.broker import DEAL_ENTRY_OUT, DEAL_REASON_SL, DEAL_REASON_TP
+        from src.core.broker import DEAL_ENTRY_IN, DEAL_ENTRY_OUT, DEAL_REASON_SL, DEAL_REASON_TP
 
         current = self.mt5.get_open_positions(self.strategy.magic_number)
         current_tickets = {p.ticket for p in current}
@@ -334,8 +369,34 @@ class SniperBot:
 
             if exit_deal.reason == DEAL_REASON_SL:
                 self.consecutive_sl_exits += 1
+                # Notify breakout shield of the SL exit
+                direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
+                # Estimate duration in bars (time from entry to exit)
+                entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
+                duration_bars = 0
+                entry_price = 0.0
+                if entry_deal:
+                    entry_price = entry_deal.price
+                    # Approximate duration: time difference / timeframe minutes
+                    tf_minutes = self.strategy.timeframe_minutes
+                    if tf_minutes > 0:
+                        duration_seconds = exit_deal.time - entry_deal.time
+                        duration_bars = max(1, int(duration_seconds / (tf_minutes * 60)))
+
+                self.shield.record_sl_exit(
+                    direction=direction,
+                    duration_bars=duration_bars,
+                    entry_price=entry_price,
+                    sl_price=exit_deal.price,
+                    df=self._last_df,
+                    htf_df=self._htf_df,
+                    h1_df=self._h1_df,
+                )
             else:
                 self.consecutive_sl_exits = 0
+                # Profitable exit resets consecutive SL counter in shield
+                direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
+                self.shield.record_profitable_exit(direction)
 
             reason = "Stop loss" if exit_deal.reason == DEAL_REASON_SL else "Take profit"
             self.logger.info(f"[MT5 EXIT] Ticket {ticket}: {reason} (${profit:.2f})")
@@ -350,13 +411,20 @@ class SniperBot:
         """
         Update trailing stop using live tick data.
 
-        Uses config values for trail distances:
+        Uses config values for trail distances, modulated by rhythm and shield:
         - trail_atr_after_breakeven: tighter trail once breakeven is applied
         - trail_atr_before_breakeven: wider trail before breakeven
+        - Dynamic sl_scale from rhythm/shield widens or tightens proportionally
         """
         be_trigger = self.config.breakeven_atr_trigger
         if current_atr < 0.5:
             return
+
+        # Get dynamic scale for trail distances
+        rhythm_params = self.rhythm.get_dynamic_params()
+        sl_scale = rhythm_params['sl_scale'] * self.shield.get_sl_adjustment()
+        be_trigger_scale = rhythm_params['breakeven_trigger_scale']
+        effective_be_trigger = be_trigger * be_trigger_scale
 
         for pos in positions:
             ticket = pos.ticket
@@ -370,7 +438,7 @@ class SniperBot:
 
             # Stage 1: Move to breakeven
             if ticket not in self._breakeven_applied:
-                if be_trigger > 0 and move_atr >= be_trigger:
+                if effective_be_trigger > 0 and move_atr >= effective_be_trigger:
                     offset = current_atr * self.config.breakeven_offset
                     new_sl = entry + offset if pos.type == ORDER_TYPE_BUY else entry - offset
                     if hasattr(self.mt5, 'modify_sl'):
@@ -378,11 +446,11 @@ class SniperBot:
                             self._breakeven_applied.add(ticket)
                             self.logger.info(f"[BREAKEVEN] Ticket {ticket}: SL -> ${new_sl:.2f}")
 
-            # Stage 2: Trail
+            # Stage 2: Trail (distances modulated by rhythm/shield)
             if ticket in self._breakeven_applied:
-                trail_distance = current_atr * self.config.trail_atr_after_breakeven
+                trail_distance = current_atr * self.config.trail_atr_after_breakeven * sl_scale
             else:
-                trail_distance = current_atr * self.config.trail_atr_before_breakeven
+                trail_distance = current_atr * self.config.trail_atr_before_breakeven * sl_scale
 
             if pos.type == ORDER_TYPE_BUY:
                 new_sl = current - trail_distance
@@ -394,6 +462,34 @@ class SniperBot:
                 if new_sl < pos.sl:
                     if hasattr(self.mt5, 'modify_sl'):
                         self.mt5.modify_sl(ticket, new_sl)
+
+    # ── HTF data for rhythm/shield ─────────────────────────────────
+
+    def _refresh_htf_data(self):
+        """Refresh higher timeframe data for rhythm and shield analysis."""
+        import time as time_module
+        now = time_module.time()
+
+        # Only refresh every 60 seconds (HTF candles don't change fast)
+        if now - self._last_htf_refresh < 60:
+            return
+
+        self._last_htf_refresh = now
+
+        # Get HTF timeframe from config (e.g. "M15" for M5 bot)
+        htf_tf_str = self._htf_timeframe
+        htf_mt5 = TIMEFRAME_MAP.get(htf_tf_str)
+        if htf_mt5 is not None:
+            htf_df = self.mt5.get_historical_data(timeframe=htf_mt5, bars=200)
+            if htf_df is not None and len(htf_df) >= 50:
+                self._htf_df = compute_indicators(htf_df, self.config)
+
+        # Always get H1 for macro context
+        h1_mt5 = TIMEFRAME_MAP.get("H1")
+        if h1_mt5 is not None:
+            h1_df = self.mt5.get_historical_data(timeframe=h1_mt5, bars=100)
+            if h1_df is not None and len(h1_df) >= 20:
+                self._h1_df = compute_indicators(h1_df, self.config)
 
     # ── Main trading logic ──────────────────────────────────────────
 
@@ -466,6 +562,28 @@ class SniperBot:
                 self.strategy.cancel_pending()
                 return
 
+        # ── Refresh HTF data (for rhythm and shield) ────────────────
+        self._refresh_htf_data()
+
+        # ── Market rhythm check (blocks entries in bad regimes) ─────
+        self.rhythm.update(df, self._htf_df)
+        if not self.rhythm.is_tradeable():
+            status = self.rhythm.state
+            self.logger.info(
+                f"[RHYTHM] Not tradeable: {status.regime.value} -- {status.reason}"
+            )
+            self.strategy.cancel_pending()
+            return
+
+        # ── Breakout shield update (check normalization signals) ────
+        current_rsi = float(latest['RSI']) if not np.isnan(latest['RSI']) else 50.0
+        self.shield.update(
+            current_price=float(latest['close']),
+            rsi=current_rsi,
+            df=df,
+            htf_df=self._htf_df,
+        )
+
         # ── Entry logic ─────────────────────────────────────────────
         open_positions = self.mt5.get_open_positions(self.strategy.magic_number)
         if len(open_positions) >= self.config.max_positions:
@@ -483,6 +601,13 @@ class SniperBot:
         })
 
         if signal:
+            # ── Shield check (blocks re-entry after SL) ─────────────
+            allowed, shield_reason = self.shield.allow_entry(signal['direction'])
+            if not allowed:
+                self.logger.info(f"[SHIELD] Blocked {signal['direction']} entry: {shield_reason}")
+                signal = None
+
+        if signal:
             mode = self.effective_trading_mode
             if mode == "long_only" and signal['direction'] == "SHORT":
                 pass
@@ -493,61 +618,98 @@ class SniperBot:
                 return  # Don't place sniper if we just entered
 
         # ── Place sniper orders for next candle ─────────────────────
+        # Get dynamic parameters from rhythm (if dynamic mode)
+        rhythm_params = self.rhythm.get_dynamic_params()
+        sl_scale = rhythm_params['sl_scale'] * self.shield.get_sl_adjustment()
+        sniper_offset = rhythm_params['sniper_offset']
+
         current_atr = float(latest['ATR']) if 'ATR' in df.columns else 0
         levels = self.strategy.calculate_sniper_levels(df)
         current_price = latest['close']
 
         if levels['buy_price'] and not has_long:
-            mode = self.effective_trading_mode
-            if mode != "short_only":
-                adaptive_mult = get_adaptive_atr_multiplier(
-                    df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
-                )
-                stop_distance = current_atr * adaptive_mult
-                entry = levels['buy_price']
-                sl = entry - stop_distance
+            # Shield check for buy direction
+            buy_allowed, buy_reason = self.shield.allow_entry("LONG")
+            if not buy_allowed:
+                self.logger.info(f"[SHIELD] Blocked LONG sniper: {buy_reason}")
+            else:
+                mode = self.effective_trading_mode
+                if mode != "short_only":
+                    adaptive_mult = get_adaptive_atr_multiplier(
+                        df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
+                    )
+                    stop_distance = current_atr * adaptive_mult * sl_scale
+                    entry = levels['buy_price']
 
-                from src.core.rsi_levels import calculate_rsi_sell_price
-                exit_rsi = self.strategy.get_tp_rsi(df, 'LONG')
-                tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
-                if tp is None or tp <= entry:
-                    tp = entry + current_atr * self.config.tp_fallback_atr_mult
+                    # Support-aware cap: don't place below demand zones
+                    cap = self.rhythm.get_sniper_level_cap("LONG", df)
+                    if cap is not None and entry < cap:
+                        self.logger.info(
+                            f"[RHYTHM] Buy level capped: ${entry:.2f} -> ${cap:.2f} "
+                            f"(demand zone)"
+                        )
+                        entry = cap
 
-                self.strategy.pending_buy = SniperOrder(
-                    direction="LONG", entry_price=entry, sl=sl, tp=tp,
-                    placed_at=get_local_now(),
-                )
-                self.logger.info(
-                    f"[SNIPER] Buy limit @ ${entry:.2f} "
-                    f"(RSI target {self.config.rsi_buy - self.config.sniper_rsi_offset:.0f}, "
-                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f})"
-                )
+                    sl = entry - stop_distance
+
+                    from src.core.rsi_levels import calculate_rsi_sell_price
+                    exit_rsi = self.strategy.get_tp_rsi(df, 'LONG')
+                    tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
+                    if tp is None or tp <= entry:
+                        tp = entry + current_atr * self.config.tp_fallback_atr_mult
+
+                    self.strategy.pending_buy = SniperOrder(
+                        direction="LONG", entry_price=entry, sl=sl, tp=tp,
+                        placed_at=get_local_now(),
+                    )
+                    self.logger.info(
+                        f"[SNIPER] Buy limit @ ${entry:.2f} "
+                        f"(RSI target {self.config.rsi_buy - sniper_offset:.0f}, "
+                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                        f"SL scale {sl_scale:.2f})"
+                    )
 
         if levels['sell_price'] and not has_short and self.config.enable_shorts:
-            mode = self.effective_trading_mode
-            if mode != "long_only":
-                adaptive_mult = get_adaptive_atr_multiplier(
-                    df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
-                )
-                stop_distance = current_atr * adaptive_mult
-                entry = levels['sell_price']
-                sl = entry + stop_distance
+            # Shield check for sell direction
+            sell_allowed, sell_reason = self.shield.allow_entry("SHORT")
+            if not sell_allowed:
+                self.logger.info(f"[SHIELD] Blocked SHORT sniper: {sell_reason}")
+            else:
+                mode = self.effective_trading_mode
+                if mode != "long_only":
+                    adaptive_mult = get_adaptive_atr_multiplier(
+                        df, self.config.atr_multiplier, self.config.atr_high_volatility_multiplier
+                    )
+                    stop_distance = current_atr * adaptive_mult * sl_scale
+                    entry = levels['sell_price']
 
-                from src.core.rsi_levels import calculate_rsi_buy_price
-                exit_rsi = self.strategy.get_tp_rsi(df, 'SHORT')
-                tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
-                if tp is None or tp >= entry:
-                    tp = entry - current_atr * self.config.tp_fallback_atr_mult
+                    # Resistance-aware cap: don't place above supply zones
+                    cap = self.rhythm.get_sniper_level_cap("SHORT", df)
+                    if cap is not None and entry > cap:
+                        self.logger.info(
+                            f"[RHYTHM] Sell level capped: ${entry:.2f} -> ${cap:.2f} "
+                            f"(supply zone)"
+                        )
+                        entry = cap
 
-                self.strategy.pending_sell = SniperOrder(
-                    direction="SHORT", entry_price=entry, sl=sl, tp=tp,
-                    placed_at=get_local_now(),
-                )
-                self.logger.info(
-                    f"[SNIPER] Sell limit @ ${entry:.2f} "
-                    f"(RSI target {self.config.rsi_sell + self.config.sniper_rsi_offset:.0f}, "
-                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f})"
-                )
+                    sl = entry + stop_distance
+
+                    from src.core.rsi_levels import calculate_rsi_buy_price
+                    exit_rsi = self.strategy.get_tp_rsi(df, 'SHORT')
+                    tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
+                    if tp is None or tp >= entry:
+                        tp = entry - current_atr * self.config.tp_fallback_atr_mult
+
+                    self.strategy.pending_sell = SniperOrder(
+                        direction="SHORT", entry_price=entry, sl=sl, tp=tp,
+                        placed_at=get_local_now(),
+                    )
+                    self.logger.info(
+                        f"[SNIPER] Sell limit @ ${entry:.2f} "
+                        f"(RSI target {self.config.rsi_sell + sniper_offset:.0f}, "
+                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                        f"SL scale {sl_scale:.2f})"
+                    )
 
     # ── Continuous checks (every second) ────────────────────────────
 
@@ -595,6 +757,14 @@ class SniperBot:
         filled = self.strategy.check_sniper_fills(tick.bid, tick.ask)
 
         if filled and self._last_df is not None:
+            # Shield check before acting on the fill
+            allowed, reason = self.shield.allow_entry(filled.direction)
+            if not allowed:
+                self.logger.info(
+                    f"[SHIELD] Blocked sniper fill {filled.direction}: {reason}"
+                )
+                filled.cancelled = True
+                return
             self.open_position(filled.direction, self._last_df, entry_price=filled.entry_price)
 
     # ── State for GUI ───────────────────────────────────────────────
@@ -676,6 +846,8 @@ class SniperBot:
                 'next_resume': self.scheduler.get_next_resume(),
             },
             'volatility_guard': self.volatility_guard.get_status(),
+            'rhythm': self.rhythm.get_status(),
+            'shield': self.shield.get_status(),
         }
 
     # ── Main loop ───────────────────────────────────────────────────
@@ -703,6 +875,20 @@ class SniperBot:
                 f"  Volatility Guard: spike={self.config.vg_atr_spike_multiplier}x, "
                 f"resume={self.config.vg_resume_below_multiplier}x, "
                 f"cooldown={self.config.vg_cooldown_minutes}min"
+            )
+        if self.rhythm.is_enabled:
+            self.logger.info(
+                f"  Rhythm: mode={self.config.rhythm_mode}, "
+                f"min_amp={self.config.rhythm_min_amplitude_atr} ATR, "
+                f"cycle=[{self.config.rhythm_min_cycle_bars}-{self.config.rhythm_max_cycle_bars}] bars, "
+                f"HTF={self.config.rhythm_htf_timeframe}, "
+                f"support_aware={self.config.rhythm_support_aware_sniper}"
+            )
+        if self.shield.is_enabled:
+            self.logger.info(
+                f"  Shield: rapid_sl={self.config.shield_rapid_sl_candles} bars, "
+                f"reduced_size={self.config.shield_reduced_size_factor}x for "
+                f"{self.config.shield_reduced_size_trades} trades"
             )
         self.logger.info("=" * 80)
 
