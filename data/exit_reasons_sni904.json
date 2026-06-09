@@ -34,5 +34,71 @@
     "full_reason": "Profit protection (continuous): profit dropped 40.1% from peak $37.76 to $22.60 (limit 40% after 21min)",
     "exit_time": "2026-06-08T14:18:02.951654+02:00",
     "bot": "SNI904"
+  },
+  "12880371": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T21:23:02.662284+02:00",
+    "bot": "SNI904"
+  },
+  "12880736": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 47.7% from peak $24.16 to $12.64 (limit 40% after 7min)",
+    "exit_time": "2026-06-08T21:32:02.000862+02:00",
+    "bot": "SNI904"
+  },
+  "12880903": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 45.3% from peak $21.20 to $11.60 (limit 40% after 19min)",
+    "exit_time": "2026-06-08T21:53:45.033776+02:00",
+    "bot": "SNI904"
+  },
+  "12882341": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 44.2% from peak $36.40 to $20.32 (limit 40% after 5min)",
+    "exit_time": "2026-06-09T01:54:48.594719+02:00",
+    "bot": "SNI904"
+  },
+  "12883867": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.1% from peak $21.30 to $12.54 (limit 40% after 33min)",
+    "exit_time": "2026-06-09T04:03:21.084706+02:00",
+    "bot": "SNI904"
+  },
+  "12894387": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T13:51:28.513252+02:00",
+    "bot": "SNI904"
+  },
+  "12894671": {
+    "reason": "Mean revert exit (RSI 72.6 >= ...",
+    "full_reason": "Mean revert exit (RSI 72.6 >= 65)",
+    "exit_time": "2026-06-09T14:10:00.258805+02:00",
+    "bot": "SNI904"
+  },
+  "12895097": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T14:20:44.905211+02:00",
+    "bot": "SNI904"
+  },
+  "12895545": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T14:36:29.473816+02:00",
+    "bot": "SNI904"
+  },
+  "12895881": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T15:00:02.502872+02:00",
+    "bot": "SNI904"
+  },
+  "12912646": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T20:09:55.914028+02:00",
+    "bot": "SNI904"
   }
 }

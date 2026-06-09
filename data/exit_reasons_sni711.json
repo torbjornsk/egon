@@ -1,0 +1,50 @@
+{
+  "12893913": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T13:18:40.044422+02:00",
+    "bot": "SNI711"
+  },
+  "12912932": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T19:33:11.284515+02:00",
+    "bot": "SNI711"
+  },
+  "12912966": {
+    "reason": "Mean revert exit (RSI 43.5 <= ...",
+    "full_reason": "Mean revert exit (RSI 43.5 <= 45)",
+    "exit_time": "2026-06-09T19:36:00.492657+02:00",
+    "bot": "SNI711"
+  },
+  "12914896": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T21:14:31.400576+02:00",
+    "bot": "SNI711"
+  },
+  "12914953": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T21:18:28.226501+02:00",
+    "bot": "SNI711"
+  },
+  "12915082": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T21:22:44.010074+02:00",
+    "bot": "SNI711"
+  },
+  "12915221": {
+    "reason": "Mean revert exit (RSI 52.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 52.1 >= 50)",
+    "exit_time": "2026-06-09T21:29:00.902689+02:00",
+    "bot": "SNI711"
+  },
+  "12915399": {
+    "reason": "Mean revert exit (RSI 34.4 <= ...",
+    "full_reason": "Mean revert exit (RSI 34.4 <= 40)",
+    "exit_time": "2026-06-09T21:41:00.701254+02:00",
+    "bot": "SNI711"
+  }
+}

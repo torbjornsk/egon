@@ -46,5 +46,197 @@
     "full_reason": "Stop loss",
     "exit_time": "2026-06-08T14:42:39.613553+02:00",
     "bot": "BRK"
+  },
+  "12870240": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:01:54.978894+02:00",
+    "bot": "BRK"
+  },
+  "12870404": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:03:00.281921+02:00",
+    "bot": "BRK"
+  },
+  "12870590": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:07:11.448237+02:00",
+    "bot": "BRK"
+  },
+  "12870792": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:15:51.370026+02:00",
+    "bot": "BRK"
+  },
+  "12870767": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:15:51.371034+02:00",
+    "bot": "BRK"
+  },
+  "12870829": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:16:56.941341+02:00",
+    "bot": "BRK"
+  },
+  "12871336": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:30:16.709989+02:00",
+    "bot": "BRK"
+  },
+  "12871651": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T15:36:49.532276+02:00",
+    "bot": "BRK"
+  },
+  "12872702": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 60.3% from peak $20.30 to $8.05 (limit 40% after 1min)",
+    "exit_time": "2026-06-08T15:58:23.335128+02:00",
+    "bot": "BRK"
+  },
+  "12873061": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 49.2% from peak $40.26 to $20.46 (limit 40% after 0min)",
+    "exit_time": "2026-06-08T16:04:04.013092+02:00",
+    "bot": "BRK"
+  },
+  "12873462": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 43.5% from peak $24.78 to $14.00 (limit 40% after 1min)",
+    "exit_time": "2026-06-08T16:11:24.547857+02:00",
+    "bot": "BRK"
+  },
+  "12874039": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T16:25:37.236327+02:00",
+    "bot": "BRK"
+  },
+  "12874485": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T16:39:51.264384+02:00",
+    "bot": "BRK"
+  },
+  "12874744": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 50.7% from peak $23.36 to $11.52 (limit 40% after 0min)",
+    "exit_time": "2026-06-08T16:46:23.666611+02:00",
+    "bot": "BRK"
+  },
+  "12875284": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 40.2% from peak $20.74 to $12.41 (limit 40% after 1min)",
+    "exit_time": "2026-06-08T16:59:34.792022+02:00",
+    "bot": "BRK"
+  },
+  "12876504": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.3% from peak $20.24 to $11.88 (limit 40% after 0min)",
+    "exit_time": "2026-06-08T17:39:45.710106+02:00",
+    "bot": "BRK"
+  },
+  "12876676": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 47.3% from peak $40.04 to $21.12 (limit 40% after 1min)",
+    "exit_time": "2026-06-08T17:45:24.339064+02:00",
+    "bot": "BRK"
+  },
+  "12876947": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T17:54:07.039607+02:00",
+    "bot": "BRK"
+  },
+  "12877879": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T18:33:05.716358+02:00",
+    "bot": "BRK"
+  },
+  "12878337": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T18:53:24.369684+02:00",
+    "bot": "BRK"
+  },
+  "12878495": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 46.2% from peak $19.50 to $10.50 (limit 40% after 0min)",
+    "exit_time": "2026-06-08T19:04:07.858794+02:00",
+    "bot": "BRK"
+  },
+  "12878672": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T19:12:46.732032+02:00",
+    "bot": "BRK"
+  },
+  "12878826": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T19:23:43.221373+02:00",
+    "bot": "BRK"
+  },
+  "12879043": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-08T19:34:21.857033+02:00",
+    "bot": "BRK"
+  },
+  "12889401": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T09:39:26.732914+02:00",
+    "bot": "BRK"
+  },
+  "12889868": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T10:06:04.942920+02:00",
+    "bot": "BRK"
+  },
+  "12890082": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 45.9% from peak $24.42 to $13.20 (limit 40% after 0min)",
+    "exit_time": "2026-06-09T10:12:12.719943+02:00",
+    "bot": "BRK"
+  },
+  "12890743": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T10:43:08.131466+02:00",
+    "bot": "BRK"
+  },
+  "12890976": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T10:50:35.811644+02:00",
+    "bot": "BRK"
+  },
+  "12891159": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T11:01:08.771115+02:00",
+    "bot": "BRK"
+  },
+  "12892577": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T12:18:03.679818+02:00",
+    "bot": "BRK"
+  },
+  "12892752": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T12:27:15.137011+02:00",
+    "bot": "BRK"
   }
 }

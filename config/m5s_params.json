@@ -37,7 +37,7 @@
   "fast_ema": 9,
   "slow_ema": 21,
   "rhythm_enabled": true,
-  "rhythm_mode": "gated",
+  "rhythm_mode": "manual",
   "rhythm_min_amplitude_atr": 0.4,
   "rhythm_max_cycle_bars": 35,
   "rhythm_min_cycle_bars": 6,

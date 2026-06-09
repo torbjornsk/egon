@@ -1,0 +1,44 @@
+{
+  "12893915": {
+    "reason": "Profit protection",
+    "full_reason": "Profit protection (continuous): profit dropped 41.9% from peak $20.24 to $11.76 (limit 40% after 2min)",
+    "exit_time": "2026-06-09T13:17:52.891043+02:00",
+    "bot": "SNI144"
+  },
+  "12912933": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T19:35:50.886894+02:00",
+    "bot": "SNI144"
+  },
+  "12914895": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T21:15:17.156202+02:00",
+    "bot": "SNI144"
+  },
+  "12915083": {
+    "reason": "Mean revert exit (RSI 52.1 >= ...",
+    "full_reason": "Mean revert exit (RSI 52.1 >= 50)",
+    "exit_time": "2026-06-09T21:29:01.065856+02:00",
+    "bot": "SNI144"
+  },
+  "12915400": {
+    "reason": "Mean revert exit (RSI 34.4 <= ...",
+    "full_reason": "Mean revert exit (RSI 34.4 <= 40)",
+    "exit_time": "2026-06-09T21:41:00.574616+02:00",
+    "bot": "SNI144"
+  },
+  "12916046": {
+    "reason": "Mean revert exit (RSI 41.6 <= ...",
+    "full_reason": "Mean revert exit (RSI 41.6 <= 45)",
+    "exit_time": "2026-06-09T22:18:00.308680+02:00",
+    "bot": "SNI144"
+  },
+  "12916068": {
+    "reason": "Stop loss",
+    "full_reason": "Stop loss",
+    "exit_time": "2026-06-09T22:21:27.741126+02:00",
+    "bot": "SNI144"
+  }
+}
