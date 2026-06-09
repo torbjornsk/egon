@@ -571,8 +571,7 @@ class BotDetailPanel:
                                   'rhythm_min_amplitude_atr', 'rhythm_max_cycle_bars',
                                   'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
                                   'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
-                'Breakout Shield': ['shield_enabled', 'shield_rapid_sl_candles',
-                                    'shield_reduced_size_factor', 'shield_reduced_size_trades'],
+                'Breakout Shield': ['shield_enabled', 'shield_rapid_sl_candles'],
                 'Schedule & Guards': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
                                     'schedule_sat', 'schedule_sun', 'schedule_closed',
@@ -905,7 +904,6 @@ class BotDetailPanel:
         if shield.get('enabled'):
             long_sh = shield.get('long_shield', {})
             short_sh = shield.get('short_shield', {})
-            reduced = shield.get('reduced_size_remaining', 0)
             parts = []
             if long_sh.get('active'):
                 sev = long_sh.get('severity', '?')
@@ -919,8 +917,6 @@ class BotDetailPanel:
                 parts.append(f"S:{sev}({len(got)}/{len(got)+needed_signals})")
             if parts:
                 ind_text += f"\nShield: {' '.join(parts)}"
-            elif reduced > 0:
-                ind_text += f"\nShield: reduced size ({reduced} trades left)"
 
         self.ind_lbl.config(text=ind_text)
 

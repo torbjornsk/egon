@@ -242,9 +242,8 @@ class TradingConfig:
     shield_enabled: bool = True
     # Position lasted fewer than this many candles = "rapid SL" (higher severity)
     shield_rapid_sl_candles: int = 3
-    # Position size multiplier for trades after a shield event
+    # Legacy fields (kept for backward compat, no longer used)
     shield_reduced_size_factor: float = 0.5
-    # How many trades after shield use reduced size
     shield_reduced_size_trades: int = 2
 
     # ── Liquidity zone strategy settings ────────────────────────────

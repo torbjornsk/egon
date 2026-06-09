@@ -11,8 +11,10 @@ NOT timer-based. The shield lifts based on market analysis:
 - Momentum stalls (small-body candles in breakout direction)
 - HTF reversal (higher timeframe unwinding)
 
-Severity levels determine how many normalization signals are needed
-before re-entry is allowed.
+Simple logic:
+- SL hit → block that direction
+- Price goes back to swinging → unblock, trade normally
+- Price keeps breaking out → stay blocked
 """
 
 import logging
@@ -34,7 +36,7 @@ class ShieldSeverity(Enum):
     """How serious the SL event was -- determines how many signals needed to lift."""
     NONE = "none"           # No shield active
     LIGHT = "light"         # Normal SL, need 1 normalization signal
-    MEDIUM = "medium"       # Rapid SL or breakout detected, need 1 signal + reduce size
+    MEDIUM = "medium"       # Rapid SL or breakout detected, need 1 signal
     HEAVY = "heavy"         # Rapid SL + breakout + HTF aligned, need 2 signals
 
 
@@ -60,8 +62,6 @@ class ShieldState:
     direction_blocked: str = ""     # "LONG" or "SHORT"
     signals_needed: int = 0         # How many normalization signals still needed
     signals_collected: list[str] = field(default_factory=list)
-    reduce_size: bool = False       # Reduce position size on next entry
-    sl_adjustment: float = 1.0     # Multiply SL distance by this on next entry
     event: SLEvent | None = None    # The SL event that triggered the shield
     reason: str = ""
 
@@ -76,7 +76,8 @@ class BreakoutShield:
     3. Monitors market for normalization signals
     4. Lifts the shield when sufficient evidence shows the breakout is over
 
-    Works with any timeframe -- sensitivity adapts via config.
+    Simple behavior: block until the market proves it's swinging again.
+    No reduced sizing, no timers. Just block/unblock.
     """
 
     def __init__(self, config: TradingConfig, bot_label: str = ""):
@@ -85,15 +86,10 @@ class BreakoutShield:
 
         self._enabled = config.shield_enabled
         self._rapid_sl_candles = config.shield_rapid_sl_candles
-        self._reduced_size_factor = config.shield_reduced_size_factor
-        self._reduced_size_trades = config.shield_reduced_size_trades
 
         # Shield states (one per direction)
         self._long_shield = ShieldState()
         self._short_shield = ShieldState()
-
-        # Track reduced-size trades remaining
-        self._reduced_size_remaining: int = 0
 
         # History of SL events (for pattern detection)
         self._sl_history: list[SLEvent] = []
@@ -129,46 +125,16 @@ class BreakoutShield:
         return True, ""
 
     def get_sizing_adjustment(self) -> float:
-        """
-        Get position sizing multiplier for the next entry.
-
-        Returns < 1.0 if we're in reduced-size mode after a shield event.
-        """
-        if not self._enabled:
-            return 1.0
-
-        if self._reduced_size_remaining > 0:
-            return self._reduced_size_factor
-
+        """Get position sizing multiplier. Always 1.0 (no reduced sizing)."""
         return 1.0
 
     def get_sl_adjustment(self) -> float:
-        """
-        Get SL/trail distance multiplier.
-
-        After a shield event, first trades back use wider SL.
-        """
-        if not self._enabled:
-            return 1.0
-
-        if self._reduced_size_remaining > 0:
-            # Wider SL after shield events (20% wider)
-            return 1.2
-
+        """Get SL/trail distance multiplier. Always 1.0 (no SL adjustment)."""
         return 1.0
 
     def record_entry(self, direction: str):
-        """
-        Record that an entry was made (for tracking reduced-size trades).
-
-        Call this after successfully opening a position.
-        """
-        if self._reduced_size_remaining > 0:
-            self._reduced_size_remaining -= 1
-            self.logger.info(
-                f"[SHIELD] Reduced-size entry ({direction}). "
-                f"{self._reduced_size_remaining} reduced trades remaining."
-            )
+        """Record that an entry was made (no-op, kept for interface compat)."""
+        pass
 
     def record_sl_exit(
         self,
@@ -386,7 +352,7 @@ class BreakoutShield:
 
         # Rapid + breakout OR consecutive > 2
         if (was_rapid and breakout_detected) or consecutive >= 3:
-            return ShieldSeverity.MEDIUM
+            return ShieldSeverity.HEAVY
 
         # Rapid SL alone OR breakout alone
         if was_rapid or breakout_detected:
@@ -404,22 +370,18 @@ class BreakoutShield:
         shield = self._long_shield if direction == "LONG" else self._short_shield
 
         # Determine signals needed based on severity
+        # HEAVY = need 2 signals (strong evidence needed that breakout is over)
+        # MEDIUM/LIGHT = need 1 signal (any sign of normalization is enough)
         if event.severity == ShieldSeverity.HEAVY:
             signals_needed = 2
-            reduce_size = True
-        elif event.severity == ShieldSeverity.MEDIUM:
+        else:
             signals_needed = 1
-            reduce_size = True
-        else:  # LIGHT
-            signals_needed = 1
-            reduce_size = False
 
         shield.active = True
         shield.severity = event.severity
         shield.direction_blocked = direction
         shield.signals_needed = signals_needed
         shield.signals_collected = []
-        shield.reduce_size = reduce_size
         shield.event = event
         shield.reason = (
             f"SL at ${event.sl_price:.2f} after {event.duration_bars} bars"
@@ -481,8 +443,6 @@ class BreakoutShield:
 
         # All bodies < 0.5 ATR = momentum stalled
         if np.all(bodies < current_atr * 0.5):
-            # Additional check: are they in the breakout direction?
-            # (consolidation after breakout move = absorption)
             shield.signals_collected.append(signal_name)
             shield.signals_needed -= 1
 
@@ -515,16 +475,10 @@ class BreakoutShield:
     def _lift_shield(self, shield: ShieldState):
         """Lift the shield -- re-entry is now allowed."""
         direction = shield.direction_blocked
-        severity = shield.severity
-
-        # Set up reduced sizing if needed
-        if shield.reduce_size:
-            self._reduced_size_remaining = self._reduced_size_trades
 
         self.logger.info(
             f"[SHIELD] LIFTED for {direction}. "
-            f"Signals: {shield.signals_collected}. "
-            f"Reduced-size trades remaining: {self._reduced_size_remaining}"
+            f"Signals: {shield.signals_collected}."
         )
 
         # Reset the shield
@@ -533,7 +487,6 @@ class BreakoutShield:
         shield.direction_blocked = ""
         shield.signals_needed = 0
         shield.signals_collected = []
-        shield.reduce_size = False
         shield.event = None
         shield.reason = ""
 
@@ -564,7 +517,6 @@ class BreakoutShield:
                 'signals_collected': self._short_shield.signals_collected,
                 'reason': self._short_shield.reason,
             },
-            'reduced_size_remaining': self._reduced_size_remaining,
             'consecutive_sl_long': self._consecutive_sl_long,
             'consecutive_sl_short': self._consecutive_sl_short,
         }

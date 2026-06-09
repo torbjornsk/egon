@@ -62,7 +62,5 @@
 
   "_comment_shield": "Breakout shield -- blocks re-entry after SL until market stabilizes",
   "shield_enabled": true,
-  "shield_rapid_sl_candles": 3,
-  "shield_reduced_size_factor": 0.5,
-  "shield_reduced_size_trades": 2
+  "shield_rapid_sl_candles": 3
 }
