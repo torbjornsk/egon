@@ -506,14 +506,21 @@ class MarketRhythm:
         current_atr = float(df.iloc[-1]['ATR'])
 
         # -- Sizing scale --
-        # Based on amplitude relative to cost-of-trading
-        # If swings are small, reduce size proportionally
-        target_reward = current_atr * 1.5  # We want at least 1.5 ATR reward
-        if target_reward > 0 and self._state.amplitude_dollars > 0:
-            raw_scale = self._state.amplitude_dollars / target_reward
-            self._state.sizing_scale = max(0.3, min(1.0, raw_scale))
+        # Inverse relationship: smaller swings need larger positions to overcome costs.
+        # Target: maintain consistent dollar profit per trade regardless of amplitude.
+        # If amplitude is high (> 2 ATR), use normal size (1.0).
+        # If amplitude is low but tradeable, scale UP so profit covers commission.
+        # Capped at 1.5x to avoid excessive risk.
+        # Below minimum amplitude, the regime check blocks entry entirely (DEAD).
+        target_amplitude = current_atr * 1.5  # "Normal" amplitude benchmark
+        if target_amplitude > 0 and self._state.amplitude_dollars > 0:
+            # Inverse: smaller amplitude → larger scale
+            raw_scale = target_amplitude / self._state.amplitude_dollars
+            # Clamp: never below 0.7 (would mean huge swings, just use normal)
+            # Never above 1.5 (risk cap)
+            self._state.sizing_scale = max(0.7, min(1.5, raw_scale))
         else:
-            self._state.sizing_scale = 0.5
+            self._state.sizing_scale = 1.0
 
         # -- SL/Trail scale --
         # High confidence + stable cycles = can tighten slightly
