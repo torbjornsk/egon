@@ -388,6 +388,16 @@ class SniperBot:
                         htf_df=self._htf_df,
                         h1_df=self._h1_df,
                     )
+                    # Cancel pending sniper orders for the blocked direction
+                    # to prevent immediate re-entry on the same level
+                    if direction == "LONG" and self.strategy.pending_buy:
+                        self.strategy.pending_buy.cancelled = True
+                        self.strategy.pending_buy = None
+                        self.logger.info("[SHIELD] Cancelled pending buy sniper order")
+                    elif direction == "SHORT" and self.strategy.pending_sell:
+                        self.strategy.pending_sell.cancelled = True
+                        self.strategy.pending_sell = None
+                        self.logger.info("[SHIELD] Cancelled pending sell sniper order")
             else:
                 self.consecutive_sl_exits = 0
                 # Profitable exit resets consecutive SL counter in shield
@@ -886,11 +896,11 @@ class SniperBot:
         try:
             while not self._stop_requested:
                 try:
-                    # Every second: check sniper fills, trailing stop, PP, SL/TP
+                    # Every second: detect SL/TP first (so shield activates before new fills)
+                    self.check_mt5_closed_positions()
                     self.check_sniper_fills()
                     self.manage_trailing_continuous()
                     self.check_profit_protection_continuous()
-                    self.check_mt5_closed_positions()
 
                     now = time.time()
 
