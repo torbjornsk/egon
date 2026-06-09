@@ -890,7 +890,13 @@ class BotDetailPanel:
                 if mode == 'dynamic':
                     sz = rhythm.get('sizing_scale', 1.0)
                     sl = rhythm.get('sl_scale', 1.0)
-                    ind_text += f"\nRhythm: {regime} (sz:{sz:.0%} sl:{sl:.0%})"
+                    offset = rhythm.get('sniper_offset', 0)
+                    cycle = rhythm.get('full_cycle_bars', 0)
+                    amp = rhythm.get('amplitude_dollars', 0)
+                    ind_text += (
+                        f"\nRhythm: {regime} | cycle={cycle:.0f}bars amp=${amp:.1f}"
+                        f"\n  sizing={sz:.0%} SL={sl:.2f}x offset={offset:.1f}"
+                    )
                 else:
                     ind_text += f"\nRhythm: {regime}"
 

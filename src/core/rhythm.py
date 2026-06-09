@@ -236,6 +236,14 @@ class MarketRhythm:
         # Step 5: Compute dynamic parameters (if dynamic mode)
         if self._mode == "dynamic":
             self._compute_dynamic_params(df)
+            s = self._state
+            self.logger.info(
+                f"[RHYTHM] Dynamic params: regime={s.regime.value}, "
+                f"cycle={s.full_cycle_bars:.0f}bars, amp=${s.amplitude_dollars:.2f}, "
+                f"sizing={s.sizing_scale:.0%}, SL={s.sl_scale:.2f}x, "
+                f"offset={s.sniper_offset_dynamic:.1f}, BE={s.breakeven_trigger_scale:.2f}x, "
+                f"confidence={s.confidence:.2f}"
+            )
 
     def _detect_crossings(self, df: pd.DataFrame):
         """Detect RSI crossings of the 50 midline."""
