@@ -106,12 +106,9 @@ FIELD_LABELS: dict[str, str] = {
     'rhythm_htf_timeframe': 'HTF Timeframe',
     'rhythm_support_aware_sniper': 'Support-Aware Sniper',
     'shield_enabled': 'Shield Enabled',
-    'shield_rapid_sl_candles': 'Rapid SL Threshold (bars)',
-    'shield_rsi_margin': 'RSI Normalize Margin',
-    'shield_stall_candles': 'Stall Candles',
-    'shield_stall_atr_fraction': 'Stall Body / ATR',
-    'shield_reduced_size_factor': 'Post-Shield Size Factor',
-    'shield_reduced_size_trades': 'Reduced Size Trades',
+    'shield_recovery_candles': 'Recovery Candles (1st SL)',
+    'shield_second_sl_rsi': '2nd SL RSI Threshold',
+    'shield_third_sl_rsi': '3rd+ SL RSI Threshold',
 }
 
 try:
@@ -570,9 +567,8 @@ class BotDetailPanel:
                                   'rhythm_min_amplitude_atr', 'rhythm_max_cycle_bars',
                                   'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
                                   'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
-                'Breakout Shield': ['shield_enabled', 'shield_rapid_sl_candles',
-                                    'shield_rsi_margin', 'shield_stall_candles',
-                                    'shield_stall_atr_fraction'],
+                'Breakout Shield': ['shield_enabled', 'shield_recovery_candles',
+                                    'shield_second_sl_rsi', 'shield_third_sl_rsi'],
                 'Schedule': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
                                     'schedule_sat', 'schedule_sun', 'schedule_closed'],
@@ -894,17 +890,11 @@ class BotDetailPanel:
             short_sh = shield.get('short_shield', {})
             parts = []
             if long_sh.get('active'):
-                sev = long_sh.get('severity', '?')
-                needed_signals = long_sh.get('signals_needed', 0)
-                got = long_sh.get('signals_collected', [])
-                parts.append(f"L:{sev}({len(got)}/{len(got)+needed_signals})")
+                parts.append(f"L: {long_sh.get('reason', '?')}")
             if short_sh.get('active'):
-                sev = short_sh.get('severity', '?')
-                needed_signals = short_sh.get('signals_needed', 0)
-                got = short_sh.get('signals_collected', [])
-                parts.append(f"S:{sev}({len(got)}/{len(got)+needed_signals})")
+                parts.append(f"S: {short_sh.get('reason', '?')}")
             if parts:
-                ind_text += f"\nShield: {' '.join(parts)}"
+                ind_text += f"\nShield: {' | '.join(parts)}"
 
         self.ind_lbl.config(text=ind_text)
 

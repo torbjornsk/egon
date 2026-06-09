@@ -404,14 +404,46 @@ class MarketRhythm:
             htf_atr = float(htf_df.iloc[-1].get('ATR', 1))
 
             if htf_atr > 0:
+                # Check 1: EMA divergence (trend strength)
                 htf_divergence = abs(htf_ema_fast - htf_ema_slow) / htf_atr
                 if htf_divergence > 1.5:
                     htf_trend_confirmed = True
                     self._htf_trending = True
                     self._htf_trend_direction = "up" if htf_ema_fast > htf_ema_slow else "down"
-                else:
+
+                # Check 2: Price displacement (breakout detection)
+                # If HTF price has moved > 3 ATR from recent high/low in last 20 bars,
+                # that's a breakout regardless of EMA state
+                htf_highs = htf_df['high'].values[-20:]
+                htf_lows = htf_df['low'].values[-20:]
+                htf_close = float(htf_df.iloc[-1]['close'])
+                recent_high = float(np.max(htf_highs))
+                recent_low = float(np.min(htf_lows))
+
+                drop_from_high = (recent_high - htf_close) / htf_atr
+                rise_from_low = (htf_close - recent_low) / htf_atr
+
+                if drop_from_high > 3.0:
+                    htf_trend_confirmed = True
+                    self._htf_trending = True
+                    self._htf_trend_direction = "down"
+                elif rise_from_low > 3.0:
+                    htf_trend_confirmed = True
+                    self._htf_trending = True
+                    self._htf_trend_direction = "up"
+
+                if not htf_trend_confirmed:
                     self._htf_trending = False
                     self._htf_trend_direction = ""
+
+        # If HTF confirms trending (breakout/displacement), classify immediately
+        # regardless of what M1 RSI crossings show
+        if htf_trend_confirmed:
+            self._state.regime = MarketRegime.TRENDING
+            self._state.reason = (
+                f"HTF breakout detected ({self._htf_trend_direction})"
+            )
+            return
 
         # Dead market: ATR too low relative to historical or amplitude too small
         atr_values = df['ATR'].values[-100:]

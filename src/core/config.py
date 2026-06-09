@@ -238,19 +238,19 @@ class TradingConfig:
     rhythm_support_aware_sniper: bool = True
 
     # ── Breakout Shield ─────────────────────────────────────────────
-    # Market-aware re-entry protection after stop-loss exits.
-    # Blocks re-entry until analysis confirms breakout is over.
+    # Escalating re-entry protection after stop-loss exits.
     shield_enabled: bool = True
-    # Position lasted fewer than this many candles = "rapid SL" (higher severity)
+    # 1st SL: how many recovery candles needed (green for long, red for short)
+    shield_recovery_candles: int = 2
+    # 2nd SL: RSI must reach this level (40 = RSI needs to recover to 40 for stopped long)
+    shield_second_sl_rsi: float = 40.0
+    # 3rd+ SL: RSI must fully revert (55 = RSI needs to get past 50 to 55 for stopped long)
+    shield_third_sl_rsi: float = 55.0
+    # Legacy fields (kept for backward compat, ignored)
     shield_rapid_sl_candles: int = 3
-    # RSI must move this many points past 50 to count as "normalized"
-    # Higher = stricter (shield stays longer). M1 may need 8-10, M5 needs 5.
     shield_rsi_margin: float = 5.0
-    # Number of consecutive small-body candles needed for "momentum stall" signal
     shield_stall_candles: int = 5
-    # Body size threshold for stall detection (fraction of ATR)
     shield_stall_atr_fraction: float = 0.4
-    # Legacy fields (kept for backward compat, no longer used)
     shield_reduced_size_factor: float = 0.5
     shield_reduced_size_trades: int = 2
 

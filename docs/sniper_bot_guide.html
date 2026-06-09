@@ -486,18 +486,38 @@ Shield lifts after breakout:
 
 <table>
     <tr><th>Field</th><th>GUI Label</th><th>Description</th><th>Default</th></tr>
-    <tr><td><code>shield_enabled</code></td><td>Shield Enabled</td><td>Master toggle. False = no shield (old behavior).</td><td>True</td></tr>
-    <tr><td><code>shield_rapid_sl_candles</code></td><td>Rapid SL Threshold</td><td>Position shorter than this many candles = "rapid SL" (higher severity, needs 2 signals to lift).</td><td>3 (M5), 6 (M1), 2 (M15)</td></tr>
-    <tr><td><code>shield_rsi_margin</code></td><td>RSI Normalize Margin</td><td>RSI must move this many points past 50 to count as "normalized". Higher = shield stays longer. M1 needs 8-10 because RSI crosses 50 frequently.</td><td>5.0</td></tr>
-    <tr><td><code>shield_stall_candles</code></td><td>Stall Candles</td><td>How many consecutive small-body candles needed to declare "momentum stalled". More = stricter.</td><td>5</td></tr>
-    <tr><td><code>shield_stall_atr_fraction</code></td><td>Stall Body / ATR</td><td>A candle body must be smaller than this fraction of ATR to count as "small". Lower = stricter.</td><td>0.4</td></tr>
+    <tr><td><code>shield_enabled</code></td><td>Shield Enabled</td><td>Master toggle. False = no shield.</td><td>True</td></tr>
+    <tr><td><code>shield_recovery_candles</code></td><td>Recovery Candles (1st SL)</td><td>After 1st SL: how many candles in recovery direction needed (green for stopped long, red for stopped short). Not necessarily consecutive.</td><td>2</td></tr>
+    <tr><td><code>shield_second_sl_rsi</code></td><td>2nd SL RSI Threshold</td><td>After 2nd consecutive SL: RSI must reach this level. For stopped long, RSI must go UP to this value. For stopped short, RSI must go DOWN to (100 - this).</td><td>40.0</td></tr>
+    <tr><td><code>shield_third_sl_rsi</code></td><td>3rd+ SL RSI Threshold</td><td>After 3rd+ consecutive SL: RSI must fully revert past midline. Same logic as 2nd but stricter value.</td><td>55.0</td></tr>
 </table>
 
+<div class="diagram">
+Escalating shield behavior:
+
+  1st SL (LONG stopped):
+    Block LONG entry until 2 green candles appear
+    (market showing it can go UP again)
+
+  2nd consecutive SL (LONG stopped again):
+    Block LONG entry until RSI >= 40
+    (momentum has reversed from deep oversold)
+
+  3rd+ consecutive SL:
+    Block LONG entry until RSI >= 55
+    (full RSI reversion past midline -- market is clearly swinging again)
+
+  Profitable trade at any point:
+    Resets consecutive counter to 0
+</div>
+
 <div class="warning">
-<strong>Tuning for M1:</strong> On M1, RSI crosses 50 constantly and candle bodies are naturally small. Use tighter values:<br>
-<code>shield_rsi_margin: 8.0</code> (RSI must reach 58+ or 42- to lift)<br>
-<code>shield_stall_candles: 8</code> (need 8 minutes of consolidation, not just 5)<br>
-<code>shield_stall_atr_fraction: 0.35</code> (bodies must be really small)
+<strong>Why these specific levels?</strong><br>
+<ul>
+    <li><strong>2 green candles (1st SL):</strong> Quick check that the market isn't in free-fall. If price can produce 2 up-candles, it's likely not a pure breakout.</li>
+    <li><strong>RSI 40 (2nd SL):</strong> After entering at RSI ~33 and getting stopped twice, RSI needs to recover at least to 40 before another long makes sense. This means the selling pressure has eased.</li>
+    <li><strong>RSI 55 (3rd+ SL):</strong> At this point the market has clearly been trending against you. RSI must fully cross 50 and go to 55 -- proving the trend reversed -- before re-entry.</li>
+</ul>
 </div>
 
 <h2>Recommended Starting Config</h2>
