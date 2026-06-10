@@ -91,9 +91,6 @@ FIELD_LABELS: dict[str, str] = {
     'breakout_re_entry_bars': 'Re-entry Cooldown (bars)',
     'breakout_sl_atr_mult': 'SL Distance (x ATR)',
     'breakout_trail_atr_mult': 'Trail Distance (x ATR)',
-    'breakout_max_daily_loss_pct': 'Max Daily Loss (%)',
-    'breakout_max_daily_trades': 'Max Daily Trades',
-    'breakout_max_drawdown_pct': 'Max Total Drawdown (%)',
     'breakeven_mode': 'Breakeven Mode',
     'reentry_cooldown_bars': 'Reentry Pause (bars)',
     'trail_interval_ms': 'Trail Update (ms)',
@@ -106,9 +103,6 @@ FIELD_LABELS: dict[str, str] = {
     'rhythm_htf_timeframe': 'HTF Timeframe',
     'rhythm_support_aware_sniper': 'Support-Aware Sniper',
     'shield_enabled': 'Shield Enabled',
-    'shield_recovery_candles': 'Recovery Candles (1st SL)',
-    'shield_second_sl_rsi': '2nd SL RSI Threshold',
-    'shield_third_sl_rsi': '3rd+ SL RSI Threshold',
 }
 
 try:
@@ -567,8 +561,7 @@ class BotDetailPanel:
                                   'rhythm_min_amplitude_atr', 'rhythm_max_cycle_bars',
                                   'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
                                   'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
-                'Breakout Shield': ['shield_enabled', 'shield_recovery_candles',
-                                    'shield_second_sl_rsi', 'shield_third_sl_rsi'],
+                'Breakout Shield': ['shield_enabled'],
                 'Schedule': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
                                     'schedule_sat', 'schedule_sun', 'schedule_closed'],
@@ -618,8 +611,7 @@ class BotDetailPanel:
                                'breakout_min_atr',
                                'breakout_re_entry_bars', 'breakout_sl_atr_mult',
                                'breakout_trail_atr_mult']
-            breakout_risk = ['max_drawdown_limit', 'breakout_max_daily_loss_pct',
-                             'breakout_max_daily_trades', 'breakout_max_drawdown_pct']
+            breakout_risk = ['max_drawdown_limit']
             return {
                 'Identity': ['config_name', 'bot_type', 'timeframe', 'symbol',
                              'magic_number', 'bot_label', 'order_comment'],

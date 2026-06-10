@@ -129,8 +129,5 @@
   "breakout_min_atr": 2.0,
   "breakout_re_entry_bars": 1,
   "breakout_sl_atr_mult": 1.0,
-  "breakout_trail_atr_mult": 0.6,
-  "breakout_max_daily_loss_pct": 0.05,
-  "breakout_max_daily_trades": 150,
-  "breakout_max_drawdown_pct": 0.15
+  "breakout_trail_atr_mult": 0.6
 }

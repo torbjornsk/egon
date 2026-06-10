@@ -241,20 +241,8 @@ class TradingConfig:
 
     # ── Breakout Shield ─────────────────────────────────────────────
     # Escalating re-entry protection after stop-loss exits.
+    # 1st SL: 1 recovery candle, 2nd SL: 2 candles, 3rd+: 3 candles.
     shield_enabled: bool = True
-    # 1st SL: how many recovery candles needed (green for long, red for short)
-    shield_recovery_candles: int = 2
-    # 2nd SL: RSI must reach this level (40 = RSI needs to recover to 40 for stopped long)
-    shield_second_sl_rsi: float = 40.0
-    # 3rd+ SL: RSI must fully revert (55 = RSI needs to get past 50 to 55 for stopped long)
-    shield_third_sl_rsi: float = 55.0
-    # Legacy fields (kept for backward compat, ignored)
-    shield_rapid_sl_candles: int = 3
-    shield_rsi_margin: float = 5.0
-    shield_stall_candles: int = 5
-    shield_stall_atr_fraction: float = 0.4
-    shield_reduced_size_factor: float = 0.5
-    shield_reduced_size_trades: int = 2
 
     # ── Liquidity zone strategy settings ────────────────────────────
     zone_lookback: int = 100
@@ -299,10 +287,6 @@ class TradingConfig:
     breakout_sl_atr_mult: float = 1.0
     # Trail distance in ATR multiples (tight trailing for momentum capture)
     breakout_trail_atr_mult: float = 0.6
-    # Daily risk limits
-    breakout_max_daily_loss_pct: float = 0.05
-    breakout_max_daily_trades: int = 150
-    breakout_max_drawdown_pct: float = 0.15
 
     # ── Computed properties ─────────────────────────────────────────
 
