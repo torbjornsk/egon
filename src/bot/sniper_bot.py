@@ -366,8 +366,11 @@ class SniperBot:
                 # not a "caught by breakout" scenario.
                 was_at_breakeven = ticket in self._breakeven_applied
                 if profit < 0 and not was_at_breakeven:
-                    # Notify breakout shield of the SL exit
-                    direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
+                    # Notify breakout shield of the SL exit.
+                    # The POSITION direction is what we need (to block same-direction re-entry).
+                    # Exit deal type is the CLOSING action (opposite of position direction):
+                    #   SHORT position closed by BUY deal, LONG position closed by SELL deal.
+                    direction = "SHORT" if exit_deal.type == ORDER_TYPE_BUY else "LONG"
                     # Estimate duration in bars (time from entry to exit)
                     entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
                     duration_bars = 0
@@ -402,7 +405,7 @@ class SniperBot:
             else:
                 self.consecutive_sl_exits = 0
                 # Profitable exit resets consecutive SL counter in shield
-                direction = "LONG" if exit_deal.type == ORDER_TYPE_BUY else "SHORT"
+                direction = "SHORT" if exit_deal.type == ORDER_TYPE_BUY else "LONG"
                 self.shield.record_profitable_exit(direction)
 
             reason = "Stop loss" if exit_deal.reason == DEAL_REASON_SL else "Take profit"
