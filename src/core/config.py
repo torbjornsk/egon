@@ -142,6 +142,10 @@ class TradingConfig:
     # RSI offset for limit order placement (deeper than entry threshold)
     # e.g. rsi_buy=35, sniper_rsi_offset=10 -> limit order at RSI 25 level
     sniper_rsi_offset: float = 10.0
+    # Minimum distance from current price for limit order placement (x ATR).
+    # If the calculated limit price is closer than this, skip placement
+    # (the candle-close fallback will catch it instead).
+    sniper_min_distance_atr: float = 0.3
 
     # ── Exit RSI ────────────────────────────────────────────────────
     # Base exit RSI level (mean revert target). Kept for backward compat.
