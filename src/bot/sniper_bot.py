@@ -679,62 +679,53 @@ class SniperBot:
                     stop_distance = current_atr * adaptive_mult * sl_scale
                     entry = levels['buy_price']
 
-                    # Minimum distance check: skip if too close to current price
-                    min_distance = current_atr * self.config.sniper_min_distance_atr
-                    if current_price - entry < min_distance:
-                        self.logger.debug(
-                            f"[SNIPER] Buy limit skipped: ${entry:.2f} too close to "
-                            f"price ${current_price:.2f} (distance ${current_price - entry:.2f} "
-                            f"< min ${min_distance:.2f})"
+                    # Support-aware cap: don't place below demand zones
+                    cap = self.rhythm.get_sniper_level_cap("LONG", df)
+                    if cap is not None and entry < cap:
+                        self.logger.info(
+                            f"[RHYTHM] Buy level capped: ${entry:.2f} -> ${cap:.2f} "
+                            f"(demand zone)"
                         )
-                    else:
-                        # Support-aware cap: don't place below demand zones
-                        cap = self.rhythm.get_sniper_level_cap("LONG", df)
-                        if cap is not None and entry < cap:
-                            self.logger.info(
-                                f"[RHYTHM] Buy level capped: ${entry:.2f} -> ${cap:.2f} "
-                                f"(demand zone)"
+                        entry = cap
+
+                    sl = entry - stop_distance
+
+                    from src.core.rsi_levels import calculate_rsi_sell_price
+                    exit_rsi = self.strategy.get_tp_rsi(df, 'LONG')
+                    tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
+                    if tp is None or tp <= entry:
+                        tp = entry + current_atr * self.config.tp_fallback_atr_mult
+
+                    # Calculate volume for the limit order
+                    info = self.mt5.get_account_info()
+                    if info:
+                        volume = self.calculate_volume(
+                            info['balance'], entry, stop_distance, df
+                        )
+                        # Apply dynamic sizing scale
+                        rhythm_params_buy = self.rhythm.get_dynamic_params()
+                        sizing_scale = rhythm_params_buy['sizing_scale'] * self.shield.get_sizing_adjustment()
+                        if sizing_scale < 1.0 and volume:
+                            volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
+
+                        if volume:
+                            # Place real MT5 limit order
+                            result = self.mt5.place_limit_order(
+                                ORDER_TYPE_BUY, entry, volume, sl, tp,
+                                self.strategy.magic_number, self.strategy.order_comment,
                             )
-                            entry = cap
-
-                        sl = entry - stop_distance
-
-                        from src.core.rsi_levels import calculate_rsi_sell_price
-                        exit_rsi = self.strategy.get_tp_rsi(df, 'LONG')
-                        tp = calculate_rsi_sell_price(df, exit_rsi, self.config.rsi_period)
-                        if tp is None or tp <= entry:
-                            tp = entry + current_atr * self.config.tp_fallback_atr_mult
-
-                        # Calculate volume for the limit order
-                        info = self.mt5.get_account_info()
-                        if info:
-                            volume = self.calculate_volume(
-                                info['balance'], entry, stop_distance, df
-                            )
-                            # Apply dynamic sizing scale
-                            rhythm_params_buy = self.rhythm.get_dynamic_params()
-                            sizing_scale = rhythm_params_buy['sizing_scale'] * self.shield.get_sizing_adjustment()
-                            if sizing_scale < 1.0 and volume:
-                                volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
-
-                            if volume:
-                                # Place real MT5 limit order
-                                result = self.mt5.place_limit_order(
-                                    ORDER_TYPE_BUY, entry, volume, sl, tp,
-                                    self.strategy.magic_number, self.strategy.order_comment,
+                            if result:
+                                self._pending_buy_ticket = result.order
+                                self.strategy.pending_buy = SniperOrder(
+                                    direction="LONG", entry_price=entry, sl=sl, tp=tp,
+                                    placed_at=get_local_now(),
                                 )
-                                if result:
-                                    self._pending_buy_ticket = result.order
-                                    self.strategy.pending_buy = SniperOrder(
-                                        direction="LONG", entry_price=entry, sl=sl, tp=tp,
-                                        placed_at=get_local_now(),
-                                    )
-                                    self.logger.info(
-                                        f"[SNIPER] Buy limit #{result.order} @ ${entry:.2f} "
-                                        f"(RSI target {self.config.rsi_buy - sniper_offset:.0f}, "
-                                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
-                                        f"SL ${sl:.2f}, Vol {volume})"
-                                    )
+                                self.logger.info(
+                                    f"[SNIPER] Buy limit #{result.order} @ ${entry:.2f} "
+                                    f"(RSI target {self.config.rsi_buy - sniper_offset:.0f}, "
+                                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                                    f"SL ${sl:.2f}, Vol {volume})"
+                                )
 
         if levels['sell_price'] and not has_short and self.config.enable_shorts:
             # Shield check for sell direction
@@ -750,62 +741,53 @@ class SniperBot:
                     stop_distance = current_atr * adaptive_mult * sl_scale
                     entry = levels['sell_price']
 
-                    # Minimum distance check: skip if too close to current price
-                    min_distance = current_atr * self.config.sniper_min_distance_atr
-                    if entry - current_price < min_distance:
-                        self.logger.debug(
-                            f"[SNIPER] Sell limit skipped: ${entry:.2f} too close to "
-                            f"price ${current_price:.2f} (distance ${entry - current_price:.2f} "
-                            f"< min ${min_distance:.2f})"
+                    # Resistance-aware cap: don't place above supply zones
+                    cap = self.rhythm.get_sniper_level_cap("SHORT", df)
+                    if cap is not None and entry > cap:
+                        self.logger.info(
+                            f"[RHYTHM] Sell level capped: ${entry:.2f} -> ${cap:.2f} "
+                            f"(supply zone)"
                         )
-                    else:
-                        # Resistance-aware cap: don't place above supply zones
-                        cap = self.rhythm.get_sniper_level_cap("SHORT", df)
-                        if cap is not None and entry > cap:
-                            self.logger.info(
-                                f"[RHYTHM] Sell level capped: ${entry:.2f} -> ${cap:.2f} "
-                                f"(supply zone)"
+                        entry = cap
+
+                    sl = entry + stop_distance
+
+                    from src.core.rsi_levels import calculate_rsi_buy_price
+                    exit_rsi = self.strategy.get_tp_rsi(df, 'SHORT')
+                    tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
+                    if tp is None or tp >= entry:
+                        tp = entry - current_atr * self.config.tp_fallback_atr_mult
+
+                    # Calculate volume for the limit order
+                    info = self.mt5.get_account_info()
+                    if info:
+                        volume = self.calculate_volume(
+                            info['balance'], entry, stop_distance, df
+                        )
+                        # Apply dynamic sizing scale
+                        rhythm_params_sell = self.rhythm.get_dynamic_params()
+                        sizing_scale = rhythm_params_sell['sizing_scale'] * self.shield.get_sizing_adjustment()
+                        if sizing_scale < 1.0 and volume:
+                            volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
+
+                        if volume:
+                            # Place real MT5 limit order
+                            result = self.mt5.place_limit_order(
+                                ORDER_TYPE_SELL, entry, volume, sl, tp,
+                                self.strategy.magic_number, self.strategy.order_comment,
                             )
-                            entry = cap
-
-                        sl = entry + stop_distance
-
-                        from src.core.rsi_levels import calculate_rsi_buy_price
-                        exit_rsi = self.strategy.get_tp_rsi(df, 'SHORT')
-                        tp = calculate_rsi_buy_price(df, exit_rsi, self.config.rsi_period)
-                        if tp is None or tp >= entry:
-                            tp = entry - current_atr * self.config.tp_fallback_atr_mult
-
-                        # Calculate volume for the limit order
-                        info = self.mt5.get_account_info()
-                        if info:
-                            volume = self.calculate_volume(
-                                info['balance'], entry, stop_distance, df
-                            )
-                            # Apply dynamic sizing scale
-                            rhythm_params_sell = self.rhythm.get_dynamic_params()
-                            sizing_scale = rhythm_params_sell['sizing_scale'] * self.shield.get_sizing_adjustment()
-                            if sizing_scale < 1.0 and volume:
-                                volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
-
-                            if volume:
-                                # Place real MT5 limit order
-                                result = self.mt5.place_limit_order(
-                                    ORDER_TYPE_SELL, entry, volume, sl, tp,
-                                    self.strategy.magic_number, self.strategy.order_comment,
+                            if result:
+                                self._pending_sell_ticket = result.order
+                                self.strategy.pending_sell = SniperOrder(
+                                    direction="SHORT", entry_price=entry, sl=sl, tp=tp,
+                                    placed_at=get_local_now(),
                                 )
-                                if result:
-                                    self._pending_sell_ticket = result.order
-                                    self.strategy.pending_sell = SniperOrder(
-                                        direction="SHORT", entry_price=entry, sl=sl, tp=tp,
-                                        placed_at=get_local_now(),
-                                    )
-                                    self.logger.info(
-                                        f"[SNIPER] Sell limit #{result.order} @ ${entry:.2f} "
-                                        f"(RSI target {self.config.rsi_sell + sniper_offset:.0f}, "
-                                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
-                                        f"SL ${sl:.2f}, Vol {volume})"
-                                    )
+                                self.logger.info(
+                                    f"[SNIPER] Sell limit #{result.order} @ ${entry:.2f} "
+                                    f"(RSI target {self.config.rsi_sell + sniper_offset:.0f}, "
+                                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                                    f"SL ${sl:.2f}, Vol {volume})"
+                                )
 
     # ── Continuous checks (every second) ────────────────────────────
 
