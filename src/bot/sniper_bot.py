@@ -984,9 +984,9 @@ class SniperBot:
             )
         if self.shield.is_enabled:
             self.logger.info(
-                f"  Shield: rapid_sl={self.config.shield_rapid_sl_candles} bars, "
-                f"reduced_size={self.config.shield_reduced_size_factor}x for "
-                f"{self.config.shield_reduced_size_trades} trades"
+                f"  Shield: candles={self.config.shield_candles_1st}/"
+                f"{self.config.shield_candles_2nd}/{self.config.shield_candles_3rd} "
+                f"(1st/2nd/3rd+ SL)"
             )
         self.logger.info("=" * 80)
 

@@ -146,8 +146,13 @@ class BreakoutShield:
             self._consecutive_sl_short += 1
             consecutive = self._consecutive_sl_short
 
-        # Determine candles needed (1, 2, or 3 based on consecutive count)
-        candles_needed = min(consecutive, 3)
+        # Determine candles needed from config escalation
+        if consecutive <= 1:
+            candles_needed = self.config.shield_candles_1st
+        elif consecutive == 2:
+            candles_needed = self.config.shield_candles_2nd
+        else:
+            candles_needed = self.config.shield_candles_3rd
 
         # Activate shield
         shield = self._long_shield if direction == "LONG" else self._short_shield

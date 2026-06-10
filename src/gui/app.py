@@ -103,6 +103,9 @@ FIELD_LABELS: dict[str, str] = {
     'rhythm_htf_timeframe': 'HTF Timeframe',
     'rhythm_support_aware_sniper': 'Support-Aware Sniper',
     'shield_enabled': 'Shield Enabled',
+    'shield_candles_1st': 'Shield Candles (1st SL)',
+    'shield_candles_2nd': 'Shield Candles (2nd SL)',
+    'shield_candles_3rd': 'Shield Candles (3rd+ SL)',
 }
 
 try:
@@ -562,7 +565,8 @@ class BotDetailPanel:
                                   'rhythm_min_amplitude_atr', 'rhythm_max_cycle_bars',
                                   'rhythm_min_cycle_bars', 'rhythm_dead_atr_factor',
                                   'rhythm_htf_timeframe', 'rhythm_support_aware_sniper'],
-                'Breakout Shield': ['shield_enabled'],
+                'Breakout Shield': ['shield_enabled', 'shield_candles_1st',
+                                    'shield_candles_2nd', 'shield_candles_3rd'],
                 'Schedule': ['schedule_enabled', 'schedule_mon', 'schedule_tue',
                                     'schedule_wed', 'schedule_thu', 'schedule_fri',
                                     'schedule_sat', 'schedule_sun', 'schedule_closed'],

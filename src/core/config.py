@@ -241,8 +241,11 @@ class TradingConfig:
 
     # ── Breakout Shield ─────────────────────────────────────────────
     # Escalating re-entry protection after stop-loss exits.
-    # 1st SL: 1 recovery candle, 2nd SL: 2 candles, 3rd+: 3 candles.
+    # 1st SL: shield_candles_1st recovery candles, 2nd SL: shield_candles_2nd, 3rd+: shield_candles_3rd.
     shield_enabled: bool = True
+    shield_candles_1st: int = 1     # Recovery candles needed after 1st consecutive SL
+    shield_candles_2nd: int = 2     # Recovery candles needed after 2nd consecutive SL
+    shield_candles_3rd: int = 3     # Recovery candles needed after 3rd+ consecutive SL
 
     # ── Liquidity zone strategy settings ────────────────────────────
     zone_lookback: int = 100
