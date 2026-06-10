@@ -151,9 +151,6 @@ def run_lz_backtest(
 
     # Disable safety pauses for full-period view
     bot.risk.max_drawdown_limit = 0.99
-    bot.risk.daily_loss_limit_pct = 0.99
-    bot.risk.rapid_loss_threshold_pct = 0.99
-    bot.risk.max_consecutive_losses = 999
 
     # Track ALL trades by monitoring balance changes each bar
     trade_records = []

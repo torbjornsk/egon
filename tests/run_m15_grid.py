@@ -167,9 +167,6 @@ def run_backtest(config: TradingConfig, m15_df: pd.DataFrame) -> dict | None:
 
     # Disable safety pauses for grid search (we want to see full performance)
     sim.bot.risk.max_drawdown_limit = 0.99
-    sim.bot.risk.daily_loss_limit_pct = 0.99
-    sim.bot.risk.rapid_loss_threshold_pct = 0.99
-    sim.bot.risk.max_consecutive_losses = 999
 
     r = sim.run()
     if not r.trades:

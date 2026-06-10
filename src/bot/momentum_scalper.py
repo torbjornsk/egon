@@ -55,7 +55,6 @@ class MomentumScalper:
 
         self.risk = RiskManager(
             max_drawdown_limit=config.max_drawdown_limit,
-            max_consecutive_losses=50,
             bot_label=self.BOT_LABEL,
         )
 

@@ -56,7 +56,6 @@ class SniperBot:
 
         self.risk = RiskManager(
             max_drawdown_limit=config.max_drawdown_limit,
-            max_consecutive_losses=12,
             bot_label=strategy.bot_label,
         )
 
@@ -759,6 +758,20 @@ class SniperBot:
         filled = self.strategy.check_sniper_fills(tick.bid, tick.ask)
 
         if filled and self._last_df is not None:
+            # Hard cooldown: reject fills too close to last SL exit.
+            # Prevents re-entry when MT5 position detection lags the SL hit.
+            if self.last_close_time and not self.last_trade_profitable:
+                seconds_since_close = (get_local_now() - self.last_close_time).total_seconds()
+                tf_seconds = self.strategy.timeframe_minutes * 60
+                if seconds_since_close < tf_seconds:
+                    self.logger.info(
+                        f"[SNIPER] Rejected {filled.direction} fill: "
+                        f"too close to last SL ({seconds_since_close:.0f}s < "
+                        f"{tf_seconds}s cooldown)"
+                    )
+                    filled.cancelled = True
+                    return
+
             # Shield check before acting on the fill
             allowed, reason = self.shield.allow_entry(filled.direction)
             if not allowed:

@@ -54,7 +54,6 @@ class BaseTradingBot:
 
         self.risk = RiskManager(
             max_drawdown_limit=config.max_drawdown_limit,
-            max_consecutive_losses=12,
             bot_label=strategy.bot_label,
         )
 
