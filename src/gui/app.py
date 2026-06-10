@@ -304,11 +304,12 @@ class BotInstancePanel:
 class BotDetailPanel:
     """A single bot detail column: config editing, controls, positions, indicators."""
 
-    def __init__(self, parent, bot_manager: BotManager, instance_panel, on_close_callback, instance: dict):
+    def __init__(self, parent, bot_manager: BotManager, instance_panel, on_close_callback, instance: dict, market=None):
         self.bot_manager = bot_manager
         self.instance_panel = instance_panel
         self.on_close = on_close_callback
         self.current_instance: dict = instance
+        self.market = market
         self.config_vars: dict[str, tk.StringVar] = {}
         self.loaded_config = None
         self.loaded_path: str = instance.get('config_path', '')
@@ -756,7 +757,7 @@ class BotDetailPanel:
         iid = self.current_instance.get('instance_id', '')
         self.bot_manager.toggle_profit_protection(iid)
 
-    def update(self):
+    def update(self, market_overview: dict | None = None):
         """Update live state display for the selected bot."""
         if not self.current_instance:
             return
@@ -785,6 +786,17 @@ class BotDetailPanel:
         atr = ind.get('atr', 0)
         uptrend = ind.get('uptrend', False)
         trend = 'UP' if uptrend else 'DN' if ind.get('downtrend', False) else '--'
+
+        # When stopped, use cached market overview for this bot's timeframe
+        if status == 'Stopped' and market_overview:
+            tf = self.current_instance.get('timeframe', 'M5')
+            tf_data = market_overview.get(tf)
+            if tf_data:
+                rsi = tf_data.get('rsi', 0)
+                atr = tf_data.get('atr', 0)
+                uptrend = tf_data.get('uptrend', False)
+                trend = 'UP' if uptrend else 'DN'
+
         dd = state.get('drawdown_pct', 0)
         trades = state.get('trades_today', 0)
         losses = state.get('consecutive_losses', 0)
@@ -998,10 +1010,13 @@ class SizingCalculator:
 class BotDetailContainer:
     """Horizontally scrollable container for multiple BotDetailPanel columns."""
 
-    def __init__(self, parent, bot_manager: BotManager, instance_panel):
+    def __init__(self, parent, bot_manager: BotManager, instance_panel, market=None):
         self.bot_manager = bot_manager
         self.instance_panel = instance_panel
+        self.market = market
         self.panels: list[BotDetailPanel] = []
+        self._market_overview_cache: dict = {}
+        self._market_overview_counter: int = 0
 
         self.frame = tk.Frame(parent, bg=BG_DARK)
 
@@ -1051,6 +1066,7 @@ class BotDetailContainer:
             self.inner, self.bot_manager, self.instance_panel,
             on_close_callback=self._on_panel_closed,
             instance=instance,
+            market=self.market,
         )
         panel.frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 2))
         self.panels.append(panel)
@@ -1182,8 +1198,18 @@ class BotDetailContainer:
 
     def update(self):
         """Update all open panels."""
+        # Refresh market overview cache every 5 update cycles (5 seconds)
+        self._market_overview_counter += 1
+        if self._market_overview_counter >= 5:
+            self._market_overview_counter = 0
+            if self.market and self.market.connected:
+                try:
+                    self._market_overview_cache = self.market.get_market_overview()
+                except Exception:
+                    pass
+
         for panel in self.panels:
-            panel.update()
+            panel.update(self._market_overview_cache)
 
 
 class EgonGUI:
@@ -1234,7 +1260,7 @@ class EgonGUI:
 
         # Right: multi-panel detail container
         self.detail_container = BotDetailContainer(
-            top_paned, self.bot_manager, self.instance_panel
+            top_paned, self.bot_manager, self.instance_panel, market=self.market
         )
         top_paned.add(self.detail_container.frame, width=900, minsize=400)
 
