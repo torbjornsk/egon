@@ -56,6 +56,17 @@ class MT5Broker:
         """Modify stop loss of an open position via MT5."""
         return self._client.modify_sl(ticket, new_sl)
 
+    def place_limit_order(self, order_type: int, price: float, volume: float,
+                          sl: float, tp: float, magic_number: int,
+                          comment: str = "egon_sniper") -> OrderResult | None:
+        """Place a pending BUY LIMIT or SELL LIMIT order."""
+        result = self._client.place_limit_order(
+            order_type, price, volume, sl, tp, magic_number, comment
+        )
+        if result is None:
+            return None
+        return OrderResult(order=result.order)
+
     def place_stop_order(self, order_type: int, price: float, volume: float,
                          sl: float, tp: float, magic_number: int,
                          comment: str = "egon_stop"):

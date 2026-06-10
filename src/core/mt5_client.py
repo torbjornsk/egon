@@ -278,6 +278,69 @@ class MT5Client:
         )
         return result
 
+    def place_limit_order(
+        self,
+        order_type: int,
+        price: float,
+        volume: float,
+        sl: float,
+        tp: float,
+        magic_number: int,
+        comment: str = "egon_sniper",
+    ) -> mt5.OrderSendResult | None:
+        """Place a pending BUY LIMIT or SELL LIMIT order.
+
+        BUY LIMIT: triggers when ask drops to price (buy the dip)
+        SELL LIMIT: triggers when bid rises to price (sell the spike)
+
+        Args:
+            order_type: ORDER_TYPE_BUY for BUY LIMIT, ORDER_TYPE_SELL for SELL LIMIT
+            price: limit price for the order
+            volume: lot size
+            sl: stop loss price
+            tp: take profit price (0 for none)
+            magic_number: bot identifier
+            comment: order comment
+        """
+        if order_type == ORDER_TYPE_BUY:
+            mt5_type = mt5.ORDER_TYPE_BUY_LIMIT
+        else:
+            mt5_type = mt5.ORDER_TYPE_SELL_LIMIT
+
+        request = {
+            "action": mt5.TRADE_ACTION_PENDING,
+            "symbol": self.symbol,
+            "volume": volume,
+            "type": mt5_type,
+            "price": price,
+            "sl": sl,
+            "deviation": 20,
+            "magic": magic_number,
+            "comment": comment,
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+
+        if tp and tp > 0:
+            request["tp"] = tp
+
+        result = mt5.order_send(request)
+        if result is None:
+            logger.error(f"place_limit_order returned None: {mt5.last_error()}")
+            return None
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            logger.error(
+                f"Limit order failed: {result.retcode} - {result.comment} "
+                f"(price={price:.2f}, type={'BUY' if order_type == ORDER_TYPE_BUY else 'SELL'})"
+            )
+            return None
+
+        logger.info(
+            f"[LIMIT ORDER] {'BUY' if order_type == ORDER_TYPE_BUY else 'SELL'} LIMIT "
+            f"placed @ ${price:.2f}, SL=${sl:.2f}, TP=${tp:.2f}, Vol={volume}"
+        )
+        return result
+
     def cancel_order(self, order_ticket: int) -> bool:
         """Cancel a pending order by ticket."""
         request = {

@@ -264,7 +264,7 @@ class SimBroker:
         self._positions.append(pos)
         return OrderResult(order=ticket)
 
-    def place_limit_order(self, order_type: int, volume: float, entry_price: float,
+    def place_limit_order(self, order_type: int, price: float, volume: float,
                           sl: float, tp: float, magic_number: int, comment: str) -> OrderResult | None:
         """
         Place a limit order fill at a specific price (no spread/slippage on entry).
@@ -272,7 +272,7 @@ class SimBroker:
         Limit orders provide liquidity, so the fill happens at the limit price.
         This is the key advantage over market orders.
         """
-        if entry_price <= 0:
+        if price <= 0:
             return None
 
         ticket = self._next_ticket
@@ -281,8 +281,8 @@ class SimBroker:
         pos = SimPosition(
             ticket=ticket,
             type=order_type,
-            price_open=entry_price,
-            price_current=entry_price,
+            price_open=price,
+            price_current=price,
             sl=sl,
             tp=tp,
             volume=volume,
@@ -391,6 +391,14 @@ class SimBroker:
 
     def mt5_timestamp_to_local(self, mt5_timestamp: int) -> datetime:
         return self._sim_time
+
+    def cancel_order(self, order_ticket: int) -> bool:
+        """Cancel a pending order (no-op in sim -- limit orders fill instantly)."""
+        return True
+
+    def get_pending_orders(self, magic_number: int) -> list:
+        """Get pending orders (always empty in sim -- limit orders fill instantly)."""
+        return []
 
     # ── Legacy compatibility (used by old tick-based PP testing) ─────
 

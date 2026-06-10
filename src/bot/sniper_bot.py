@@ -91,6 +91,8 @@ class SniperBot:
         # Sniper state
         self._sniper_active: bool = False
         self._last_df: pd.DataFrame | None = None
+        self._pending_buy_ticket: int | None = None
+        self._pending_sell_ticket: int | None = None
 
         # Scheduler (time-based pause)
         self.scheduler = Scheduler(
@@ -146,6 +148,8 @@ class SniperBot:
         return True
 
     def disconnect(self):
+        # Cancel any outstanding MT5 limit orders before disconnecting
+        self._cancel_mt5_sniper_orders()
         if self._shared_connection:
             self.logger.info("Skipping disconnect (shared MT5 connection)")
             return
@@ -277,9 +281,11 @@ class SniperBot:
             )
 
         # Use limit fill if we have a specific entry price and broker supports it
+        # (Legacy path -- real sniper orders are now placed as MT5 pending orders
+        #  in trading_logic(). This path handles any manual entry_price calls.)
         if entry_price and hasattr(self.mt5, 'place_limit_order'):
             result = self.mt5.place_limit_order(
-                order_type, volume, entry_price, sl, tp,
+                order_type, entry_price, volume, sl, tp,
                 self.strategy.magic_number, self.strategy.order_comment,
             )
         else:
@@ -397,13 +403,21 @@ class SniperBot:
                             h1_df=self._h1_df,
                         )
                         # Cancel pending sniper orders for the blocked direction
-                        if direction == "LONG" and self.strategy.pending_buy:
-                            self.strategy.pending_buy.cancelled = True
-                            self.strategy.pending_buy = None
+                        if direction == "LONG":
+                            if self._pending_buy_ticket:
+                                self.mt5.cancel_order(self._pending_buy_ticket)
+                                self._pending_buy_ticket = None
+                            if self.strategy.pending_buy:
+                                self.strategy.pending_buy.cancelled = True
+                                self.strategy.pending_buy = None
                             self.logger.info("[SHIELD] Cancelled pending buy sniper order")
-                        elif direction == "SHORT" and self.strategy.pending_sell:
-                            self.strategy.pending_sell.cancelled = True
-                            self.strategy.pending_sell = None
+                        elif direction == "SHORT":
+                            if self._pending_sell_ticket:
+                                self.mt5.cancel_order(self._pending_sell_ticket)
+                                self._pending_sell_ticket = None
+                            if self.strategy.pending_sell:
+                                self.strategy.pending_sell.cancelled = True
+                                self.strategy.pending_sell = None
                             self.logger.info("[SHIELD] Cancelled pending sell sniper order")
             else:
                 self.consecutive_sl_exits = 0
@@ -506,6 +520,18 @@ class SniperBot:
 
     # ── Main trading logic ──────────────────────────────────────────
 
+    def _cancel_mt5_sniper_orders(self):
+        """Cancel any active MT5 limit orders placed by the sniper."""
+        if self._pending_buy_ticket:
+            if self.mt5.cancel_order(self._pending_buy_ticket):
+                self.logger.debug(f"[SNIPER] Cancelled buy limit #{self._pending_buy_ticket}")
+            self._pending_buy_ticket = None
+
+        if self._pending_sell_ticket:
+            if self.mt5.cancel_order(self._pending_sell_ticket):
+                self.logger.debug(f"[SNIPER] Cancelled sell limit #{self._pending_sell_ticket}")
+            self._pending_sell_ticket = None
+
     def trading_logic(self):
         """Run on each new candle."""
         info = self.mt5.get_account_info()
@@ -521,6 +547,7 @@ class SniperBot:
         if is_closing:
             for pos in open_positions:
                 self.close_position(pos, "Weekend protection")
+            self._cancel_mt5_sniper_orders()
             self.strategy.cancel_pending()
             return
 
@@ -566,6 +593,7 @@ class SniperBot:
 
         # ── Schedule check (blocks new entries only) ────────────────
         if not self.scheduler.check():
+            self._cancel_mt5_sniper_orders()
             self.strategy.cancel_pending()
             return
 
@@ -579,6 +607,7 @@ class SniperBot:
             self.logger.info(
                 f"[RHYTHM] Not tradeable: {status.regime.value} -- {status.reason}"
             )
+            self._cancel_mt5_sniper_orders()
             self.strategy.cancel_pending()
             return
 
@@ -594,10 +623,12 @@ class SniperBot:
         # ── Entry logic ─────────────────────────────────────────────
         open_positions = self.mt5.get_open_positions(self.strategy.magic_number)
         if len(open_positions) >= self.config.max_positions:
+            self._cancel_mt5_sniper_orders()
             self.strategy.cancel_pending()
             return
 
-        # Cancel previous sniper orders
+        # Cancel previous sniper orders (both in-memory and on MT5)
+        self._cancel_mt5_sniper_orders()
         self.strategy.cancel_pending()
 
         has_long = any(p.type == ORDER_TYPE_BUY for p in open_positions)
@@ -665,16 +696,36 @@ class SniperBot:
                     if tp is None or tp <= entry:
                         tp = entry + current_atr * self.config.tp_fallback_atr_mult
 
-                    self.strategy.pending_buy = SniperOrder(
-                        direction="LONG", entry_price=entry, sl=sl, tp=tp,
-                        placed_at=get_local_now(),
-                    )
-                    self.logger.info(
-                        f"[SNIPER] Buy limit @ ${entry:.2f} "
-                        f"(RSI target {self.config.rsi_buy - sniper_offset:.0f}, "
-                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
-                        f"SL scale {sl_scale:.2f})"
-                    )
+                    # Calculate volume for the limit order
+                    info = self.mt5.get_account_info()
+                    if info:
+                        volume = self.calculate_volume(
+                            info['balance'], entry, stop_distance, df
+                        )
+                        # Apply dynamic sizing scale
+                        rhythm_params_buy = self.rhythm.get_dynamic_params()
+                        sizing_scale = rhythm_params_buy['sizing_scale'] * self.shield.get_sizing_adjustment()
+                        if sizing_scale < 1.0 and volume:
+                            volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
+
+                        if volume:
+                            # Place real MT5 limit order
+                            result = self.mt5.place_limit_order(
+                                ORDER_TYPE_BUY, entry, volume, sl, tp,
+                                self.strategy.magic_number, self.strategy.order_comment,
+                            )
+                            if result:
+                                self._pending_buy_ticket = result.order
+                                self.strategy.pending_buy = SniperOrder(
+                                    direction="LONG", entry_price=entry, sl=sl, tp=tp,
+                                    placed_at=get_local_now(),
+                                )
+                                self.logger.info(
+                                    f"[SNIPER] Buy limit #{result.order} @ ${entry:.2f} "
+                                    f"(RSI target {self.config.rsi_buy - sniper_offset:.0f}, "
+                                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                                    f"SL ${sl:.2f}, Vol {volume})"
+                                )
 
         if levels['sell_price'] and not has_short and self.config.enable_shorts:
             # Shield check for sell direction
@@ -707,16 +758,36 @@ class SniperBot:
                     if tp is None or tp >= entry:
                         tp = entry - current_atr * self.config.tp_fallback_atr_mult
 
-                    self.strategy.pending_sell = SniperOrder(
-                        direction="SHORT", entry_price=entry, sl=sl, tp=tp,
-                        placed_at=get_local_now(),
-                    )
-                    self.logger.info(
-                        f"[SNIPER] Sell limit @ ${entry:.2f} "
-                        f"(RSI target {self.config.rsi_sell + sniper_offset:.0f}, "
-                        f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
-                        f"SL scale {sl_scale:.2f})"
-                    )
+                    # Calculate volume for the limit order
+                    info = self.mt5.get_account_info()
+                    if info:
+                        volume = self.calculate_volume(
+                            info['balance'], entry, stop_distance, df
+                        )
+                        # Apply dynamic sizing scale
+                        rhythm_params_sell = self.rhythm.get_dynamic_params()
+                        sizing_scale = rhythm_params_sell['sizing_scale'] * self.shield.get_sizing_adjustment()
+                        if sizing_scale < 1.0 and volume:
+                            volume = max(0.01, round(volume * sizing_scale / 0.01) * 0.01)
+
+                        if volume:
+                            # Place real MT5 limit order
+                            result = self.mt5.place_limit_order(
+                                ORDER_TYPE_SELL, entry, volume, sl, tp,
+                                self.strategy.magic_number, self.strategy.order_comment,
+                            )
+                            if result:
+                                self._pending_sell_ticket = result.order
+                                self.strategy.pending_sell = SniperOrder(
+                                    direction="SHORT", entry_price=entry, sl=sl, tp=tp,
+                                    placed_at=get_local_now(),
+                                )
+                                self.logger.info(
+                                    f"[SNIPER] Sell limit #{result.order} @ ${entry:.2f} "
+                                    f"(RSI target {self.config.rsi_sell + sniper_offset:.0f}, "
+                                    f"TP ${tp:.2f} at RSI {exit_rsi:.0f}, "
+                                    f"SL ${sl:.2f}, Vol {volume})"
+                                )
 
     # ── Continuous checks (every second) ────────────────────────────
 
@@ -752,66 +823,52 @@ class SniperBot:
         self._manage_trailing(positions, current_atr, tick)
 
     def check_sniper_fills(self):
-        """Check if current price has hit a sniper level (runs every second)."""
-        tick = self.mt5.get_tick()
-        if tick is None:
+        """Check if MT5 has filled any of our pending limit orders.
+
+        When MT5 fills a limit order, the pending order disappears and a new
+        position appears. We detect this by checking if our tracked order
+        tickets are still pending.
+        """
+        if not self._pending_buy_ticket and not self._pending_sell_ticket:
             return
 
-        open_positions = self.mt5.get_open_positions(self.strategy.magic_number)
-        if len(open_positions) >= self.config.max_positions:
-            return
+        # Get currently pending orders for our magic number
+        pending = self.mt5.get_pending_orders(self.strategy.magic_number)
+        pending_tickets = {o.ticket for o in pending}
 
-        filled = self.strategy.check_sniper_fills(tick.bid, tick.ask)
+        # Check if buy limit was filled
+        if self._pending_buy_ticket and self._pending_buy_ticket not in pending_tickets:
+            ticket = self._pending_buy_ticket
+            self._pending_buy_ticket = None
 
-        if filled and self._last_df is not None:
-            # Hard cooldown: reject fills too close to last SL exit.
-            # Prevents re-entry when MT5 position detection lags the SL hit.
-            if self.last_close_time and not self.last_trade_profitable:
-                seconds_since_close = (get_local_now() - self.last_close_time).total_seconds()
-                tf_seconds = self.strategy.timeframe_minutes * 60
-                if seconds_since_close < tf_seconds:
-                    self.logger.info(
-                        f"[SNIPER] Rejected {filled.direction} fill: "
-                        f"too close to last SL ({seconds_since_close:.0f}s < "
-                        f"{tf_seconds}s cooldown)"
-                    )
-                    filled.cancelled = True
-                    return
-
-            # Shield check before acting on the fill
-            allowed, reason = self.shield.allow_entry(filled.direction)
-            if not allowed:
+            if self.strategy.pending_buy and not self.strategy.pending_buy.cancelled:
+                self.strategy.pending_buy.filled = True
+                self.positions.register_open(None)  # ticket unknown until next position scan
+                self.trades_today += 1
+                self.shield.record_entry("LONG")
+                entry = self.strategy.pending_buy.entry_price
                 self.logger.info(
-                    f"[SHIELD] Blocked sniper fill {filled.direction}: {reason}"
+                    f">>> [SNIPER FILL] LONG @ ${entry:.2f} "
+                    f"(MT5 limit order #{ticket} filled)"
                 )
-                filled.cancelled = True
-                return
+            self.strategy.pending_buy = None
 
-            # RSI validation: verify RSI actually supports entry at this moment.
-            # The sniper price was calculated on a previous candle's RSI state.
-            # If RSI has changed since then, the fill may no longer be valid.
-            latest = self._last_df.iloc[-1]
-            current_rsi = float(latest['RSI'])
-            if filled.direction == "LONG":
-                # For a buy fill: RSI should still be below the buy threshold
-                if current_rsi > self.config.rsi_buy + 5:
-                    self.logger.info(
-                        f"[SNIPER] Rejected LONG fill: RSI {current_rsi:.1f} "
-                        f"> {self.config.rsi_buy + 5:.0f} (no longer oversold)"
-                    )
-                    filled.cancelled = True
-                    return
-            else:
-                # For a sell fill: RSI should still be above the sell threshold
-                if current_rsi < self.config.rsi_sell - 5:
-                    self.logger.info(
-                        f"[SNIPER] Rejected SHORT fill: RSI {current_rsi:.1f} "
-                        f"< {self.config.rsi_sell - 5:.0f} (no longer overbought)"
-                    )
-                    filled.cancelled = True
-                    return
+        # Check if sell limit was filled
+        if self._pending_sell_ticket and self._pending_sell_ticket not in pending_tickets:
+            ticket = self._pending_sell_ticket
+            self._pending_sell_ticket = None
 
-            self.open_position(filled.direction, self._last_df, entry_price=filled.entry_price)
+            if self.strategy.pending_sell and not self.strategy.pending_sell.cancelled:
+                self.strategy.pending_sell.filled = True
+                self.positions.register_open(None)  # ticket unknown until next position scan
+                self.trades_today += 1
+                self.shield.record_entry("SHORT")
+                entry = self.strategy.pending_sell.entry_price
+                self.logger.info(
+                    f">>> [SNIPER FILL] SHORT @ ${entry:.2f} "
+                    f"(MT5 limit order #{ticket} filled)"
+                )
+            self.strategy.pending_sell = None
 
     # ── State for GUI ───────────────────────────────────────────────
 
@@ -855,8 +912,10 @@ class SniperBot:
         sniper_info = {}
         if self.strategy.pending_buy:
             sniper_info['buy_level'] = self.strategy.pending_buy.entry_price
+            sniper_info['buy_ticket'] = self._pending_buy_ticket
         if self.strategy.pending_sell:
             sniper_info['sell_level'] = self.strategy.pending_sell.entry_price
+            sniper_info['sell_ticket'] = self._pending_sell_ticket
 
         return {
             'bot_label': self.strategy.bot_label,
