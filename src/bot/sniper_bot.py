@@ -320,6 +320,11 @@ class SniperBot:
         self._partial_closed.discard(ticket)
 
         direction = "LONG" if position.type == ORDER_TYPE_BUY else "SHORT"
+
+        # Successful trade (BE or better) resets shield counter for this direction
+        if profit >= 0:
+            self.shield.record_profitable_exit(direction)
+
         self.logger.info(f"<<< CLOSED [{direction}] -- {reason}, P/L: ${profit:.2f}")
         self.last_close_time = get_local_now()
 
@@ -361,50 +366,48 @@ class SniperBot:
 
             if exit_deal.reason == DEAL_REASON_SL:
                 self.consecutive_sl_exits += 1
-                # Only activate shield on SLs that haven't been moved to breakeven.
-                # A trailing stop at/past breakeven means the trade was protected --
-                # not a "caught by breakout" scenario.
-                was_at_breakeven = ticket in self._breakeven_applied
-                if profit < 0 and not was_at_breakeven:
-                    # Notify breakout shield of the SL exit.
-                    # The POSITION direction is what we need (to block same-direction re-entry).
-                    # Exit deal type is the CLOSING action (opposite of position direction):
-                    #   SHORT position closed by BUY deal, LONG position closed by SELL deal.
-                    direction = "SHORT" if exit_deal.type == ORDER_TYPE_BUY else "LONG"
-                    # Estimate duration in bars (time from entry to exit)
-                    entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
-                    duration_bars = 0
-                    entry_price = 0.0
-                    if entry_deal:
-                        entry_price = entry_deal.price
-                        # Approximate duration: time difference / timeframe minutes
-                        tf_minutes = self.strategy.timeframe_minutes
-                        if tf_minutes > 0:
-                            duration_seconds = exit_deal.time - entry_deal.time
-                            duration_bars = max(1, int(duration_seconds / (tf_minutes * 60)))
+                # Position direction (exit deal type is opposite)
+                direction = "SHORT" if exit_deal.type == ORDER_TYPE_BUY else "LONG"
 
-                    self.shield.record_sl_exit(
-                        direction=direction,
-                        duration_bars=duration_bars,
-                        entry_price=entry_price,
-                        sl_price=exit_deal.price,
-                        df=self._last_df,
-                        htf_df=self._htf_df,
-                        h1_df=self._h1_df,
-                    )
-                    # Cancel pending sniper orders for the blocked direction
-                    # to prevent immediate re-entry on the same level
-                    if direction == "LONG" and self.strategy.pending_buy:
-                        self.strategy.pending_buy.cancelled = True
-                        self.strategy.pending_buy = None
-                        self.logger.info("[SHIELD] Cancelled pending buy sniper order")
-                    elif direction == "SHORT" and self.strategy.pending_sell:
-                        self.strategy.pending_sell.cancelled = True
-                        self.strategy.pending_sell = None
-                        self.logger.info("[SHIELD] Cancelled pending sell sniper order")
+                if profit >= 0:
+                    # SL at breakeven or better = successful trade, reset counter
+                    self.shield.record_profitable_exit(direction)
+                else:
+                    # Only activate shield on losing SLs that weren't at breakeven
+                    was_at_breakeven = ticket in self._breakeven_applied
+                    if not was_at_breakeven:
+                        # Estimate duration in bars (time from entry to exit)
+                        entry_deal = next((d for d in deals if d.entry == DEAL_ENTRY_IN), None)
+                        duration_bars = 0
+                        entry_price = 0.0
+                        if entry_deal:
+                            entry_price = entry_deal.price
+                            tf_minutes = self.strategy.timeframe_minutes
+                            if tf_minutes > 0:
+                                duration_seconds = exit_deal.time - entry_deal.time
+                                duration_bars = max(1, int(duration_seconds / (tf_minutes * 60)))
+
+                        self.shield.record_sl_exit(
+                            direction=direction,
+                            duration_bars=duration_bars,
+                            entry_price=entry_price,
+                            sl_price=exit_deal.price,
+                            df=self._last_df,
+                            htf_df=self._htf_df,
+                            h1_df=self._h1_df,
+                        )
+                        # Cancel pending sniper orders for the blocked direction
+                        if direction == "LONG" and self.strategy.pending_buy:
+                            self.strategy.pending_buy.cancelled = True
+                            self.strategy.pending_buy = None
+                            self.logger.info("[SHIELD] Cancelled pending buy sniper order")
+                        elif direction == "SHORT" and self.strategy.pending_sell:
+                            self.strategy.pending_sell.cancelled = True
+                            self.strategy.pending_sell = None
+                            self.logger.info("[SHIELD] Cancelled pending sell sniper order")
             else:
                 self.consecutive_sl_exits = 0
-                # Profitable exit resets consecutive SL counter in shield
+                # Non-SL exit (TP, RSI, PP) = successful, reset shield counter
                 direction = "SHORT" if exit_deal.type == ORDER_TYPE_BUY else "LONG"
                 self.shield.record_profitable_exit(direction)
 
